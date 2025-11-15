@@ -11,6 +11,10 @@ import { apiLimiter } from './middleware/rateLimiter';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
+import systemRoutes from './routes/systemRoutes';
+import userRoutes from './routes/userRoutes';
+import roleRoutes from './routes/roleRoutes';
+import userRoutes from './routes/userRoutes';
 import documentRoutes from './routes/documentRoutes';
 import auditRoutes from './routes/auditRoutes';
 import equipmentRoutes from './routes/equipmentRoutes';
@@ -49,7 +53,10 @@ app.get('/health', (_req, res) => {
 });
 
 // API routes
+app.use('/api/system', systemRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/roles', roleRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/equipment', equipmentRoutes);
