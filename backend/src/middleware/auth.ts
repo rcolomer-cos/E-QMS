@@ -7,12 +7,13 @@ export const authenticateToken = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
+    res.status(401).json({ error: 'Access token required' });
+    return;
   }
 
   try {
@@ -25,18 +26,20 @@ export const authenticateToken = (
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(403).json({ error: 'Invalid or expired token' });
+    res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
 
 export const authorizeRoles = (...allowedRoles: UserRole[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
     }
 
     if (!allowedRoles.includes(req.user.role as UserRole)) {
-      return res.status(403).json({ error: 'Access denied: insufficient permissions' });
+      res.status(403).json({ error: 'Access denied: insufficient permissions' });
+      return;
     }
 
     next();

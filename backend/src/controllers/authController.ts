@@ -5,18 +5,20 @@ import { config } from '../config';
 import { validationResult } from 'express-validator';
 import { AuthRequest } from '../types';
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
 
     const { username, email, password, role, firstName, lastName, department } = req.body;
 
     const existingUser = await UserModel.findByUsername(username);
     if (existingUser) {
-      return res.status(409).json({ error: 'Username already exists' });
+      res.status(409).json({ error: 'Username already exists' });
+      return;
     }
 
     const user: User = {
@@ -42,23 +44,26 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
 
     const { username, password } = req.body;
 
     const user = await UserModel.findByUsername(username);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
     }
 
     const isValidPassword = await UserModel.verifyPassword(user, password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
     }
 
     const token = jwt.sign(
@@ -69,7 +74,7 @@ export const login = async (req: Request, res: Response) => {
         role: user.role,
       },
       config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      { expiresIn: config.jwtExpiresIn } as jwt.SignOptions
     );
 
     res.json({
@@ -90,15 +95,17 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const getProfile = async (req: AuthRequest, res: Response) => {
+export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
     }
 
     const user = await UserModel.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
 
     res.json({

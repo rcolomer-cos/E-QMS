@@ -108,7 +108,6 @@ export class DocumentModel {
   }
 
   static async createVersion(documentId: number, userId: number): Promise<number> {
-    const pool = await getConnection();
     const original = await this.findById(documentId);
 
     if (!original) {

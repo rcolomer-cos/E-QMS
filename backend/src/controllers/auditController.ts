@@ -3,15 +3,17 @@ import { AuditModel, Audit } from '../models/AuditModel';
 import { AuthRequest } from '../types';
 import { validationResult } from 'express-validator';
 
-export const createAudit = async (req: AuthRequest, res: Response) => {
+export const createAudit = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
 
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
     }
 
     const audit: Audit = {
@@ -47,13 +49,14 @@ export const getAudits = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getAuditById = async (req: AuthRequest, res: Response) => {
+export const getAuditById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     const audit = await AuditModel.findById(parseInt(id, 10));
     if (!audit) {
-      return res.status(404).json({ error: 'Audit not found' });
+      res.status(404).json({ error: 'Audit not found' });
+      return;
     }
 
     res.json(audit);

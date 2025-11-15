@@ -3,15 +3,17 @@ import { DocumentModel, Document } from '../models/DocumentModel';
 import { AuthRequest, UserRole } from '../types';
 import { validationResult } from 'express-validator';
 
-export const createDocument = async (req: AuthRequest, res: Response) => {
+export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
 
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
     }
 
     const document: Document = {
@@ -48,13 +50,14 @@ export const getDocuments = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getDocumentById = async (req: AuthRequest, res: Response) => {
+export const getDocumentById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     const document = await DocumentModel.findById(parseInt(id, 10));
     if (!document) {
-      return res.status(404).json({ error: 'Document not found' });
+      res.status(404).json({ error: 'Document not found' });
+      return;
     }
 
     res.json(document);
@@ -78,10 +81,11 @@ export const updateDocument = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const deleteDocument = async (req: AuthRequest, res: Response) => {
+export const deleteDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user || req.user.role !== UserRole.ADMIN) {
-      return res.status(403).json({ error: 'Access denied' });
+      res.status(403).json({ error: 'Access denied' });
+      return;
     }
 
     const { id } = req.params;
@@ -95,10 +99,11 @@ export const deleteDocument = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const createDocumentVersion = async (req: AuthRequest, res: Response) => {
+export const createDocumentVersion = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
     }
 
     const { id } = req.params;

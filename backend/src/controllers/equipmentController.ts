@@ -3,10 +3,11 @@ import { EquipmentModel, Equipment } from '../models/EquipmentModel';
 import { AuthRequest } from '../types';
 import QRCode from 'qrcode';
 
-export const createEquipment = async (req: AuthRequest, res: Response) => {
+export const createEquipment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
     }
 
     const equipment: Equipment = req.body;
@@ -45,13 +46,14 @@ export const getEquipment = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getEquipmentById = async (req: AuthRequest, res: Response) => {
+export const getEquipmentById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     const equipment = await EquipmentModel.findById(parseInt(id, 10));
     if (!equipment) {
-      return res.status(404).json({ error: 'Equipment not found' });
+      res.status(404).json({ error: 'Equipment not found' });
+      return;
     }
 
     res.json(equipment);
@@ -61,13 +63,14 @@ export const getEquipmentById = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getEquipmentByQR = async (req: AuthRequest, res: Response) => {
+export const getEquipmentByQR = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { qrCode } = req.params;
 
     const equipment = await EquipmentModel.findByQRCode(qrCode);
     if (!equipment) {
-      return res.status(404).json({ error: 'Equipment not found' });
+      res.status(404).json({ error: 'Equipment not found' });
+      return;
     }
 
     res.json(equipment);
