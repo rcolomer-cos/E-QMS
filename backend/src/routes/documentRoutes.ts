@@ -16,11 +16,11 @@ const router = Router();
 
 router.use(authenticateToken);
 
-router.post('/', createLimiter, validateDocument, createDocument);
+router.post('/', createLimiter, validateDocument, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.USER), createDocument);
 router.get('/', getDocuments);
 router.get('/:id', validateId, getDocumentById);
-router.put('/:id', validateId, updateDocument);
+router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.USER), updateDocument);
 router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteDocument);
-router.post('/:id/version', createLimiter, validateId, createDocumentVersion);
+router.post('/:id/version', createLimiter, validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.USER), createDocumentVersion);
 
 export default router;
