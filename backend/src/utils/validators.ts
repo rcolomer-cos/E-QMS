@@ -21,10 +21,11 @@ export const validateUser = [
 ];
 
 export const validateLogin = [
-  body('username')
+  body('email')
     .trim()
-    .notEmpty()
-    .withMessage('Username is required'),
+    .isEmail()
+    .withMessage('Valid email is required')
+    .normalizeEmail(),
   body('password')
     .notEmpty()
     .withMessage('Password is required'),

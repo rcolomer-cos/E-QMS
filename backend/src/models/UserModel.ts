@@ -49,6 +49,16 @@ export class UserModel {
     return result.recordset[0] || null;
   }
 
+  static async findByEmail(email: string): Promise<User | null> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input('email', sql.NVarChar, email)
+      .query('SELECT * FROM Users WHERE email = @email AND active = 1');
+
+    return result.recordset[0] || null;
+  }
+
   static async findById(id: number): Promise<User | null> {
     const pool = await getConnection();
     const result = await pool
