@@ -49,6 +49,34 @@ export const validateDocument = [
     .withMessage('Category is required'),
 ];
 
+export const validateUserUpdate = [
+  body('email')
+    .optional()
+    .trim()
+    .isEmail()
+    .withMessage('Invalid email address')
+    .normalizeEmail(),
+  body('role')
+    .optional()
+    .isIn(['admin', 'manager', 'auditor', 'user', 'viewer'])
+    .withMessage('Invalid role'),
+  body('firstName')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('First name must not exceed 100 characters'),
+  body('lastName')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Last name must not exceed 100 characters'),
+  body('department')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Department must not exceed 100 characters'),
+];
+
 export const validateId: ValidationChain = param('id')
   .isInt({ min: 1 })
   .withMessage('Invalid ID');
