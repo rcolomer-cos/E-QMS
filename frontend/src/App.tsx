@@ -8,6 +8,7 @@ import NCR from './pages/NCR';
 import CAPA from './pages/CAPA';
 import Equipment from './pages/Equipment';
 import Training from './pages/Training';
+import Users from './pages/Users';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
         <Route path="capa" element={<CAPA />} />
         <Route path="equipment" element={<Equipment />} />
         <Route path="training" element={<Training />} />
+        <Route path="users" element={<Users />} />
       </Route>
     </Routes>
   );

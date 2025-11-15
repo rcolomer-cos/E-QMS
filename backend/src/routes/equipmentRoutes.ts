@@ -22,7 +22,7 @@ router.get('/', getEquipment);
 router.get('/calibration-due', getCalibrationDue);
 router.get('/qr/:qrCode', getEquipmentByQR);
 router.get('/:id', validateId, getEquipmentById);
-router.put('/:id', validateId, updateEquipment);
+router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), updateEquipment);
 router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteEquipment);
 
 export default router;
