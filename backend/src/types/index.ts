@@ -10,11 +10,32 @@ export interface AuthRequest extends Request {
 }
 
 export enum UserRole {
+  SUPERUSER = 'superuser',
   ADMIN = 'admin',
   MANAGER = 'manager',
   AUDITOR = 'auditor',
   USER = 'user',
   VIEWER = 'viewer',
+}
+
+export interface Role {
+  id: number;
+  name: string;
+  displayName: string;
+  description?: string;
+  isSuperUser: boolean;
+  permissions: string;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserRoleAssignment {
+  id: number;
+  userId: number;
+  roleId: number;
+  assignedAt: Date;
+  assignedBy?: number;
 }
 
 export enum DocumentStatus {
