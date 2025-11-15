@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 
 import { config } from './config';
 import { errorHandler } from './middleware/errorHandler';
+import { apiLimiter } from './middleware/rateLimiter';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
@@ -31,6 +32,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Compression middleware
 app.use(compression());
+
+// Rate limiting middleware
+app.use('/api/', apiLimiter);
 
 // Logging middleware
 if (config.nodeEnv === 'development') {

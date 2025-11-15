@@ -8,13 +8,14 @@ import {
 } from '../controllers/auditController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { validateId } from '../utils/validators';
+import { createLimiter } from '../middleware/rateLimiter';
 import { UserRole } from '../types';
 
 const router = Router();
 
 router.use(authenticateToken);
 
-router.post('/', authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), createAudit);
+router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), createAudit);
 router.get('/', getAudits);
 router.get('/:id', validateId, getAuditById);
 router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), updateAudit);

@@ -10,13 +10,14 @@ import {
 } from '../controllers/equipmentController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { validateId } from '../utils/validators';
+import { createLimiter } from '../middleware/rateLimiter';
 import { UserRole } from '../types';
 
 const router = Router();
 
 router.use(authenticateToken);
 
-router.post('/', authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), createEquipment);
+router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), createEquipment);
 router.get('/', getEquipment);
 router.get('/calibration-due', getCalibrationDue);
 router.get('/qr/:qrCode', getEquipmentByQR);
