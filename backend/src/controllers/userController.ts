@@ -37,6 +37,7 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
     }
 
     // Remove password from response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
   } catch (error) {
