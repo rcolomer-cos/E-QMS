@@ -1,10 +1,6 @@
 import { body, param, ValidationChain } from 'express-validator';
 
 export const validateUser = [
-  body('username')
-    .trim()
-    .isLength({ min: 3, max: 50 })
-    .withMessage('Username must be between 3 and 50 characters'),
   body('email')
     .trim()
     .isEmail()
@@ -15,16 +11,29 @@ export const validateUser = [
     .withMessage('Password must be at least 8 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  body('role')
-    .isIn(['admin', 'manager', 'auditor', 'user', 'viewer'])
-    .withMessage('Invalid role'),
+  body('firstName')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('First name is required and must not exceed 100 characters'),
+  body('lastName')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Last name is required and must not exceed 100 characters'),
+  body('roleIds')
+    .optional()
+    .isArray({ min: 1 })
+    .withMessage('At least one role must be assigned'),
+  body('roleIds.*')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid role ID'),
 ];
 
 export const validateLogin = [
-  body('username')
+  body('email')
     .trim()
-    .notEmpty()
-    .withMessage('Username is required'),
+    .isEmail()
+    .withMessage('Email is required'),
   body('password')
     .notEmpty()
     .withMessage('Password is required'),
