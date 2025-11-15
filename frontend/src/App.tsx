@@ -1,0 +1,37 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Documents from './pages/Documents';
+import Audits from './pages/Audits';
+import NCR from './pages/NCR';
+import CAPA from './pages/CAPA';
+import Equipment from './pages/Equipment';
+import Training from './pages/Training';
+import { useAuth } from './services/authService';
+
+function App() {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? <Layout /> : <Navigate to="/login" replace />
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="documents" element={<Documents />} />
+        <Route path="audits" element={<Audits />} />
+        <Route path="ncr" element={<NCR />} />
+        <Route path="capa" element={<CAPA />} />
+        <Route path="equipment" element={<Equipment />} />
+        <Route path="training" element={<Training />} />
+      </Route>
+    </Routes>
+  );
+}
+
+export default App;
