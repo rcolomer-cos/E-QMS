@@ -63,7 +63,7 @@ export class UserModel {
     const pool = await getConnection();
     const result = await pool
       .request()
-      .query('SELECT id, username, email, role, firstName, lastName, department, active, createdAt, updatedAt FROM Users WHERE active = 1');
+      .query('SELECT id, username, email, role, firstName, lastName, department, active, createdAt, updatedAt FROM Users ORDER BY createdAt DESC');
 
     return result.recordset;
   }
