@@ -25,6 +25,7 @@ function Layout() {
           <li><Link to="/capa">CAPA</Link></li>
           <li><Link to="/equipment">Equipment</Link></li>
           <li><Link to="/training">Training</Link></li>
+          {user?.role === 'admin' && <li><Link to="/users">Users</Link></li>}
         </ul>
         <div className="navbar-user">
           <span>{user?.username} ({user?.role})</span>
