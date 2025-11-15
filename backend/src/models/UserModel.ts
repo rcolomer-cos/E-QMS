@@ -176,7 +176,10 @@ export class UserModel {
         ORDER BY r.level DESC
       `);
 
-    return result.recordset;
+    return result.recordset.map(user => ({
+      ...user,
+      roles: user.roles ? user.roles.split(',') : []
+    }));
   }
 
   /**

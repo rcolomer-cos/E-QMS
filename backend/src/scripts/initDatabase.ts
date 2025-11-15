@@ -246,6 +246,18 @@ const createTables = async () => {
     )
   `);
 
+  // Update database version for complete initialization
+  await pool.request().query(`
+    IF EXISTS (SELECT * FROM sys.tables WHERE name = 'DatabaseVersion')
+    BEGIN
+      IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.4')
+      BEGIN
+        INSERT INTO DatabaseVersion (version, description, scriptName)
+        VALUES ('1.0.4', 'Complete database initialization with all tables', 'initDatabase.ts');
+      END
+    END
+  `);
+
   console.log('Database tables created successfully!');
 };
 

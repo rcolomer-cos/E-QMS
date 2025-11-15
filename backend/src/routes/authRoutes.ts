@@ -19,6 +19,8 @@ router.post('/initial-superuser', authLimiter, validateUser, createInitialSuperu
 // Authentication routes
 router.post('/register', authLimiter, validateUser, register); // Protected in controller
 router.post('/login', authLimiter, validateLogin, login);
+router.post('/logout', authenticateToken, logout);
+router.post('/refresh', authenticateToken, refresh);
 router.get('/profile', authenticateToken, getProfile);
 
 export default router;
