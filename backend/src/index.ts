@@ -14,7 +14,6 @@ import authRoutes from './routes/authRoutes';
 import systemRoutes from './routes/systemRoutes';
 import userRoutes from './routes/userRoutes';
 import roleRoutes from './routes/roleRoutes';
-import userRoutes from './routes/userRoutes';
 import documentRoutes from './routes/documentRoutes';
 import auditRoutes from './routes/auditRoutes';
 import equipmentRoutes from './routes/equipmentRoutes';

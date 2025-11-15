@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { UserModel, User } from '../models/UserModel';
+import { UserModel, CreateUserData } from '../models/UserModel';
 import { RoleModel } from '../models/RoleModel';
 import { config } from '../config';
 import { validationResult } from 'express-validator';
 import { AuthRequest } from '../types';
 
+/**
+ * Register a new user (admin/superuser function)
+ * Note: This should be protected by authorization middleware
+ */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
@@ -14,7 +18,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { email, password, firstName, lastName, department } = req.body;
+    const { email, password, firstName, lastName, department, roleIds } = req.body;
 
     // Check if user already exists
     const existingUser = await UserModel.findByEmail(email);
@@ -23,17 +27,25 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user: User = {
+    // Validate roleIds
+    if (!roleIds || !Array.isArray(roleIds) || roleIds.length === 0) {
+      res.status(400).json({ error: 'At least one role must be assigned' });
+      return;
+    }
+
+    // Create user data
+    const userData: CreateUserData = {
       email,
       password,
       firstName,
       lastName,
       department,
-      active: true,
+      roleIds,
+      createdBy: (req as AuthRequest).user?.id || 0, // Will be 0 for initial superuser
       mustChangePassword: false,
     };
 
-    const userId = await UserModel.create(user);
+    const userId = await UserModel.create(userData);
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -45,6 +57,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * Login with email and password
+ */
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
@@ -55,30 +70,32 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const { email, password } = req.body;
 
+    // Find user by email
     const user = await UserModel.findByEmail(email);
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
 
+    // Verify password
     const isValidPassword = await UserModel.verifyPassword(user, password);
     if (!isValidPassword) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
 
-    // Get user roles
-    const roles = await RoleModel.getUserRoles(user.id!);
-    const roleNames = roles.map(r => r.name);
-
     // Update last login
     await UserModel.updateLastLogin(user.id!);
 
+    // Generate JWT token
     const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
-        roles: roleNames,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        roles: user.roleNames || [],
+        roleIds: user.roles?.map(r => r.id) || [],
       },
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn } as jwt.SignOptions
@@ -92,7 +109,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         firstName: user.firstName,
         lastName: user.lastName,
         department: user.department,
-        roles: roleNames,
+        roles: user.roles,
         mustChangePassword: user.mustChangePassword,
       },
     });
@@ -102,6 +119,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * Get current user profile
+ */
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -115,19 +135,15 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Get user roles
-    const roles = await RoleModel.getUserRoles(req.user.id);
-    const roleNames = roles.map(r => r.name);
-
     res.json({
       id: user.id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       department: user.department,
-      roles: roleNames,
-      lastLoginAt: user.lastLoginAt,
-      mustChangePassword: user.mustChangePassword,
+      roles: user.roles,
+      roleNames: user.roleNames,
+      lastLogin: user.lastLogin,
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -135,65 +151,65 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
   }
 };
 
-export const logout = async (req: AuthRequest, res: Response): Promise<void> => {
+/**
+ * Check if system has any superusers (for bootstrap)
+ */
+export const checkSuperusers = async (_req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'User not authenticated' });
-      return;
-    }
-
-    // In a stateless JWT implementation, logout is handled client-side
-    // The client should remove the token from storage
-    // This endpoint confirms the token is valid and logs the action
-    res.json({
-      message: 'Logged out successfully',
-    });
+    const hasSuperusers = await UserModel.hasSuperusers();
+    res.json({ hasSuperusers });
   } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({ error: 'Failed to logout' });
+    console.error('Check superusers error:', error);
+    res.status(500).json({ error: 'Failed to check superusers' });
   }
 };
 
-export const refresh = async (req: AuthRequest, res: Response): Promise<void> => {
+/**
+ * Create initial superuser (only if no superusers exist)
+ */
+export const createInitialSuperuser = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'User not authenticated' });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
       return;
     }
 
-    // Verify user still exists and is active
-    const user = await UserModel.findById(req.user.id);
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
+    // Check if superusers already exist
+    const hasSuperusers = await UserModel.hasSuperusers();
+    if (hasSuperusers) {
+      res.status(403).json({ error: 'Superusers already exist in the system' });
       return;
     }
 
-    // Generate new token with fresh expiry
-    const token = jwt.sign(
-      {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
-      config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn } as jwt.SignOptions
-    );
+    const { email, password, firstName, lastName } = req.body;
 
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        department: user.department,
-      },
+    // Get superuser role
+    const superuserRole = await RoleModel.findByName('superuser');
+    if (!superuserRole) {
+      res.status(500).json({ error: 'Superuser role not found in database' });
+      return;
+    }
+
+    // Create initial superuser
+    const userData: CreateUserData = {
+      email,
+      password,
+      firstName,
+      lastName,
+      roleIds: [superuserRole.id],
+      createdBy: 0, // System created
+      mustChangePassword: false,
+    };
+
+    const userId = await UserModel.create(userData);
+
+    res.status(201).json({
+      message: 'Initial superuser created successfully',
+      userId,
     });
   } catch (error) {
-    console.error('Token refresh error:', error);
-    res.status(500).json({ error: 'Failed to refresh token' });
+    console.error('Create initial superuser error:', error);
+    res.status(500).json({ error: 'Failed to create initial superuser' });
   }
 };

@@ -1,117 +1,41 @@
 import { Response } from 'express';
-import { UserModel } from '../models/UserModel';
+import { UserModel, CreateUserData } from '../models/UserModel';
 import { RoleModel } from '../models/RoleModel';
-import { AuthRequest } from '../types';
-import { validationResult } from 'express-validator';
-import { generateMemorablePassword } from '../utils/passwordGenerator';
-
-/**
- * Get all users (admin and superuser only)
- */
-export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: 'User not authenticated' });
-      return;
-    }
-
-    // Check if user is admin or superuser
-    const isAdmin = await RoleModel.userIsAdmin(req.user.id);
-    if (!isAdmin) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
-
-    const users = await UserModel.findAll();
-    res.json({ users });
-  } catch (error) {
-    console.error('Get all users error:', error);
-    res.status(500).json({ error: 'Failed to get users' });
-  }
-};
-
-/**
- * Get user by ID
- */
-export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: 'User not authenticated' });
-      return;
-    }
-
-    const userId = parseInt(req.params.id);
-    const user = await UserModel.findById(userId);
-
 import { AuthRequest, UserRole } from '../types';
 import { validationResult } from 'express-validator';
-import bcrypt from 'bcrypt';
+import { generatePasswordOptions, generateMemorablePassword } from '../utils/passwordGenerator';
 
 /**
- * Get all users (Admin only)
+ * Get all users (admin/superuser only)
  */
-export const getUsers = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getAllUsers = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const users = await UserModel.findAll();
-    res.json(users);
+    
+    // Remove password from response
+    const sanitizedUsers = users.map(user => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+
+    res.json(sanitizedUsers);
   } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({ error: 'Failed to retrieve users' });
+    console.error('Get all users error:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 };
 
 /**
- * Get user by ID (Admin or self)
+ * Get user by ID (admin/superuser only)
  */
 export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = parseInt(req.params.id);
-    
-    // Check if user is accessing their own profile or is admin
-    if (req.user?.role !== UserRole.ADMIN && req.user?.id !== userId) {
-      res.status(403).json({ error: 'Access denied: You can only view your own profile' });
-      return;
-    }
+    const { id } = req.params;
+    const user = await UserModel.findById(parseInt(id, 10));
 
-    const user = await UserModel.findById(userId);
     if (!user) {
       res.status(404).json({ error: 'User not found' });
-      return;
-    }
-
-    // Get user roles
-    const roles = await RoleModel.getUserRoles(userId);
-
-    res.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        department: user.department,
-        active: user.active,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt,
-        roles: roles.map(r => ({
-          id: r.id,
-          name: r.name,
-          displayName: r.displayName,
-        })),
-      },
-    });
-  } catch (error) {
-    console.error('Get user by ID error:', error);
-    res.status(500).json({ error: 'Failed to get user' });
-  }
-};
-
-/**
- * Create/Invite new user (admin and superuser only)
- */
-export const createUser = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
@@ -121,14 +45,15 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
     res.json(userWithoutPassword);
   } catch (error) {
     console.error('Get user by ID error:', error);
-    res.status(500).json({ error: 'Failed to retrieve user' });
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 };
 
 /**
- * Update user (Admin or self, with restrictions)
+ * Create a new user (admin/superuser only)
+ * Note: Only superusers can create other superusers
  */
-export const updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -136,14 +61,12 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Check if user is admin or superuser
-    const isAdmin = await RoleModel.userIsAdmin(req.user.id);
-    if (!isAdmin) {
-      res.status(403).json({ error: 'Insufficient permissions' });
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
-    const { email, firstName, lastName, department, roleIds, generatePassword } = req.body;
+    const { email, password, firstName, lastName, department, roleIds } = req.body;
 
     // Check if user already exists
     const existingUser = await UserModel.findByEmail(email);
@@ -152,69 +75,44 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Generate password or use provided one
-    let password = req.body.password;
-    let generatedPassword: string | undefined;
-
-    if (generatePassword || !password) {
-      generatedPassword = generateMemorablePassword(12);
-      password = generatedPassword;
+    // Validate roleIds
+    if (!roleIds || !Array.isArray(roleIds) || roleIds.length === 0) {
+      res.status(400).json({ error: 'At least one role must be assigned' });
+      return;
     }
 
-    // Create user
-    const userId = await UserModel.create(
-      {
-        email,
-        password,
-        firstName,
-        lastName,
-        department,
-        active: true,
-        mustChangePassword: false,
-      },
-      req.user.id
-    );
+    // Check if trying to create a superuser
+    const roles = await RoleModel.findByIds(roleIds);
+    const hasSuperuserRole = roles.some(r => r.name === 'superuser');
 
-    // Assign roles
-    if (roleIds && Array.isArray(roleIds)) {
-      for (const roleId of roleIds) {
-        // Check if trying to assign superuser role
-        const role = await RoleModel.findById(roleId);
-        if (role && role.isSuperUser) {
-          // Only superusers can assign superuser role
-          const isSuperUser = await RoleModel.userIsSuperUser(req.user.id);
-          if (!isSuperUser) {
-            res.status(403).json({ 
-              error: 'Only superusers can assign superuser role' 
-            });
-            return;
-          }
-        }
-
-        await RoleModel.assignRoleToUser(userId, roleId, req.user.id);
+    if (hasSuperuserRole) {
+      // Only superusers can create other superusers
+      const isSuperuser = req.user.roles.includes(UserRole.SUPERUSER);
+      if (!isSuperuser) {
+        res.status(403).json({ error: 'Only superusers can create other superusers' });
+        return;
       }
     }
 
-    // Get assigned roles
-    const assignedRoles = await RoleModel.getUserRoles(userId);
+    // Create user
+    const userData: CreateUserData = {
+      email,
+      password,
+      firstName,
+      lastName,
+      department,
+      roleIds,
+      createdBy: req.user.id,
+      mustChangePassword: false,
+    };
+
+    const userId = await UserModel.create(userData);
 
     res.status(201).json({
       message: 'User created successfully',
-      user: {
-        id: userId,
-        email,
-        firstName,
-        lastName,
-        department,
-        roles: assignedRoles.map(r => r.name),
-      },
-      // Only return password if it was generated
-      ...(generatedPassword && { 
-        credentials: {
-          email,
-          password: generatedPassword,
-        }
-      }),
+      userId,
+      email,
+      password, // Return password only once so admin can share it
     });
   } catch (error) {
     console.error('Create user error:', error);
@@ -223,89 +121,32 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
 };
 
 /**
- * Update user (admin and superuser only)
+ * Update user information (admin/superuser only)
  */
 export const updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'User not authenticated' });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
       return;
     }
 
-    // Check if user is admin or superuser
-    const isAdmin = await RoleModel.userIsAdmin(req.user.id);
-    if (!isAdmin) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
+    const { id } = req.params;
+    const { email, firstName, lastName, department } = req.body;
 
-    const userId = parseInt(req.params.id);
-    const { email, firstName, lastName, department, active } = req.body;
-
-    const userId = parseInt(req.params.id);
-    const updates = req.body;
-
-    // Check if user is updating their own profile or is admin
-    const isAdmin = req.user?.role === UserRole.ADMIN;
-    const isSelf = req.user?.id === userId;
-
-    if (!isAdmin && !isSelf) {
-      res.status(403).json({ error: 'Access denied: You can only update your own profile' });
-      return;
-    }
-
-    // Non-admins cannot change role or active status
-    if (!isAdmin && (updates.role || updates.active !== undefined)) {
-      res.status(403).json({ error: 'Access denied: Only admins can change role or active status' });
-      return;
-    }
-
-    // Check if user exists
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findById(parseInt(id, 10));
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    await UserModel.update(userId, updates);
-    res.json({ message: 'User updated successfully' });
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ error: 'Failed to update user' });
-  }
-};
-
-/**
- * Delete (deactivate) user (Admin only)
- */
-export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const userId = parseInt(req.params.id);
-
-    // Prevent self-deletion
-    if (req.user?.id === userId) {
-      res.status(400).json({ error: 'Cannot deactivate your own account' });
-      return;
-    }
-
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-
-    // Update user
-    await UserModel.update(userId, {
+    await UserModel.update(parseInt(id, 10), {
       email,
       firstName,
       lastName,
       department,
     });
 
-    if (active !== undefined && !active) {
-      await UserModel.delete(userId);
-    }
-
     res.json({ message: 'User updated successfully' });
   } catch (error) {
     console.error('Update user error:', error);
@@ -314,7 +155,52 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
 };
 
 /**
- * Assign role to user (admin and superuser only)
+ * Delete/deactivate user (admin/superuser only)
+ */
+export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const userId = parseInt(id, 10);
+
+    // Prevent self-deletion
+    if (userId === req.user.id) {
+      res.status(400).json({ error: 'Cannot delete your own account' });
+      return;
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check if trying to delete a superuser
+    const isSuperuser = user.roleNames?.includes('superuser');
+    if (isSuperuser) {
+      // Only superusers can delete other superusers
+      const isRequestingSuperuser = req.user.roles.includes(UserRole.SUPERUSER);
+      if (!isRequestingSuperuser) {
+        res.status(403).json({ error: 'Only superusers can delete other superusers' });
+        return;
+      }
+    }
+
+    await UserModel.delete(userId);
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+};
+
+/**
+ * Assign role to user (admin/superuser only)
  */
 export const assignRole = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -323,45 +209,10 @@ export const assignRole = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Check if user is admin or superuser
-    const isAdmin = await RoleModel.userIsAdmin(req.user.id);
-    if (!isAdmin) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
+    const { id } = req.params;
+    const { roleId, expiresAt } = req.body;
 
-    const userId = parseInt(req.params.id);
-    const { roleId } = req.body;
-
-    await UserModel.delete(userId);
-    res.json({ message: 'User deactivated successfully' });
-  } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({ error: 'Failed to deactivate user' });
-  }
-};
-
-/**
- * Update user role (Admin only)
- */
-export const updateUserRole = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
-      return;
-    }
-
-    const userId = parseInt(req.params.id);
-    const { role } = req.body;
-
-    // Prevent changing own role
-    if (req.user?.id === userId) {
-      res.status(400).json({ error: 'Cannot change your own role' });
-      return;
-    }
-
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findById(parseInt(id, 10));
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
@@ -374,17 +225,20 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
     }
 
     // Check if trying to assign superuser role
-    if (role.isSuperUser) {
-      const isSuperUser = await RoleModel.userIsSuperUser(req.user.id);
-      if (!isSuperUser) {
-        res.status(403).json({ 
-          error: 'Only superusers can assign superuser role' 
-        });
+    if (role.name === 'superuser') {
+      const isSuperuser = req.user.roles.includes(UserRole.SUPERUSER);
+      if (!isSuperuser) {
+        res.status(403).json({ error: 'Only superusers can assign the superuser role' });
         return;
       }
     }
 
-    await RoleModel.assignRoleToUser(userId, roleId, req.user.id);
+    await UserModel.assignRole(
+      parseInt(id, 10),
+      roleId,
+      req.user.id,
+      expiresAt ? new Date(expiresAt) : undefined
+    );
 
     res.json({ message: 'Role assigned successfully' });
   } catch (error) {
@@ -394,57 +248,19 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
 };
 
 /**
- * Remove role from user (admin and superuser only)
+ * Revoke role from user (admin/superuser only)
  */
-export const removeRole = async (req: AuthRequest, res: Response): Promise<void> => {
+export const revokeRole = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
-    // Check if user is admin or superuser
-    const isAdmin = await RoleModel.userIsAdmin(req.user.id);
-    if (!isAdmin) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
-
-    const userId = parseInt(req.params.id);
+    const { id } = req.params;
     const { roleId } = req.body;
 
-    await UserModel.update(userId, { role });
-    res.json({ message: 'User role updated successfully' });
-  } catch (error) {
-    console.error('Update user role error:', error);
-    res.status(500).json({ error: 'Failed to update user role' });
-  }
-};
-
-/**
- * Change user password (Admin or self)
- */
-export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
-      return;
-    }
-
-    const userId = parseInt(req.params.id);
-    const { currentPassword, newPassword } = req.body;
-
-    // Check if user is changing their own password or is admin
-    const isAdmin = req.user?.role === UserRole.ADMIN;
-    const isSelf = req.user?.id === userId;
-
-    if (!isAdmin && !isSelf) {
-      res.status(403).json({ error: 'Access denied: You can only change your own password' });
-      return;
-    }
-
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findById(parseInt(id, 10));
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
@@ -456,61 +272,59 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    // Check if trying to remove superuser role
-    if (role.isSuperUser) {
-      const isSuperUser = await RoleModel.userIsSuperUser(req.user.id);
-      if (!isSuperUser) {
-        res.status(403).json({ 
-          error: 'Only superusers can remove superuser role' 
-        });
-    // Non-admins must provide current password
-    if (!isAdmin) {
-      const isValidPassword = await UserModel.verifyPassword(user, currentPassword);
-      if (!isValidPassword) {
-        res.status(401).json({ error: 'Current password is incorrect' });
+    // Check if trying to revoke superuser role
+    if (role.name === 'superuser') {
+      const isSuperuser = req.user.roles.includes(UserRole.SUPERUSER);
+      if (!isSuperuser) {
+        res.status(403).json({ error: 'Only superusers can revoke the superuser role' });
         return;
       }
     }
 
-    await RoleModel.removeRoleFromUser(userId, roleId);
+    await UserModel.revokeRole(parseInt(id, 10), roleId);
 
-    res.json({ message: 'Role removed successfully' });
+    res.json({ message: 'Role revoked successfully' });
   } catch (error) {
-    console.error('Remove role error:', error);
-    res.status(500).json({ error: 'Failed to remove role' });
+    console.error('Revoke role error:', error);
+    res.status(500).json({ error: 'Failed to revoke role' });
   }
 };
 
 /**
- * Generate a new password
+ * Generate password options for new user
  */
-export const generatePassword = async (req: AuthRequest, res: Response): Promise<void> => {
+export const generatePassword = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'User not authenticated' });
-      return;
-    }
-
-    // Check if user is admin or superuser
-    const isAdmin = await RoleModel.userIsAdmin(req.user.id);
-    if (!isAdmin) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
-
-    const password = generateMemorablePassword(12);
-
-    res.json({ password });
+    const passwords = generatePasswordOptions(3);
+    res.json({ passwords });
   } catch (error) {
     console.error('Generate password error:', error);
     res.status(500).json({ error: 'Failed to generate password' });
-    // Hash new password and update
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await UserModel.updatePassword(userId, hashedPassword);
+  }
+};
 
-    res.json({ message: 'Password changed successfully' });
+/**
+ * Generate a single memorable password
+ */
+export const generateSinglePassword = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const password = generateMemorablePassword();
+    res.json({ password });
   } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ error: 'Failed to change password' });
+    console.error('Generate single password error:', error);
+    res.status(500).json({ error: 'Failed to generate password' });
+  }
+};
+
+/**
+ * Get all available roles
+ */
+export const getAllRoles = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const roles = await RoleModel.findAll();
+    res.json(roles);
+  } catch (error) {
+    console.error('Get all roles error:', error);
+    res.status(500).json({ error: 'Failed to fetch roles' });
   }
 };

@@ -23,7 +23,7 @@ router.get('/', async (_req: AuthRequest, res: Response) => {
       name: role.name,
       displayName: role.displayName,
       description: role.description,
-      isSuperUser: role.isSuperUser,
+      level: role.level,
     }));
 
     res.json({ roles: rolesData });
@@ -54,8 +54,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
         name: role.name,
         displayName: role.displayName,
         description: role.description,
-        isSuperUser: role.isSuperUser,
-        permissions: role.permissions ? JSON.parse(role.permissions) : [],
+        level: role.level,
       },
     });
   } catch (error) {

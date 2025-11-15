@@ -2,15 +2,21 @@ import { getConnection, sql } from '../config/database';
 import { Role } from '../types';
 
 export class RoleModel {
+  /**
+   * Get all active roles
+   */
   static async findAll(): Promise<Role[]> {
     const pool = await getConnection();
     const result = await pool
       .request()
-      .query('SELECT * FROM Roles WHERE active = 1 ORDER BY name');
+      .query('SELECT * FROM Roles WHERE active = 1 ORDER BY level DESC');
 
     return result.recordset;
   }
 
+  /**
+   * Find role by ID
+   */
   static async findById(id: number): Promise<Role | null> {
     const pool = await getConnection();
     const result = await pool
@@ -21,6 +27,9 @@ export class RoleModel {
     return result.recordset[0] || null;
   }
 
+  /**
+   * Find role by name
+   */
   static async findByName(name: string): Promise<Role | null> {
     const pool = await getConnection();
     const result = await pool
@@ -31,88 +40,97 @@ export class RoleModel {
     return result.recordset[0] || null;
   }
 
-  static async getUserRoles(userId: number): Promise<Role[]> {
+  /**
+   * Get roles by IDs
+   */
+  static async findByIds(roleIds: number[]): Promise<Role[]> {
+    if (roleIds.length === 0) return [];
+
     const pool = await getConnection();
     const result = await pool
       .request()
-      .input('userId', sql.Int, userId)
+      .input('roleIds', sql.NVarChar, roleIds.join(','))
       .query(`
-        SELECT r.*
-        FROM Roles r
-        INNER JOIN UserRoles ur ON r.id = ur.roleId
-        WHERE ur.userId = @userId AND r.active = 1
-        ORDER BY r.name
+        SELECT * FROM Roles 
+        WHERE id IN (SELECT value FROM STRING_SPLIT(@roleIds, ','))
+          AND active = 1
+        ORDER BY level DESC
       `);
 
     return result.recordset;
   }
 
-  static async assignRoleToUser(
-    userId: number,
-    roleId: number,
-    assignedBy?: number
-  ): Promise<void> {
-    const pool = await getConnection();
-    await pool
-      .request()
-      .input('userId', sql.Int, userId)
-      .input('roleId', sql.Int, roleId)
-      .input('assignedBy', sql.Int, assignedBy || null)
-      .query(`
-        IF NOT EXISTS (SELECT 1 FROM UserRoles WHERE userId = @userId AND roleId = @roleId)
-        BEGIN
-          INSERT INTO UserRoles (userId, roleId, assignedBy)
-          VALUES (@userId, @roleId, @assignedBy)
-        END
-      `);
-  }
-
-  static async removeRoleFromUser(userId: number, roleId: number): Promise<void> {
-    const pool = await getConnection();
-    await pool
-      .request()
-      .input('userId', sql.Int, userId)
-      .input('roleId', sql.Int, roleId)
-      .query('DELETE FROM UserRoles WHERE userId = @userId AND roleId = @roleId');
-  }
-
-  static async userHasRole(userId: number, roleName: string): Promise<boolean> {
+  /**
+   * Create a new role (admin function)
+   */
+  static async create(role: Omit<Role, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
     const pool = await getConnection();
     const result = await pool
       .request()
-      .input('userId', sql.Int, userId)
-      .input('roleName', sql.NVarChar, roleName)
+      .input('name', sql.NVarChar, role.name)
+      .input('displayName', sql.NVarChar, role.displayName)
+      .input('description', sql.NVarChar, role.description)
+      .input('level', sql.Int, role.level)
       .query(`
-        SELECT COUNT(*) as count
-        FROM UserRoles ur
-        INNER JOIN Roles r ON ur.roleId = r.id
-        WHERE ur.userId = @userId AND r.name = @roleName AND r.active = 1
+        INSERT INTO Roles (name, displayName, description, level, active)
+        OUTPUT INSERTED.id
+        VALUES (@name, @displayName, @description, @level, 1)
       `);
 
-    return result.recordset[0].count > 0;
+    return result.recordset[0].id;
   }
 
-  static async userIsSuperUser(userId: number): Promise<boolean> {
-    return this.userHasRole(userId, 'superuser');
-  }
-
-  static async userIsAdmin(userId: number): Promise<boolean> {
-    const isSuperUser = await this.userIsSuperUser(userId);
-    const isAdmin = await this.userHasRole(userId, 'admin');
-    return isSuperUser || isAdmin;
-  }
-
-  static async hasSuperUsers(): Promise<boolean> {
+  /**
+   * Update role
+   */
+  static async update(id: number, updates: Partial<Role>): Promise<void> {
     const pool = await getConnection();
-    const result = await pool
-      .request()
-      .query(`
-        SELECT COUNT(*) as count
-        FROM UserRoles ur
-        INNER JOIN Roles r ON ur.roleId = r.id
-        WHERE r.name = 'superuser' AND r.active = 1
-      `);
+    const request = pool.request().input('id', sql.Int, id);
 
-    return result.recordset[0].count > 0;
+    const fields: string[] = [];
+    if (updates.displayName) {
+      request.input('displayName', sql.NVarChar, updates.displayName);
+      fields.push('displayName = @displayName');
+    }
+    if (updates.description !== undefined) {
+      request.input('description', sql.NVarChar, updates.description);
+      fields.push('description = @description');
+    }
+    if (updates.level !== undefined) {
+      request.input('level', sql.Int, updates.level);
+      fields.push('level = @level');
+    }
+
+    if (fields.length > 0) {
+      fields.push('updatedAt = GETDATE()');
+      await request.query(`UPDATE Roles SET ${fields.join(', ')} WHERE id = @id`);
+    }
+  }
+
+  /**
+   * Deactivate role (soft delete)
+   */
+  static async delete(id: number): Promise<void> {
+    const pool = await getConnection();
+    await pool
+      .request()
+      .input('id', sql.Int, id)
+      .query('UPDATE Roles SET active = 0, updatedAt = GETDATE() WHERE id = @id');
+  }
+
+  /**
+   * Get role permission level
+   */
+  static async getRoleLevel(roleId: number): Promise<number> {
+    const role = await this.findById(roleId);
+    return role ? role.level : 0;
+  }
+
+  /**
+   * Check if role exists
+   */
+  static async exists(name: string): Promise<boolean> {
+    const role = await this.findByName(name);
+    return role !== null;
   }
 }

@@ -1,86 +1,65 @@
 /**
  * Password Generator Utility
- * Generates strong but memorable passwords
+ * Generates strong but memorable passwords for new users
  */
 
-// Word lists for memorable password generation
-const adjectives = [
-  'Happy', 'Bright', 'Swift', 'Brave', 'Clever', 'Quick', 'Smart', 'Bold',
-  'Calm', 'Eager', 'Fair', 'Grand', 'Kind', 'Lively', 'Noble', 'Proud',
-  'Wise', 'Warm', 'Gentle', 'Strong', 'Fierce', 'Mighty', 'Solid', 'Vital'
-];
-
-const nouns = [
-  'Tiger', 'Eagle', 'Dolphin', 'Falcon', 'Panda', 'Phoenix', 'Dragon', 'Lion',
-  'Shark', 'Wolf', 'Bear', 'Hawk', 'Raven', 'Panther', 'Cobra', 'Lynx',
-  'Orca', 'Jaguar', 'Cheetah', 'Leopard', 'Viper', 'Scorpion', 'Rhino', 'Bison'
-];
-
-const specialChars = ['!', '@', '#', '$', '%', '&', '*'];
-
 /**
- * Generate a random number between min and max (inclusive)
- */
-function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/**
- * Get a random element from an array
- */
-function randomElement<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
-}
-
-/**
- * Generate a strong but memorable password
- * Format: Adjective + Noun + Number + SpecialChar
- * Example: BrightTiger42!
+ * Generate a random password that is strong but memorable
+ * Format: Word-Word-Number-Symbol
+ * Example: Blue-Tiger-2024-!
  * 
- * @param minLength Minimum password length (default: 12)
- * @returns Generated password string
+ * @param includeSymbols - Whether to include special symbols
+ * @returns A strong, memorable password
  */
-export function generateMemorablePassword(minLength: number = 12): string {
-  const adjective = randomElement(adjectives);
-  const noun = randomElement(nouns);
-  const number = randomInt(10, 99);
-  const specialChar = randomElement(specialChars);
-  
-  let password = `${adjective}${noun}${number}${specialChar}`;
-  
-  // If password is shorter than minLength, add more numbers
-  while (password.length < minLength) {
-    password = password.slice(0, -1) + randomInt(0, 9) + password.slice(-1);
-  }
-  
-  return password;
+export function generateMemorablePassword(includeSymbols: boolean = true): string {
+  const words = [
+    'Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel',
+    'India', 'Juliet', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa',
+    'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor', 'Whiskey', 'Xray',
+    'Yankee', 'Zulu', 'Ocean', 'Mountain', 'River', 'Forest', 'Desert', 'Valley',
+    'Peak', 'Canyon', 'Lake', 'Storm', 'Thunder', 'Lightning', 'Sunshine', 'Rainbow',
+    'Crystal', 'Diamond', 'Emerald', 'Ruby', 'Sapphire', 'Pearl', 'Gold', 'Silver',
+    'Bronze', 'Copper', 'Steel', 'Iron', 'Titanium', 'Platinum', 'Mercury', 'Venus',
+    'Mars', 'Jupiter', 'Saturn', 'Neptune', 'Pluto', 'Phoenix', 'Dragon', 'Eagle',
+    'Falcon', 'Hawk', 'Raven', 'Wolf', 'Bear', 'Lion', 'Tiger', 'Leopard', 'Panther'
+  ];
+
+  const symbols = ['!', '@', '#', '$', '%', '&', '*', '+', '=', '?'];
+
+  const word1 = words[Math.floor(Math.random() * words.length)];
+  const word2 = words[Math.floor(Math.random() * words.length)];
+  const number = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+  const symbol = includeSymbols ? symbols[Math.floor(Math.random() * symbols.length)] : '';
+
+  return `${word1}-${word2}-${number}${symbol}`;
 }
 
 /**
  * Generate a completely random strong password
  * 
- * @param length Password length (default: 16)
- * @returns Generated password string
+ * @param length - Length of the password (default: 16)
+ * @returns A strong random password
  */
-export function generateRandomPassword(length: number = 16): string {
+export function generateStrongPassword(length: number = 16): string {
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
   const numbers = '0123456789';
-  const special = '!@#$%&*';
-  const allChars = uppercase + lowercase + numbers + special;
+  const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  const allChars = uppercase + lowercase + numbers + symbols;
+
+  let password = '';
   
   // Ensure at least one of each type
-  let password = '';
-  password += randomElement([...uppercase]);
-  password += randomElement([...lowercase]);
-  password += randomElement([...numbers]);
-  password += randomElement([...special]);
-  
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+
   // Fill the rest randomly
   for (let i = password.length; i < length; i++) {
-    password += randomElement([...allChars]);
+    password += allChars[Math.floor(Math.random() * allChars.length)];
   }
-  
+
   // Shuffle the password
   return password.split('').sort(() => Math.random() - 0.5).join('');
 }
@@ -88,55 +67,92 @@ export function generateRandomPassword(length: number = 16): string {
 /**
  * Validate password strength
  * 
- * @param password Password to validate
- * @returns Object with validation result and error messages
+ * @param password - Password to validate
+ * @returns Object with validation result and feedback
  */
 export function validatePasswordStrength(password: string): {
   isValid: boolean;
-  errors: string[];
+  score: number; // 0-100
+  feedback: string[];
 } {
-  const errors: string[] = [];
-  
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
+  const feedback: string[] = [];
+  let score = 0;
+
+  // Length check
+  if (password.length >= 8) {
+    score += 20;
+  } else {
+    feedback.push('Password should be at least 8 characters long');
   }
-  
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
+
+  if (password.length >= 12) {
+    score += 10;
   }
-  
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
+
+  // Uppercase check
+  if (/[A-Z]/.test(password)) {
+    score += 20;
+  } else {
+    feedback.push('Password should contain at least one uppercase letter');
   }
-  
-  if (!/[0-9]/.test(password)) {
-    errors.push('Password must contain at least one number');
+
+  // Lowercase check
+  if (/[a-z]/.test(password)) {
+    score += 20;
+  } else {
+    feedback.push('Password should contain at least one lowercase letter');
   }
-  
-  if (!/[!@#$%&*]/.test(password)) {
-    errors.push('Password must contain at least one special character (!@#$%&*)');
+
+  // Number check
+  if (/\d/.test(password)) {
+    score += 20;
+  } else {
+    feedback.push('Password should contain at least one number');
   }
-  
+
+  // Symbol check
+  if (/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(password)) {
+    score += 10;
+  } else {
+    feedback.push('Consider adding a special character for extra strength');
+  }
+
+  // Complexity bonus
+  const uniqueChars = new Set(password).size;
+  if (uniqueChars > password.length * 0.6) {
+    score += 10;
+  }
+
+  const isValid = score >= 70 && 
+                  password.length >= 8 && 
+                  /[A-Z]/.test(password) && 
+                  /[a-z]/.test(password) && 
+                  /\d/.test(password);
+
   return {
-    isValid: errors.length === 0,
-    errors
+    isValid,
+    score: Math.min(score, 100),
+    feedback: feedback.length > 0 ? feedback : ['Password is strong']
   };
 }
 
 /**
- * Calculate password entropy (bits)
- * Higher entropy = stronger password
+ * Generate multiple password options for the user to choose from
  * 
- * @param password Password to analyze
- * @returns Entropy in bits
+ * @param count - Number of passwords to generate
+ * @returns Array of password options
  */
-export function calculatePasswordEntropy(password: string): number {
-  let charSetSize = 0;
+export function generatePasswordOptions(count: number = 3): string[] {
+  const passwords: string[] = [];
   
-  if (/[a-z]/.test(password)) charSetSize += 26;
-  if (/[A-Z]/.test(password)) charSetSize += 26;
-  if (/[0-9]/.test(password)) charSetSize += 10;
-  if (/[!@#$%&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) charSetSize += 32;
+  for (let i = 0; i < count; i++) {
+    // Alternate between memorable and random passwords
+    if (i % 2 === 0) {
+      passwords.push(generateMemorablePassword());
+    } else {
+      passwords.push(generateStrongPassword(14));
+    }
+  }
   
-  return Math.log2(Math.pow(charSetSize, password.length));
+  return passwords;
 }

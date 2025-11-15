@@ -13,7 +13,7 @@ export class SystemService {
    * @returns true if at least one superuser exists
    */
   static async hasSuperUsers(): Promise<boolean> {
-    return RoleModel.hasSuperUsers();
+    return UserModel.hasSuperusers();
   }
 
   /**
@@ -46,7 +46,7 @@ export class SystemService {
       }
 
       // Check for superusers
-      const hasSuperUser = await RoleModel.hasSuperUsers();
+      const hasSuperUser = await UserModel.hasSuperusers();
 
       return {
         needsSetup: !hasSuperUser,
@@ -79,20 +79,10 @@ export class SystemService {
   ): Promise<number> {
     try {
       // Check if superuser already exists
-      const hasSuperUser = await RoleModel.hasSuperUsers();
+      const hasSuperUser = await UserModel.hasSuperusers();
       if (hasSuperUser) {
         throw new Error('Superuser already exists');
       }
-
-      // Create user
-      const userId = await UserModel.create({
-        email,
-        password,
-        firstName,
-        lastName,
-        active: true,
-        mustChangePassword: false,
-      });
 
       // Get superuser role
       const superUserRole = await RoleModel.findByName('superuser');
@@ -100,8 +90,16 @@ export class SystemService {
         throw new Error('Superuser role not found in database');
       }
 
-      // Assign superuser role
-      await RoleModel.assignRoleToUser(userId, superUserRole.id);
+      // Create user with superuser role
+      const userId = await UserModel.create({
+        email,
+        password,
+        firstName,
+        lastName,
+        roleIds: [superUserRole.id],
+        createdBy: 0, // System created
+        mustChangePassword: false,
+      });
 
       return userId;
     } catch (error) {

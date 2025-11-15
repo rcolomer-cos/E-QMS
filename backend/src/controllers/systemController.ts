@@ -43,7 +43,7 @@ export const createFirstSuperUser = async (req: Request, res: Response): Promise
     if (!passwordValidation.isValid) {
       res.status(400).json({ 
         error: 'Password does not meet strength requirements',
-        details: passwordValidation.errors,
+        details: passwordValidation.feedback,
       });
       return;
     }

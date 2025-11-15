@@ -1,225 +1,249 @@
-# E-QMS Database Scripts
+# E-QMS Database Schema Scripts
 
 This directory contains SQL scripts for creating and managing the E-QMS database schema.
 
-## Directory Structure
+## Database Structure
 
-```
-database/
-├── schemas/           # Table creation scripts (run once)
-│   ├── 00_RunAll.sql # Master script - runs all schema scripts
-│   ├── 01_DatabaseVersion.sql
-│   ├── 02_Roles.sql
-│   ├── 03_Users.sql
-│   └── 04_UserRoles.sql
-└── migrations/        # Schema update scripts (versioned)
-```
+The E-QMS system uses a role-based access control (RBAC) model with support for multiple roles per user.
 
-## Initial Database Setup
+### Tables
+
+1. **DatabaseVersion** - Tracks schema versions and updates
+2. **Roles** - System roles for access control
+3. **Users** - User accounts (email-based authentication)
+4. **UserRoles** - Many-to-many relationship between Users and Roles
+
+## Initial Setup
 
 ### Prerequisites
 
-1. Microsoft SQL Server 2016 or higher installed
-2. SQL Server Management Studio (SSMS) or Azure Data Studio
-3. Appropriate database permissions (CREATE DATABASE, CREATE TABLE)
+- Microsoft SQL Server 2016 or higher
+- SQL Server Management Studio (SSMS) or Azure Data Studio
+- Database created (default name: `eqms`)
 
-### Step 1: Create Database
+### Installation Steps
 
-Open SSMS and connect to your SQL Server instance, then run:
+1. **Create Database** (if not already created):
+   ```sql
+   CREATE DATABASE eqms;
+   GO
+   USE eqms;
+   GO
+   ```
 
-```sql
-CREATE DATABASE eqms;
-GO
-```
+2. **Run Scripts in Order**:
+   
+   Execute the SQL scripts in numerical order using SSMS:
+   
+   ```
+   01_create_versioning_table.sql
+   02_create_roles_table.sql
+   03_create_users_table.sql
+   04_create_user_roles_table.sql
+   ```
 
-### Step 2: Run Schema Scripts
+3. **Verify Installation**:
+   ```sql
+   -- Check database version
+   SELECT * FROM DatabaseVersion ORDER BY appliedDate DESC;
+   
+   -- View available roles
+   SELECT * FROM Roles WHERE active = 1 ORDER BY level DESC;
+   
+   -- Check if tables exist
+   SELECT name FROM sys.tables WHERE name IN ('DatabaseVersion', 'Roles', 'Users', 'UserRoles');
+   ```
 
-**Option A: Run Master Script (Recommended)**
-
-1. Open SSMS
-2. Connect to your SQL Server
-3. Open the file `schemas/00_RunAll.sql`
-4. Ensure you're in the correct directory for the `:r` commands to work
-5. Execute the script (F5)
-
-**Option B: Run Individual Scripts**
-
-Run each script in order manually:
-
-1. `01_DatabaseVersion.sql` - Creates version tracking table
-2. `02_Roles.sql` - Creates roles with default system roles
-3. `03_Users.sql` - Creates users table (email as login)
-4. `04_UserRoles.sql` - Creates user-role junction table
-
-### Step 3: Verify Installation
-
-Run this query to verify all tables were created:
-
-```sql
-USE eqms;
-GO
-
-SELECT 
-    t.name AS TableName,
-    SCHEMA_NAME(t.schema_id) AS SchemaName,
-    p.rows AS RowCount
-FROM sys.tables t
-INNER JOIN sys.partitions p ON t.object_id = p.object_id
-WHERE p.index_id IN (0,1)
-  AND t.name IN ('DatabaseVersion', 'Roles', 'Users', 'UserRoles')
-ORDER BY t.name;
-GO
-```
-
-Expected output should show 4 tables with the following approximate row counts:
-- `DatabaseVersion`: 3+ rows
-- `Roles`: 6 rows
-- `Users`: 0 rows (initially)
-- `UserRoles`: 0 rows (initially)
-
-## Database Schema Overview
-
-### DatabaseVersion Table
-
-Tracks all schema changes and migrations applied to the database.
-
-**Columns:**
-- `version` - Semantic version (e.g., 1.0.0)
-- `description` - What changed
-- `scriptName` - SQL file that was executed
-- `appliedAt` - Timestamp
-- `appliedBy` - SQL Server user who ran the script
-
-### Roles Table
-
-Defines system roles with hierarchical permissions.
-
-**Default Roles:**
-- `superuser` - Full system access, can create/elevate other superusers
-- `admin` - Administrative access, cannot elevate to superuser
-- `manager` - Quality management and approval authority
-- `auditor` - Conduct audits and create NCRs
-- `user` - Create and edit documents
-- `viewer` - Read-only access
+## Database Schema Details
 
 ### Users Table
 
-Stores user authentication information.
+- **Email as Username**: The `email` field is unique and serves as the login username
+- **Name Fields**: Stores `firstName` and `lastName` separately
+- **Security Features**: 
+  - Password hashing (bcrypt in application layer)
+  - Failed login attempt tracking
+  - Account locking mechanism
+  - Password change enforcement
+- **Audit Trail**: `createdAt`, `updatedAt`, `createdBy` fields
 
-**Key Features:**
-- Email is used as the login username (unique)
-- Password is hashed with bcrypt
-- Supports soft deletion (active flag)
-- Tracks last login and password change timestamps
+### Roles Table
+
+Default system roles (ordered by permission level):
+
+| Role       | Level | Description                                           |
+|------------|-------|-------------------------------------------------------|
+| superuser  | 100   | Full system access, can create other superusers       |
+| admin      | 90    | Administrative access, cannot create superusers       |
+| manager    | 70    | Manage quality processes, approve documents           |
+| auditor    | 60    | Conduct audits, create NCRs                           |
+| user       | 50    | Create and edit documents, participate in processes   |
+| viewer     | 10    | Read-only access                                      |
 
 ### UserRoles Table
 
-Junction table enabling many-to-many relationship between Users and Roles.
+- **Many-to-Many**: Users can have multiple roles
+- **Temporal Roles**: Optional `expiresAt` field for temporary role assignments
+- **Audit Trail**: Tracks who assigned roles and when
+- **Soft Delete**: `active` flag for role assignment deactivation
 
-**Features:**
-- Users can have multiple roles
-- Tracks who assigned the role and when
-- Cascade deletion when user is deleted
+## Role-Based Access Control (RBAC)
+
+### Permission Hierarchy
+
+- Higher `level` values indicate more permissions
+- Users inherit all permissions from their assigned roles
+- Multiple roles combine permissions (union, not intersection)
+
+### Superuser Bootstrap
+
+When the application starts, it checks for existing superusers:
+- If **no superusers exist**, the application displays a "Create Superuser" interface
+- Only **superusers** can create other superusers
+- **Admins** can create users with roles up to admin level
+
+## Schema Version Control
+
+The `DatabaseVersion` table tracks all schema changes:
+
+```sql
+-- View schema history
+SELECT 
+    version,
+    description,
+    scriptName,
+    appliedDate,
+    status
+FROM DatabaseVersion
+ORDER BY appliedDate;
+```
+
+### Adding New Schema Updates
+
+When creating new schema update scripts:
+
+1. Use sequential numbering: `05_description.sql`, `06_description.sql`, etc.
+2. Include version tracking at the end:
+   ```sql
+   INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+   VALUES ('1.0.X', 'Description', 'XX_script_name.sql', 'SUCCESS', 'Notes');
+   ```
+3. Use idempotent scripts (check if changes already exist)
+4. Document breaking changes in the `notes` field
 
 ## Security Considerations
 
-### Superuser Access
+### Password Management
 
-- Only superusers can create new superuser accounts
-- The application checks for existing superusers on startup
-- If no superuser exists, the application prompts to create one
+- Passwords are **never stored in plain text**
+- The application layer handles password hashing using bcrypt
+- Minimum password requirements enforced in application
+- Strong password generation available in admin panel
 
-### Password Requirements
+### User Creation
 
-- Minimum 8 characters
-- Must include uppercase, lowercase, numbers, and special characters
-- Hashed using bcrypt with cost factor 10
-- Application includes password generator for strong, memorable passwords
+- **Superusers and Admins only** can create users
+- **Only Superusers** can elevate users to superuser role
+- New user passwords generated and displayed once
+- Users should change password on first login
 
-### Role Assignment Rules
+### Email Validation
 
-1. Only `superuser` and `admin` roles can assign roles to users
-2. Only `superuser` can assign the `superuser` role
-3. Role changes are audited in the database
+- Email format validated at database level (CHECK constraint)
+- Email must be unique across all users
+- Case-insensitive email lookup in application layer
 
-## Migrations
+## Maintenance Queries
 
-As the schema evolves, migration scripts will be added to the `migrations/` directory.
-
-### Migration Naming Convention
-
-```
-YYYYMMDD_HHMM_DescriptiveNameOfChange.sql
-```
-
-Example: `20240115_1430_AddUserPreferencesTable.sql`
-
-### Running Migrations
-
-1. Migrations should be run in chronological order
-2. Each migration updates the `DatabaseVersion` table
-3. Check current version before running migrations:
+### Check User Roles
 
 ```sql
-SELECT TOP 1 version, description, appliedAt 
-FROM DatabaseVersion 
-ORDER BY appliedAt DESC;
+-- View all users with their roles
+SELECT 
+    u.id,
+    u.email,
+    u.firstName + ' ' + u.lastName AS fullName,
+    STRING_AGG(r.displayName, ', ') AS roles,
+    u.active
+FROM Users u
+LEFT JOIN UserRoles ur ON u.id = ur.userId AND ur.active = 1
+LEFT JOIN Roles r ON ur.roleId = r.id
+WHERE u.active = 1
+GROUP BY u.id, u.email, u.firstName, u.lastName, u.active
+ORDER BY u.email;
 ```
 
-## Rollback Procedures
+### Find Superusers
 
-For each migration script, maintain a corresponding rollback script:
-
+```sql
+-- Check for existing superusers
+SELECT 
+    u.id,
+    u.email,
+    u.firstName + ' ' + u.lastName AS fullName,
+    u.lastLogin
+FROM Users u
+INNER JOIN UserRoles ur ON u.id = ur.userId
+INNER JOIN Roles r ON ur.roleId = r.id
+WHERE u.active = 1 
+    AND ur.active = 1 
+    AND r.name = 'superuser';
 ```
-migrations/
-├── 20240115_1430_AddUserPreferencesTable.sql
-└── 20240115_1430_AddUserPreferencesTable_ROLLBACK.sql
+
+### Assign Role to User
+
+```sql
+-- Example: Assign 'manager' role to user
+DECLARE @UserId INT = 1; -- Replace with actual user ID
+DECLARE @RoleId INT = (SELECT id FROM Roles WHERE name = 'manager');
+DECLARE @AssignedBy INT = 1; -- Replace with ID of user making the assignment
+
+INSERT INTO UserRoles (userId, roleId, assignedBy, active)
+VALUES (@UserId, @RoleId, @AssignedBy, 1);
 ```
 
-## Connection String
+### Revoke Role from User
 
-Configure your application's `.env` file:
-
-```env
-DB_SERVER=localhost
-DB_NAME=eqms
-DB_USER=your_username
-DB_PASSWORD=your_password
-DB_PORT=1433
-DB_ENCRYPT=false
-DB_TRUST_SERVER_CERTIFICATE=true
+```sql
+-- Soft delete: Deactivate role assignment
+UPDATE UserRoles 
+SET active = 0, updatedAt = GETDATE()
+WHERE userId = @UserId AND roleId = @RoleId;
 ```
+
+## Migration from Old Schema
+
+If you have an existing Users table with a single `role` field:
+
+1. Backup your database
+2. Run migration script to:
+   - Create new tables (Roles, UserRoles)
+   - Migrate existing user roles to UserRoles table
+   - Drop old `role` column from Users table
+3. Test thoroughly before production deployment
+
+Migration script example available in `migrations/` directory (when needed).
 
 ## Troubleshooting
 
 ### Script Execution Errors
 
-If `:r` commands fail in SSMS:
-1. Use SQLCMD mode: Query → SQLCMD Mode
-2. Or run each script individually in the correct order
+- Ensure scripts are run in the correct order
+- Check database connection and permissions
+- Verify SQL Server version compatibility
+- Review DatabaseVersion table for failed executions
 
-### Permission Errors
+### Foreign Key Violations
 
-Ensure your SQL Server user has:
-- CREATE TABLE permission
-- INSERT/UPDATE/DELETE permissions
-- ALTER TABLE permission for migrations
+- Ensure parent records exist before creating child records
+- Check cascading delete behavior on UserRoles
 
-### Version Conflicts
+### Performance Issues
 
-If you see duplicate version errors:
-```sql
--- Check existing versions
-SELECT * FROM DatabaseVersion ORDER BY appliedAt DESC;
-
--- If needed, remove duplicate (use with caution)
-DELETE FROM DatabaseVersion WHERE id = <specific_id>;
-```
+- All necessary indexes are created by the schema scripts
+- Monitor query performance on large datasets
+- Consider archiving inactive users periodically
 
 ## Support
 
-For database-related issues:
-1. Check the application logs
-2. Verify database connectivity
-3. Ensure all scripts ran successfully
-4. Review DatabaseVersion table for migration history
+For issues or questions regarding the database schema, please refer to the main project documentation or contact the development team.
