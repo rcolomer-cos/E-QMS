@@ -19,9 +19,11 @@ export const authenticateToken = (
   try {
     const decoded = jwt.verify(token, config.jwtSecret) as {
       id: number;
-      username: string;
       email: string;
-      role: string;
+      firstName: string;
+      lastName: string;
+      roles: string[];
+      roleIds: number[];
     };
     req.user = decoded;
     next();
@@ -37,7 +39,12 @@ export const authorizeRoles = (...allowedRoles: UserRole[]) => {
       return;
     }
 
-    if (!allowedRoles.includes(req.user.role as UserRole)) {
+    // Check if user has any of the allowed roles
+    const hasRole = req.user.roles.some(role => 
+      allowedRoles.includes(role as UserRole)
+    );
+
+    if (!hasRole) {
       res.status(403).json({ error: 'Access denied: insufficient permissions' });
       return;
     }

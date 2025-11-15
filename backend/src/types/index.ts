@@ -3,18 +3,43 @@ import { Request } from 'express';
 export interface AuthRequest extends Request {
   user?: {
     id: number;
-    username: string;
     email: string;
-    role: string;
+    firstName: string;
+    lastName: string;
+    roles: string[]; // Array of role names
+    roleIds: number[]; // Array of role IDs
   };
 }
 
 export enum UserRole {
+  SUPERUSER = 'superuser',
   ADMIN = 'admin',
   MANAGER = 'manager',
   AUDITOR = 'auditor',
   USER = 'user',
   VIEWER = 'viewer',
+}
+
+export interface Role {
+  id: number;
+  name: string;
+  displayName: string;
+  description?: string;
+  level: number;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserRoleAssignment {
+  id: number;
+  userId: number;
+  roleId: number;
+  assignedAt: Date;
+  assignedBy?: number;
+  expiresAt?: Date;
+  active: boolean;
+  notes?: string;
 }
 
 export enum DocumentStatus {

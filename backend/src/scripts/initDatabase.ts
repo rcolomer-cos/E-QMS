@@ -1,14 +1,53 @@
 import { getConnection, closeConnection } from '../config/database';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const executeSqlFile = async (filePath: string): Promise<void> => {
+  const pool = await getConnection();
+  const sqlContent = fs.readFileSync(filePath, 'utf8');
+  
+  // Split by GO statements (SQL Server batch separator)
+  const batches = sqlContent
+    .split(/^\s*GO\s*$/im)
+    .filter(batch => batch.trim().length > 0);
+
+  console.log(`Executing ${path.basename(filePath)}...`);
+  
+  for (const batch of batches) {
+    if (batch.trim()) {
+      await pool.request().query(batch);
+    }
+  }
+};
 
 const createTables = async () => {
   const pool = await getConnection();
 
   console.log('Creating database tables...');
 
-  // Users table
+  // Execute SQL schema files in order
+  const databaseDir = path.join(__dirname, '../../database');
+  const schemaFiles = [
+    '01_create_versioning_table.sql',
+    '02_create_roles_table.sql',
+    '03_create_users_table.sql',
+    '04_create_user_roles_table.sql'
+  ];
+
+  for (const file of schemaFiles) {
+    const filePath = path.join(databaseDir, file);
+    if (fs.existsSync(filePath)) {
+      await executeSqlFile(filePath);
+    } else {
+      console.warn(`Warning: Schema file not found: ${filePath}`);
+    }
+  }
+
+  // Legacy tables (keep for existing functionality)
+  // Users table (old schema - will be replaced)
   await pool.request().query(`
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
-    CREATE TABLE Users (
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users_Legacy')
+    CREATE TABLE Users_Legacy (
       id INT IDENTITY(1,1) PRIMARY KEY,
       username NVARCHAR(50) UNIQUE NOT NULL,
       email NVARCHAR(100) UNIQUE NOT NULL,

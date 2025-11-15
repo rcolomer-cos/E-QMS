@@ -83,7 +83,7 @@ export const updateDocument = async (req: AuthRequest, res: Response) => {
 
 export const deleteDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user || req.user.role !== UserRole.ADMIN) {
+    if (!req.user || !req.user.roles.includes(UserRole.ADMIN) && !req.user.roles.includes(UserRole.SUPERUSER)) {
       res.status(403).json({ error: 'Access denied' });
       return;
     }
