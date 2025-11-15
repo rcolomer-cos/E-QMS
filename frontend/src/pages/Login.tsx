@@ -4,7 +4,7 @@ import { login } from '../services/authService';
 import '../styles/Login.css';
 
 function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ function Login() {
     setLoading(true);
 
     try {
-      await login({ username, password });
+      await login({ email, password });
       navigate('/');
     } catch (err) {
       setError('Invalid credentials. Please try again.');
@@ -34,12 +34,12 @@ function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="email">Email</label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
