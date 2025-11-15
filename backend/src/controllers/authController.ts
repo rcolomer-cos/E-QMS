@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserModel, User } from '../models/UserModel';
+import { RoleModel } from '../models/RoleModel';
 import { config } from '../config';
 import { validationResult } from 'express-validator';
 import { AuthRequest } from '../types';
@@ -13,23 +14,23 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { username, email, password, role, firstName, lastName, department } = req.body;
+    const { email, password, firstName, lastName, department } = req.body;
 
-    const existingUser = await UserModel.findByUsername(username);
+    // Check if user already exists
+    const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
-      res.status(409).json({ error: 'Username already exists' });
+      res.status(409).json({ error: 'Email already exists' });
       return;
     }
 
     const user: User = {
-      username,
       email,
       password,
-      role,
       firstName,
       lastName,
       department,
       active: true,
+      mustChangePassword: false,
     };
 
     const userId = await UserModel.create(user);
@@ -52,9 +53,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    const user = await UserModel.findByUsername(username);
+    const user = await UserModel.findByEmail(email);
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
@@ -66,12 +67,18 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Get user roles
+    const roles = await RoleModel.getUserRoles(user.id!);
+    const roleNames = roles.map(r => r.name);
+
+    // Update last login
+    await UserModel.updateLastLogin(user.id!);
+
     const token = jwt.sign(
       {
         id: user.id,
-        username: user.username,
         email: user.email,
-        role: user.role,
+        roles: roleNames,
       },
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn } as jwt.SignOptions
@@ -81,12 +88,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       token,
       user: {
         id: user.id,
-        username: user.username,
         email: user.email,
-        role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
         department: user.department,
+        roles: roleNames,
+        mustChangePassword: user.mustChangePassword,
       },
     });
   } catch (error) {
@@ -108,14 +115,19 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
+    // Get user roles
+    const roles = await RoleModel.getUserRoles(req.user.id);
+    const roleNames = roles.map(r => r.name);
+
     res.json({
       id: user.id,
-      username: user.username,
       email: user.email,
-      role: user.role,
       firstName: user.firstName,
       lastName: user.lastName,
       department: user.department,
+      roles: roleNames,
+      lastLoginAt: user.lastLoginAt,
+      mustChangePassword: user.mustChangePassword,
     });
   } catch (error) {
     console.error('Get profile error:', error);
