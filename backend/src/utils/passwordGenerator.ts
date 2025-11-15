@@ -136,7 +136,7 @@ export function calculatePasswordEntropy(password: string): number {
   if (/[a-z]/.test(password)) charSetSize += 26;
   if (/[A-Z]/.test(password)) charSetSize += 26;
   if (/[0-9]/.test(password)) charSetSize += 10;
-  if (/[!@#$%&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) charSetSize += 32;
+  if (/[!@#$%&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) charSetSize += 32;
   
   return Math.log2(Math.pow(charSetSize, password.length));
 }
