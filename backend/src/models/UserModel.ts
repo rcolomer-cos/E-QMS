@@ -111,4 +111,13 @@ export class UserModel {
   static async verifyPassword(user: User, password: string): Promise<boolean> {
     return bcrypt.compare(password, user.password);
   }
+
+  static async updatePassword(id: number, hashedPassword: string): Promise<void> {
+    const pool = await getConnection();
+    await pool
+      .request()
+      .input('id', sql.Int, id)
+      .input('password', sql.NVarChar, hashedPassword)
+      .query('UPDATE Users SET password = @password, updatedAt = GETDATE() WHERE id = @id');
+  }
 }
