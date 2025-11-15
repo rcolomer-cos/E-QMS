@@ -49,6 +49,10 @@ export const validateDocument = [
     .withMessage('Category is required'),
 ];
 
+export const validateId: ValidationChain = param('id')
+  .isInt({ min: 1 })
+  .withMessage('Invalid ID');
+
 export const validateUserUpdate = [
   body('email')
     .optional()
@@ -56,27 +60,41 @@ export const validateUserUpdate = [
     .isEmail()
     .withMessage('Invalid email address')
     .normalizeEmail(),
-  body('role')
-    .optional()
-    .isIn(['admin', 'manager', 'auditor', 'user', 'viewer'])
-    .withMessage('Invalid role'),
   body('firstName')
     .optional()
     .trim()
-    .isLength({ max: 100 })
-    .withMessage('First name must not exceed 100 characters'),
+    .isLength({ max: 50 })
+    .withMessage('First name must not exceed 50 characters'),
   body('lastName')
     .optional()
     .trim()
-    .isLength({ max: 100 })
-    .withMessage('Last name must not exceed 100 characters'),
+    .isLength({ max: 50 })
+    .withMessage('Last name must not exceed 50 characters'),
   body('department')
     .optional()
     .trim()
     .isLength({ max: 100 })
     .withMessage('Department must not exceed 100 characters'),
+  body('role')
+    .optional()
+    .isIn(['admin', 'manager', 'auditor', 'user', 'viewer'])
+    .withMessage('Invalid role'),
 ];
 
-export const validateId: ValidationChain = param('id')
-  .isInt({ min: 1 })
-  .withMessage('Invalid ID');
+export const validateRoleUpdate = [
+  body('role')
+    .isIn(['admin', 'manager', 'auditor', 'user', 'viewer'])
+    .withMessage('Invalid role'),
+];
+
+export const validatePasswordChange = [
+  body('currentPassword')
+    .optional()
+    .notEmpty()
+    .withMessage('Current password is required'),
+  body('newPassword')
+    .isLength({ min: 8 })
+    .withMessage('New password must be at least 8 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
+];

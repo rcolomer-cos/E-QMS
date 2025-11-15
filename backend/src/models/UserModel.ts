@@ -1,52 +1,59 @@
 import { getConnection, sql } from '../config/database';
 import bcrypt from 'bcrypt';
-import { UserRole } from '../types';
 
 export interface User {
   id?: number;
-  username: string;
   email: string;
   password: string;
-  role: UserRole;
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
   department?: string;
   active: boolean;
+  lastLoginAt?: Date;
+  passwordChangedAt?: Date;
+  mustChangePassword: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  createdBy?: number;
+  roles?: string[]; // Role names for convenience
 }
 
 export class UserModel {
-  static async create(user: User): Promise<number> {
+  static async create(user: User, createdBy?: number): Promise<number> {
     const pool = await getConnection();
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
     const result = await pool
       .request()
-      .input('username', sql.NVarChar, user.username)
       .input('email', sql.NVarChar, user.email)
       .input('password', sql.NVarChar, hashedPassword)
-      .input('role', sql.NVarChar, user.role)
       .input('firstName', sql.NVarChar, user.firstName)
       .input('lastName', sql.NVarChar, user.lastName)
       .input('department', sql.NVarChar, user.department)
+      .input('createdBy', sql.Int, createdBy || null)
+      .input('mustChangePassword', sql.Bit, user.mustChangePassword || 0)
       .query(`
-        INSERT INTO Users (username, email, password, role, firstName, lastName, department, active)
+        INSERT INTO Users (email, password, firstName, lastName, department, createdBy, mustChangePassword, active)
         OUTPUT INSERTED.id
-        VALUES (@username, @email, @password, @role, @firstName, @lastName, @department, 1)
+        VALUES (@email, @password, @firstName, @lastName, @department, @createdBy, @mustChangePassword, 1)
       `);
 
     return result.recordset[0].id;
   }
 
-  static async findByUsername(username: string): Promise<User | null> {
+  static async findByEmail(email: string): Promise<User | null> {
     const pool = await getConnection();
     const result = await pool
       .request()
-      .input('username', sql.NVarChar, username)
-      .query('SELECT * FROM Users WHERE username = @username AND active = 1');
+      .input('email', sql.NVarChar, email)
+      .query('SELECT * FROM Users WHERE email = @email AND active = 1');
 
     return result.recordset[0] || null;
+  }
+
+  // Keep for backward compatibility but redirect to email lookup
+  static async findByUsername(username: string): Promise<User | null> {
+    return this.findByEmail(username);
   }
 
   static async findById(id: number): Promise<User | null> {
@@ -63,9 +70,24 @@ export class UserModel {
     const pool = await getConnection();
     const result = await pool
       .request()
-      .query('SELECT id, username, email, role, firstName, lastName, department, active, createdAt, updatedAt FROM Users ORDER BY createdAt DESC');
+      .query(`
+        SELECT 
+          u.id, u.email, u.firstName, u.lastName, u.department, 
+          u.active, u.lastLoginAt, u.createdAt, u.updatedAt,
+          STRING_AGG(r.name, ',') as roles
+        FROM Users u
+        LEFT JOIN UserRoles ur ON u.id = ur.userId
+        LEFT JOIN Roles r ON ur.roleId = r.id AND r.active = 1
+        WHERE u.active = 1
+        GROUP BY u.id, u.email, u.firstName, u.lastName, u.department, 
+                 u.active, u.lastLoginAt, u.createdAt, u.updatedAt
+        ORDER BY u.createdAt DESC
+      `);
 
-    return result.recordset;
+    return result.recordset.map(user => ({
+      ...user,
+      roles: user.roles ? user.roles.split(',') : []
+    }));
   }
 
   static async update(id: number, updates: Partial<User>): Promise<void> {
@@ -89,15 +111,34 @@ export class UserModel {
       request.input('department', sql.NVarChar, updates.department);
       fields.push('department = @department');
     }
-    if (updates.role) {
-      request.input('role', sql.NVarChar, updates.role);
-      fields.push('role = @role');
+    if (updates.mustChangePassword !== undefined) {
+      request.input('mustChangePassword', sql.Bit, updates.mustChangePassword);
+      fields.push('mustChangePassword = @mustChangePassword');
     }
 
     if (fields.length > 0) {
       fields.push('updatedAt = GETDATE()');
       await request.query(`UPDATE Users SET ${fields.join(', ')} WHERE id = @id`);
     }
+  }
+
+  static async updateLastLogin(id: number): Promise<void> {
+    const pool = await getConnection();
+    await pool
+      .request()
+      .input('id', sql.Int, id)
+      .query('UPDATE Users SET lastLoginAt = GETDATE() WHERE id = @id');
+  }
+
+  static async updatePassword(id: number, newPassword: string): Promise<void> {
+    const pool = await getConnection();
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    await pool
+      .request()
+      .input('id', sql.Int, id)
+      .input('password', sql.NVarChar, hashedPassword)
+      .query('UPDATE Users SET password = @password, passwordChangedAt = GETDATE(), mustChangePassword = 0 WHERE id = @id');
   }
 
   static async delete(id: number): Promise<void> {

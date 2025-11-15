@@ -1,24 +1,18 @@
 import { useState, useEffect } from 'react';
-import {
-  getAllUsers,
-  createUser,
-  updateUser,
-  deactivateUser,
-  User,
-  CreateUserData,
-  UpdateUserData,
-} from '../services/userService';
+import { getUsers, deleteUser, updateUserRole } from '../services/userService';
+import { User } from '../types';
 import { getCurrentUser } from '../services/authService';
-import UserForm from '../components/UserForm';
 import '../styles/Users.css';
 
-function Users() {
+const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingRole, setEditingRole] = useState<number | null>(null);
+  const [newRole, setNewRole] = useState('');
   const currentUser = getCurrentUser();
+
+  const roles = ['admin', 'manager', 'auditor', 'user', 'viewer'];
 
   useEffect(() => {
     loadUsers();
@@ -26,9 +20,10 @@ function Users() {
 
   const loadUsers = async () => {
     try {
-      setError('');
-      const data = await getAllUsers();
+      setLoading(true);
+      const data = await getUsers();
       setUsers(data);
+      setError('');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load users');
     } finally {
@@ -36,78 +31,60 @@ function Users() {
     }
   };
 
-  const handleCreateUser = () => {
-    setEditingUser(null);
-    setShowForm(true);
-  };
-
-  const handleEditUser = (user: User) => {
-    setEditingUser(user);
-    setShowForm(true);
-  };
-
-  const handleFormSubmit = async (data: CreateUserData | UpdateUserData) => {
-    if (editingUser) {
-      // Update existing user - optimistic update
-      const updatedUsers = users.map((u) =>
-        u.id === editingUser.id ? { ...u, ...(data as UpdateUserData) } : u
-      );
-      setUsers(updatedUsers);
-      
-      try {
-        await updateUser(editingUser.id, data as UpdateUserData);
-        setShowForm(false);
-        setEditingUser(null);
-        // Reload to get fresh data from server
-        await loadUsers();
-      } catch (err: any) {
-        // Revert optimistic update on error
-        await loadUsers();
-        throw err;
-      }
-    } else {
-      // Create new user
-      try {
-        await createUser(data as CreateUserData);
-        setShowForm(false);
-        // Reload to get the new user with full details
-        await loadUsers();
-      } catch (err: any) {
-        throw err;
-      }
-    }
-  };
-
-  const handleDeactivateUser = async (user: User) => {
-    if (user.id === currentUser?.id) {
-      alert('You cannot deactivate your own account');
+  const handleDeleteUser = async (userId: number) => {
+    if (!window.confirm('Are you sure you want to deactivate this user?')) {
       return;
     }
-
-    if (!confirm(`Are you sure you want to deactivate user "${user.username}"?`)) {
-      return;
-    }
-
-    // Optimistic update
-    const updatedUsers = users.map((u) =>
-      u.id === user.id ? { ...u, active: false } : u
-    );
-    setUsers(updatedUsers);
 
     try {
-      await deactivateUser(user.id);
-      // Reload to confirm server state
+      await deleteUser(userId);
       await loadUsers();
     } catch (err: any) {
-      // Revert optimistic update on error
-      await loadUsers();
       setError(err.response?.data?.error || 'Failed to deactivate user');
     }
   };
 
-  const handleFormCancel = () => {
-    setShowForm(false);
-    setEditingUser(null);
+  const handleRoleUpdate = async (userId: number) => {
+    try {
+      await updateUserRole(userId, newRole);
+      setEditingRole(null);
+      setNewRole('');
+      await loadUsers();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to update role');
+    }
+  };
+
+  const startEditingRole = (userId: number, currentRole: string) => {
+    setEditingRole(userId);
+    setNewRole(currentRole);
+  };
+
+  const cancelEditingRole = () => {
+    setEditingRole(null);
+    setNewRole('');
+  };
+
+  const getRoleBadgeClass = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'role-badge admin';
+      case 'manager':
+        return 'role-badge manager';
+      case 'auditor':
+        return 'role-badge auditor';
+      case 'user':
+        return 'role-badge user';
+      case 'viewer':
+        return 'role-badge viewer';
+      default:
+        return 'role-badge';
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (loading) {
@@ -118,9 +95,7 @@ function Users() {
     <div className="users-page">
       <div className="page-header">
         <h1>User Management</h1>
-        <button className="btn-primary" onClick={handleCreateUser}>
-          Create New User
-        </button>
+        <p className="subtitle">Manage system users and their roles</p>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -129,89 +104,95 @@ function Users() {
         <table className="users-table">
           <thead>
             <tr>
+              <th>ID</th>
               <th>Username</th>
-              <th>Name</th>
               <th>Email</th>
-              <th>Role</th>
+              <th>Name</th>
               <th>Department</th>
+              <th>Role</th>
               <th>Status</th>
+              <th>Created</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {users.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="no-data">
-                  No users found
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>{user.username}</td>
+                <td>{user.email}</td>
+                <td>
+                  {user.firstName || user.lastName
+                    ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+                    : 'N/A'}
                 </td>
-              </tr>
-            ) : (
-              users.map((user) => (
-                <tr key={user.id} className={!user.active ? 'inactive' : ''}>
-                  <td>{user.username}</td>
-                  <td>
-                    {user.firstName || user.lastName
-                      ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
-                      : '-'}
-                  </td>
-                  <td>{user.email}</td>
-                  <td>
-                    <span className={`role-badge role-${user.role}`}>
+                <td>{user.department || 'N/A'}</td>
+                <td>
+                  {editingRole === user.id ? (
+                    <div className="role-edit">
+                      <select
+                        value={newRole}
+                        onChange={(e) => setNewRole(e.target.value)}
+                        className="role-select"
+                      >
+                        {roles.map((role) => (
+                          <option key={role} value={role}>
+                            {role}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleRoleUpdate(user.id)}
+                        className="btn-save"
+                      >
+                        ✓
+                      </button>
+                      <button onClick={cancelEditingRole} className="btn-cancel">
+                        ✗
+                      </button>
+                    </div>
+                  ) : (
+                    <span className={getRoleBadgeClass(user.role)}>
                       {user.role}
                     </span>
-                  </td>
-                  <td>{user.department || '-'}</td>
-                  <td>
-                    <span className={`status-badge status-${user.active ? 'active' : 'inactive'}`}>
-                      {user.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      {user.active && (
-                        <>
-                          <button
-                            className="btn-edit"
-                            onClick={() => handleEditUser(user)}
-                            title="Edit user"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="btn-deactivate"
-                            onClick={() => handleDeactivateUser(user)}
-                            disabled={user.id === currentUser?.id}
-                            title={
-                              user.id === currentUser?.id
-                                ? 'Cannot deactivate own account'
-                                : 'Deactivate user'
-                            }
-                          >
-                            Deactivate
-                          </button>
-                        </>
-                      )}
-                      {!user.active && (
-                        <span className="text-muted">No actions available</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
+                  )}
+                </td>
+                <td>
+                  <span className={user.active ? 'status-active' : 'status-inactive'}>
+                    {user.active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td>{formatDate(user.createdAt)}</td>
+                <td className="actions-cell">
+                  {currentUser?.id !== user.id && (
+                    <>
+                      <button
+                        onClick={() => startEditingRole(user.id, user.role)}
+                        className="btn-edit"
+                        title="Change Role"
+                      >
+                        Edit Role
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="btn-delete"
+                        title="Deactivate User"
+                      >
+                        Deactivate
+                      </button>
+                    </>
+                  )}
+                  {currentUser?.id === user.id && (
+                    <span className="self-indicator">(You)</span>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-
-      {showForm && (
-        <UserForm
-          user={editingUser}
-          onSubmit={handleFormSubmit}
-          onCancel={handleFormCancel}
-        />
-      )}
     </div>
   );
-}
+};
 
 export default Users;
