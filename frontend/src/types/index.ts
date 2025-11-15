@@ -6,10 +6,13 @@ export interface User {
   firstName?: string;
   lastName?: string;
   department?: string;
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LoginCredentials {
-  username: string;
+  email: string;
   password: string;
 }
 

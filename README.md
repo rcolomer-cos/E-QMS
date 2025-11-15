@@ -141,8 +141,18 @@ E-QMS/
 
 ### Authentication
 - `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
+- `POST /api/auth/login` - Login (returns JWT token and user role data)
+- `POST /api/auth/logout` - Logout (authenticated, invalidates session)
+- `POST /api/auth/refresh` - Refresh JWT token (authenticated, extends token expiry)
 - `GET /api/auth/profile` - Get user profile (authenticated)
+
+### User Management
+- `GET /api/users` - List all users (admin only)
+- `GET /api/users/:id` - Get user by ID (admin or self)
+- `PUT /api/users/:id` - Update user (admin or self, with restrictions)
+- `DELETE /api/users/:id` - Deactivate user (admin only)
+- `PUT /api/users/:id/role` - Update user role (admin only)
+- `PUT /api/users/:id/password` - Change password (admin or self)
 
 ### Documents
 - `GET /api/documents` - List documents
