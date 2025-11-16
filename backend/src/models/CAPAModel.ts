@@ -106,4 +106,42 @@ export class CAPAModel {
     const pool = await getConnection();
     await pool.request().input('id', sql.Int, id).query('DELETE FROM CAPAs WHERE id = @id');
   }
+
+  static async findByActionOwner(actionOwner: number): Promise<CAPA[]> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input('actionOwner', sql.Int, actionOwner)
+      .query(`
+        SELECT c.*, 
+               CONCAT(u.firstName, ' ', u.lastName) as actionOwnerName,
+               CONCAT(v.firstName, ' ', v.lastName) as verifiedByName
+        FROM CAPAs c
+        LEFT JOIN Users u ON c.actionOwner = u.id
+        LEFT JOIN Users v ON c.verifiedBy = v.id
+        WHERE c.actionOwner = @actionOwner
+        ORDER BY c.targetDate ASC
+      `);
+
+    return result.recordset;
+  }
+
+  static async findOverdue(): Promise<CAPA[]> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .query(`
+        SELECT c.*, 
+               CONCAT(u.firstName, ' ', u.lastName) as actionOwnerName,
+               CONCAT(v.firstName, ' ', v.lastName) as verifiedByName
+        FROM CAPAs c
+        LEFT JOIN Users u ON c.actionOwner = u.id
+        LEFT JOIN Users v ON c.verifiedBy = v.id
+        WHERE c.targetDate < GETDATE() 
+          AND c.status NOT IN ('completed', 'verified', 'closed')
+        ORDER BY c.targetDate ASC
+      `);
+
+    return result.recordset;
+  }
 }
