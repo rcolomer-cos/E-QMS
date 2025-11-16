@@ -64,7 +64,8 @@ describe('AttachmentController', () => {
         encoding: '7bit',
         destination: '/uploads/calibration',
         buffer: Buffer.from(''),
-        stream: {} as unknown as NodeJS.ReadableStream,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        stream: {} as any,
       };
 
       mockRequest.file = mockFile;
