@@ -15,6 +15,12 @@ import Training from './pages/Training';
 import Users from './pages/Users';
 import Departments from './pages/Departments';
 import Processes from './pages/Processes';
+import CalibrationRecords from './pages/CalibrationRecords';
+import CalibrationRecordDetail from './pages/CalibrationRecordDetail';
+import InspectionRecords from './pages/InspectionRecords';
+import InspectionRecordDetail from './pages/InspectionRecordDetail';
+import ServiceRecords from './pages/ServiceRecords';
+import ServiceRecordDetail from './pages/ServiceRecordDetail';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -46,6 +52,12 @@ function App() {
         <Route path="users" element={<Users />} />
         <Route path="departments" element={<Departments />} />
         <Route path="processes" element={<Processes />} />
+        <Route path="calibration-records" element={<CalibrationRecords />} />
+        <Route path="calibration-records/:id" element={<CalibrationRecordDetail />} />
+        <Route path="inspection-records" element={<InspectionRecords />} />
+        <Route path="inspection-records/:id" element={<InspectionRecordDetail />} />
+        <Route path="service-records" element={<ServiceRecords />} />
+        <Route path="service-records/:id" element={<ServiceRecordDetail />} />
       </Route>
     </Routes>
   );
