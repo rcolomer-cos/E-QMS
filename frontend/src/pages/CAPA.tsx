@@ -27,6 +27,7 @@ function CAPA() {
   useEffect(() => {
     loadData();
     loadCurrentUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode]);
 
   const loadCurrentUser = () => {

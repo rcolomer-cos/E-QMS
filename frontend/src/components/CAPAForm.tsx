@@ -46,45 +46,45 @@ const CAPAForm = ({ onSubmit, onCancel, users, currentUserId, ncrId, auditId }: 
   const [submitting, setSubmitting] = useState(false);
 
   // Validate field
-  const validateField = (name: keyof CreateCAPAData, value: any): string | undefined => {
+  const validateField = (name: keyof CreateCAPAData, value: CreateCAPAData[keyof CreateCAPAData]): string | undefined => {
     switch (name) {
       case 'capaNumber':
-        if (!value || value.trim().length === 0) {
+        if (!value || (typeof value === 'string' && value.trim().length === 0)) {
           return 'CAPA Number is required';
         }
-        if (value.length > 100) {
+        if (typeof value === 'string' && value.length > 100) {
           return 'CAPA Number must not exceed 100 characters';
         }
         break;
       case 'title':
-        if (!value || value.trim().length === 0) {
+        if (!value || (typeof value === 'string' && value.trim().length === 0)) {
           return 'Title is required';
         }
-        if (value.length > 500) {
+        if (typeof value === 'string' && value.length > 500) {
           return 'Title must not exceed 500 characters';
         }
         break;
       case 'description':
-        if (!value || value.trim().length === 0) {
+        if (!value || (typeof value === 'string' && value.trim().length === 0)) {
           return 'Description is required';
         }
-        if (value.length > 2000) {
+        if (typeof value === 'string' && value.length > 2000) {
           return 'Description must not exceed 2000 characters';
         }
         break;
       case 'source':
-        if (!value || value.trim().length === 0) {
+        if (!value || (typeof value === 'string' && value.trim().length === 0)) {
           return 'Source is required';
         }
-        if (value.length > 200) {
+        if (typeof value === 'string' && value.length > 200) {
           return 'Source must not exceed 200 characters';
         }
         break;
       case 'proposedAction':
-        if (!value || value.trim().length === 0) {
+        if (!value || (typeof value === 'string' && value.trim().length === 0)) {
           return 'Proposed Action is required';
         }
-        if (value.length > 2000) {
+        if (typeof value === 'string' && value.length > 2000) {
           return 'Proposed Action must not exceed 2000 characters';
         }
         break;

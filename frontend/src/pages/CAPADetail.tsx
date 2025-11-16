@@ -352,7 +352,7 @@ function CAPADetail() {
                 <label>Priority:</label>
                 <select
                   value={editData.priority || capa.priority}
-                  onChange={(e) => setEditData({ ...editData, priority: e.target.value as any })}
+                  onChange={(e) => setEditData({ ...editData, priority: e.target.value as 'low' | 'medium' | 'high' | 'urgent' })}
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
