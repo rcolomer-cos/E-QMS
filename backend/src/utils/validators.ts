@@ -153,3 +153,94 @@ export const validateDepartmentUpdate = [
     .isInt({ min: 1 })
     .withMessage('Invalid manager ID'),
 ];
+
+export const validateProcess = [
+  body('name')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Process name is required and must not exceed 200 characters'),
+  body('code')
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Process code is required and must not exceed 50 characters')
+    .matches(/^[A-Z0-9_-]+$/)
+    .withMessage('Process code must contain only uppercase letters, numbers, hyphens, and underscores'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Description must not exceed 1000 characters'),
+  body('departmentId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid department ID'),
+  body('processCategory')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Process category must not exceed 100 characters'),
+  body('objective')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Objective must not exceed 500 characters'),
+  body('scope')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Scope must not exceed 500 characters'),
+];
+
+export const validateProcessUpdate = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Process name must not exceed 200 characters'),
+  body('code')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Process code must not exceed 50 characters')
+    .matches(/^[A-Z0-9_-]+$/)
+    .withMessage('Process code must contain only uppercase letters, numbers, hyphens, and underscores'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Description must not exceed 1000 characters'),
+  body('departmentId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid department ID'),
+  body('processCategory')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Process category must not exceed 100 characters'),
+  body('objective')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Objective must not exceed 500 characters'),
+  body('scope')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Scope must not exceed 500 characters'),
+];
+
+export const validateProcessOwner = [
+  body('ownerId')
+    .isInt({ min: 1 })
+    .withMessage('Owner ID is required and must be a valid user ID'),
+  body('isPrimaryOwner')
+    .optional()
+    .isBoolean()
+    .withMessage('isPrimaryOwner must be a boolean value'),
+  body('notes')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Notes must not exceed 500 characters'),
+];
