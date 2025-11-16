@@ -69,3 +69,8 @@ export const getEquipmentReadOnly = async (equipmentNumber: string): Promise<Equ
   const response = await api.get(`/equipment/public/${equipmentNumber}`);
   return response.data;
 };
+
+export const regenerateQRCode = async (id: number): Promise<{ qrCode: string }> => {
+  const response = await api.post(`/equipment/${id}/regenerate-qr`);
+  return response.data;
+};

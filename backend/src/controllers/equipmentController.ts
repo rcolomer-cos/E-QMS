@@ -180,3 +180,32 @@ export const getEquipmentReadOnly = async (req: AuthRequest, res: Response): Pro
     res.status(500).json({ error: 'Failed to get equipment' });
   }
 };
+
+export const regenerateQRCode = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Check if equipment exists
+    const equipment = await EquipmentModel.findById(parseInt(id, 10));
+    if (!equipment) {
+      res.status(404).json({ error: 'Equipment not found' });
+      return;
+    }
+
+    // Generate new QR code with URL to read-only page
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const qrData = `${frontendUrl}/equipment/view/${equipment.equipmentNumber}`;
+    const qrCode = await QRCode.toDataURL(qrData);
+
+    // Update equipment with new QR code
+    await EquipmentModel.update(parseInt(id, 10), { qrCode });
+
+    res.json({
+      message: 'QR code regenerated successfully',
+      qrCode,
+    });
+  } catch (error) {
+    console.error('Regenerate QR code error:', error);
+    res.status(500).json({ error: 'Failed to regenerate QR code' });
+  }
+};

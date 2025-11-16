@@ -8,6 +8,7 @@ import {
   deleteEquipment,
   getCalibrationDue,
   getEquipmentReadOnly,
+  regenerateQRCode,
 } from '../../controllers/equipmentController';
 import { EquipmentModel } from '../../models/EquipmentModel';
 import { AuthRequest, UserRole, EquipmentStatus } from '../../types';
@@ -480,6 +481,52 @@ describe('Equipment Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get equipment' });
+    });
+  });
+
+  describe('regenerateQRCode', () => {
+    it('should regenerate QR code successfully', async () => {
+      mockAuthRequest.params = { id: '1' };
+      const mockEquipment = {
+        id: 1,
+        equipmentNumber: 'EQ-001',
+        name: 'Test Equipment',
+        location: 'Lab A',
+        status: EquipmentStatus.OPERATIONAL,
+      };
+      (EquipmentModel.findById as jest.Mock).mockResolvedValue(mockEquipment);
+      (QRCode.toDataURL as jest.Mock).mockResolvedValue('data:image/png;base64,newqrcode');
+      (EquipmentModel.update as jest.Mock).mockResolvedValue(undefined);
+
+      await regenerateQRCode(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(EquipmentModel.findById).toHaveBeenCalledWith(1);
+      expect(QRCode.toDataURL).toHaveBeenCalledWith('http://localhost:5173/equipment/view/EQ-001');
+      expect(EquipmentModel.update).toHaveBeenCalledWith(1, { qrCode: 'data:image/png;base64,newqrcode' });
+      expect(mockJson).toHaveBeenCalledWith({
+        message: 'QR code regenerated successfully',
+        qrCode: 'data:image/png;base64,newqrcode',
+      });
+    });
+
+    it('should return 404 if equipment not found', async () => {
+      mockAuthRequest.params = { id: '999' };
+      (EquipmentModel.findById as jest.Mock).mockResolvedValue(null);
+
+      await regenerateQRCode(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Equipment not found' });
+    });
+
+    it('should return 500 on database error', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (EquipmentModel.findById as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await regenerateQRCode(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to regenerate QR code' });
     });
   });
 });
