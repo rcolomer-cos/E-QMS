@@ -17,6 +17,8 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 7. **ProcessOwners** - Process ownership assignments
 8. **Documents** - Document management with metadata and version control
 9. **DocumentRevisions** - Detailed revision history and audit trail for documents
+10. **Notifications** - In-app notifications for users
+11. **Equipment** - Equipment metadata, calibration, and maintenance tracking
 
 ## Initial Setup
 
@@ -50,6 +52,8 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    07_create_process_owners_table.sql
    08_create_documents_table.sql
    09_create_document_revisions_table.sql
+   10_create_notifications_table.sql
+   11_create_equipment_table.sql
    ```
 
 3. **Verify Installation**:
@@ -108,6 +112,19 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation, updates, and approval timestamps
 - **Performance Indexes**: Optimized for queries by status, type, category, owner, and version
 - **ISO 9001 Compliance**: Supports document control requirements with traceability and version history
+
+### Equipment Table
+
+- **Identification**: Stores unique equipment number, name, manufacturer, model, and serial number
+- **Location Tracking**: Physical location, department, and responsible person assignment
+- **Status Management**: Tracks operational status (operational, maintenance, out_of_service, calibration_due)
+- **Calibration Tracking**: Manages last calibration date, next due date, and calibration intervals
+- **Maintenance Tracking**: Manages last maintenance date, next due date, and maintenance intervals
+- **QR Code Support**: Optional QR code field for mobile device scanning and quick access
+- **Ownership**: Links to responsible user via `responsiblePerson` foreign key
+- **Audit Trail**: Complete tracking of creation and update timestamps
+- **Performance Indexes**: Optimized for queries by status, location, department, responsible person, and maintenance/calibration dates
+- **ISO 9001 Compliance**: Supports equipment management and calibration control requirements
 
 ## Role-Based Access Control (RBAC)
 
@@ -345,6 +362,90 @@ INNER JOIN Documents d ON dr.documentId = d.id
 LEFT JOIN Users u ON dr.authorId = u.id
 WHERE dr.revisionDate BETWEEN '2024-01-01' AND '2024-12-31'
 ORDER BY dr.revisionDate DESC;
+```
+
+### List Equipment by Status
+
+```sql
+-- View all equipment grouped by operational status
+SELECT 
+    e.status,
+    COUNT(*) AS equipmentCount,
+    STRING_AGG(e.name, ', ') AS equipmentList
+FROM Equipment e
+GROUP BY e.status
+ORDER BY e.status;
+```
+
+### Find Equipment Due for Calibration
+
+```sql
+-- Equipment requiring calibration within the next 30 days
+SELECT 
+    e.id,
+    e.equipmentNumber,
+    e.name,
+    e.location,
+    e.department,
+    e.nextCalibrationDate,
+    u.firstName + ' ' + u.lastName AS responsiblePerson
+FROM Equipment e
+LEFT JOIN Users u ON e.responsiblePerson = u.id
+WHERE e.nextCalibrationDate IS NOT NULL 
+    AND e.nextCalibrationDate <= DATEADD(day, 30, GETDATE())
+    AND e.status != 'out_of_service'
+ORDER BY e.nextCalibrationDate ASC;
+```
+
+### Find Equipment Due for Maintenance
+
+```sql
+-- Equipment requiring maintenance within the next 30 days
+SELECT 
+    e.id,
+    e.equipmentNumber,
+    e.name,
+    e.location,
+    e.department,
+    e.nextMaintenanceDate,
+    u.firstName + ' ' + u.lastName AS responsiblePerson
+FROM Equipment e
+LEFT JOIN Users u ON e.responsiblePerson = u.id
+WHERE e.nextMaintenanceDate IS NOT NULL 
+    AND e.nextMaintenanceDate <= DATEADD(day, 30, GETDATE())
+    AND e.status != 'out_of_service'
+ORDER BY e.nextMaintenanceDate ASC;
+```
+
+### List Equipment by Department
+
+```sql
+-- View all operational equipment by department
+SELECT 
+    e.department,
+    COUNT(*) AS equipmentCount,
+    STRING_AGG(e.name + ' (' + e.equipmentNumber + ')', ', ') AS equipment
+FROM Equipment e
+WHERE e.status = 'operational'
+    AND e.department IS NOT NULL
+GROUP BY e.department
+ORDER BY e.department;
+```
+
+### Find Equipment by Responsible Person
+
+```sql
+-- View all equipment assigned to a specific person
+SELECT 
+    e.equipmentNumber,
+    e.name,
+    e.status,
+    e.location,
+    e.nextCalibrationDate,
+    e.nextMaintenanceDate
+FROM Equipment e
+WHERE e.responsiblePerson = 1 -- Replace with actual user ID
+ORDER BY e.status, e.name;
 ```
 
 ## Migration from Old Schema
