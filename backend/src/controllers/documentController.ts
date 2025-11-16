@@ -3,6 +3,7 @@ import { DocumentModel, Document } from '../models/DocumentModel';
 import { AuthRequest, DocumentStatus } from '../types';
 import { validationResult } from 'express-validator';
 import { getConnection } from '../config/database';
+import { NotificationService } from '../services/notificationService';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -363,7 +364,7 @@ export const approveDocument = async (req: AuthRequest, res: Response): Promise<
     });
 
     // Create revision entry for approval
-    await DocumentModel.createRevision(
+    const revisionId = await DocumentModel.createRevision(
       documentId,
       req.user.id,
       'approve',
@@ -372,6 +373,15 @@ export const approveDocument = async (req: AuthRequest, res: Response): Promise<
       document.status,
       DocumentStatus.APPROVED
     );
+
+    // Send notification to document creator
+    await NotificationService.notifyDocumentApproved({
+      userId: document.createdBy,
+      type: 'document_approved',
+      documentId,
+      revisionId,
+      actorName: `${req.user.firstName} ${req.user.lastName}`,
+    });
 
     res.json({ message: 'Document approved successfully' });
   } catch (error) {
@@ -409,7 +419,7 @@ export const rejectDocument = async (req: AuthRequest, res: Response): Promise<v
     });
 
     // Create revision entry for rejection
-    await DocumentModel.createRevision(
+    const revisionId = await DocumentModel.createRevision(
       documentId,
       req.user.id,
       'update',
@@ -418,6 +428,16 @@ export const rejectDocument = async (req: AuthRequest, res: Response): Promise<v
       document.status,
       DocumentStatus.DRAFT
     );
+
+    // Send notification to document creator
+    await NotificationService.notifyDocumentRejected({
+      userId: document.createdBy,
+      type: 'document_rejected',
+      documentId,
+      revisionId,
+      actorName: `${req.user.firstName} ${req.user.lastName}`,
+      reason,
+    });
 
     res.json({ message: 'Document rejected successfully' });
   } catch (error) {
@@ -455,7 +475,7 @@ export const requestChangesDocument = async (req: AuthRequest, res: Response): P
     });
 
     // Create revision entry for change request
-    await DocumentModel.createRevision(
+    const revisionId = await DocumentModel.createRevision(
       documentId,
       req.user.id,
       'update',
@@ -464,6 +484,16 @@ export const requestChangesDocument = async (req: AuthRequest, res: Response): P
       document.status,
       DocumentStatus.DRAFT
     );
+
+    // Send notification to document creator
+    await NotificationService.notifyDocumentChangesRequested({
+      userId: document.createdBy,
+      type: 'document_changes_requested',
+      documentId,
+      revisionId,
+      actorName: `${req.user.firstName} ${req.user.lastName}`,
+      reason: changes,
+    });
 
     res.json({ message: 'Changes requested successfully' });
   } catch (error) {

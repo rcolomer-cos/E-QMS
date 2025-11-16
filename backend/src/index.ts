@@ -19,6 +19,7 @@ import auditRoutes from './routes/auditRoutes';
 import equipmentRoutes from './routes/equipmentRoutes';
 import departmentRoutes from './routes/departmentRoutes';
 import processRoutes from './routes/processRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 dotenv.config();
 
@@ -63,6 +64,7 @@ app.use('/api/audits', auditRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/processes', processRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler
 app.use((_req, res) => {
