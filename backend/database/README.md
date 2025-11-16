@@ -23,6 +23,8 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 13. **InspectionRecords** - Inspection records for equipment with findings and compliance tracking
 14. **ServiceMaintenanceRecords** - Service and maintenance records for equipment with cost and downtime tracking
 15. **NCRs** - Non-conformity reports with tracking for category, severity, root cause, and resolution
+16. **CAPAs** - Corrective and preventive actions with root causes, actions, deadlines, and verification data
+17. **AuditLog** - Comprehensive audit trail capturing all user actions, timestamps, affected entities, and old/new values
 
 ## Initial Setup
 
@@ -62,6 +64,8 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    15_create_inspection_records_table.sql
    16_create_service_maintenance_records_table.sql
    17_create_ncr_table.sql
+   18_create_capa_table.sql
+   19_create_audit_log_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -236,6 +240,33 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation and update timestamps
 - **Performance Indexes**: Optimized for queries by NCR number, status, severity, dates, personnel, source, and category
 - **ISO 9001 Compliance**: Supports non-conformance management and corrective action requirements with full traceability
+
+### CAPAs Table
+
+- **CAPA Identification**: Stores unique CAPA number, title, and detailed description of corrective/preventive action
+- **Classification**: Tracks type (corrective/preventive), source, and priority level (low, medium, high, urgent)
+- **Related Records**: Optional links to related NCRs and audits for traceability
+- **Analysis and Actions**: Documents root cause analysis findings and proposed actions
+- **Personnel and Timeline**: Assigns action owners and tracks target/completion dates
+- **Status and Verification**: Monitors CAPA status (open, in_progress, completed, verified, closed)
+- **Effectiveness Verification**: Captures effectiveness verification notes and verification personnel
+- **Audit Trail**: Complete tracking of creation, updates, and responsible personnel
+- **Performance Indexes**: Optimized for queries by CAPA number, status, priority, dates, personnel, and related records
+- **ISO 9001 Compliance**: Supports CAPA management with relations to NCRs, full audit trail, and effectiveness verification
+
+### AuditLog Table
+
+- **User Tracking**: Records user ID, name, and email for comprehensive user action tracking (supports system actions)
+- **Action Details**: Captures action type, category, and human-readable description
+- **Entity Tracking**: Links actions to affected entities (type, ID, and identifier) for complete traceability
+- **Change Tracking**: Stores old and new values in JSON format with list of changed fields
+- **Request Metadata**: Captures IP address, user agent, HTTP method, and request URL for security monitoring
+- **Result Tracking**: Records success status, error messages, and status codes
+- **Timestamp**: High-precision timestamp for chronological audit trail
+- **Session Context**: Groups related actions by session ID with additional contextual data
+- **Cached User Data**: Maintains user information even if user accounts are deleted
+- **Performance Indexes**: Extensively indexed for high read volume including timestamp, user, action, entity, and security monitoring queries
+- **ISO 9001 Compliance**: Provides comprehensive audit trail for all system activities with full traceability and change tracking
 
 ## Role-Based Access Control (RBAC)
 
@@ -834,6 +865,157 @@ SELECT
 FROM Equipment e
 WHERE e.status != 'out_of_service'
 ORDER BY e.department, e.name;
+```
+
+### View Audit Trail for Specific Entity
+
+```sql
+-- Get complete audit history for a specific entity (e.g., Document ID 5)
+SELECT 
+    al.id,
+    al.timestamp,
+    al.userName,
+    al.userEmail,
+    al.action,
+    al.actionDescription,
+    al.changedFields,
+    al.oldValues,
+    al.newValues,
+    al.success,
+    al.ipAddress
+FROM AuditLog al
+WHERE al.entityType = 'Document' 
+    AND al.entityId = 5
+ORDER BY al.timestamp DESC;
+```
+
+### View Recent User Activity
+
+```sql
+-- View all actions performed by a specific user in the last 30 days
+SELECT 
+    al.timestamp,
+    al.action,
+    al.actionCategory,
+    al.actionDescription,
+    al.entityType,
+    al.entityIdentifier,
+    al.success,
+    al.ipAddress
+FROM AuditLog al
+WHERE al.userId = 1 -- Replace with actual user ID
+    AND al.timestamp >= DATEADD(day, -30, GETDATE())
+ORDER BY al.timestamp DESC;
+```
+
+### View Failed Actions for Security Monitoring
+
+```sql
+-- Find all failed actions for security analysis
+SELECT 
+    al.timestamp,
+    al.userName,
+    al.userEmail,
+    al.action,
+    al.actionCategory,
+    al.entityType,
+    al.errorMessage,
+    al.ipAddress,
+    al.requestUrl
+FROM AuditLog al
+WHERE al.success = 0
+    AND al.timestamp >= DATEADD(day, -7, GETDATE())
+ORDER BY al.timestamp DESC;
+```
+
+### View Login Activity
+
+```sql
+-- Track user login activity and patterns
+SELECT 
+    al.timestamp,
+    al.userName,
+    al.userEmail,
+    al.success,
+    al.ipAddress,
+    al.userAgent,
+    al.errorMessage
+FROM AuditLog al
+WHERE al.action IN ('login', 'logout', 'login_failed')
+    AND al.timestamp >= DATEADD(day, -30, GETDATE())
+ORDER BY al.timestamp DESC;
+```
+
+### View Changes to Specific Fields
+
+```sql
+-- Find all instances where specific fields were changed
+SELECT 
+    al.timestamp,
+    al.userName,
+    al.entityType,
+    al.entityIdentifier,
+    al.changedFields,
+    al.oldValues,
+    al.newValues
+FROM AuditLog al
+WHERE al.changedFields LIKE '%status%' -- Find status changes
+    AND al.timestamp >= DATEADD(day, -90, GETDATE())
+ORDER BY al.timestamp DESC;
+```
+
+### View Audit Activity by Action Category
+
+```sql
+-- Summarize audit activity by action category
+SELECT 
+    al.actionCategory,
+    COUNT(*) AS totalActions,
+    SUM(CASE WHEN al.success = 1 THEN 1 ELSE 0 END) AS successfulActions,
+    SUM(CASE WHEN al.success = 0 THEN 1 ELSE 0 END) AS failedActions,
+    COUNT(DISTINCT al.userId) AS uniqueUsers,
+    MIN(al.timestamp) AS firstAction,
+    MAX(al.timestamp) AS lastAction
+FROM AuditLog al
+WHERE al.timestamp >= DATEADD(day, -30, GETDATE())
+GROUP BY al.actionCategory
+ORDER BY totalActions DESC;
+```
+
+### View User Session Activity
+
+```sql
+-- View all actions in a specific user session
+SELECT 
+    al.timestamp,
+    al.action,
+    al.actionDescription,
+    al.entityType,
+    al.entityIdentifier,
+    al.success,
+    al.requestUrl
+FROM AuditLog al
+WHERE al.sessionId = 'session-xyz-123' -- Replace with actual session ID
+ORDER BY al.timestamp ASC;
+```
+
+### View Entity Change History with User Details
+
+```sql
+-- Get detailed change history for entities with user information
+SELECT 
+    al.timestamp,
+    al.userName + ' (' + al.userEmail + ')' AS user,
+    al.action,
+    al.entityType,
+    al.entityIdentifier,
+    al.changedFields,
+    al.actionDescription
+FROM AuditLog al
+WHERE al.entityType IN ('Document', 'NCR', 'CAPA', 'Equipment')
+    AND al.action IN ('create', 'update', 'delete')
+    AND al.timestamp >= DATEADD(day, -7, GETDATE())
+ORDER BY al.timestamp DESC;
 ```
 
 ## Migration from Old Schema
