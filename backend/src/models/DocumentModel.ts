@@ -1,5 +1,6 @@
 import { getConnection, sql } from '../config/database';
 import { DocumentStatus } from '../types';
+import { DocumentRevisionModel, DocumentRevision } from './DocumentRevisionModel';
 
 export interface Document {
   id?: number;
@@ -164,5 +165,54 @@ export class DocumentModel {
       `);
 
     return result.recordset;
+  }
+
+  /**
+   * Create a revision entry when a document is created or updated
+   */
+  static async createRevision(
+    documentId: number,
+    userId: number,
+    changeType: 'create' | 'update' | 'approve' | 'obsolete' | 'review' | 'version',
+    changeDescription?: string,
+    changeReason?: string,
+    statusBefore?: string,
+    statusAfter?: string
+  ): Promise<number> {
+    const document = await this.findById(documentId);
+    if (!document) {
+      throw new Error('Document not found');
+    }
+
+    // Get the next revision number
+    const revisionNumber = await DocumentRevisionModel.getNextRevisionNumber(documentId);
+
+    // Get the latest revision to link as previous
+    const latestRevision = await DocumentRevisionModel.findLatestByDocumentId(documentId);
+
+    const revision: DocumentRevision = {
+      documentId,
+      version: document.version,
+      revisionNumber,
+      changeDescription,
+      changeType,
+      changeReason,
+      authorId: userId,
+      filePath: document.filePath,
+      fileName: document.fileName,
+      fileSize: document.fileSize,
+      statusBefore,
+      statusAfter: statusAfter || document.status,
+      previousRevisionId: latestRevision?.id,
+    };
+
+    return DocumentRevisionModel.create(revision);
+  }
+
+  /**
+   * Get full revision history for a document
+   */
+  static async getRevisionHistory(documentId: number) {
+    return DocumentRevisionModel.findByDocumentId(documentId);
   }
 }

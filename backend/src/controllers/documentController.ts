@@ -195,6 +195,65 @@ export const getDocumentVersionHistory = async (req: AuthRequest, res: Response)
   }
 };
 
+export const getDocumentRevisionHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    const revisions = await DocumentModel.getRevisionHistory(documentId);
+
+    res.json(revisions);
+  } catch (error) {
+    console.error('Get revision history error:', error);
+    res.status(500).json({ error: 'Failed to get revision history' });
+  }
+};
+
+export const createDocumentRevision = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { changeType, changeDescription, changeReason, statusBefore, statusAfter } = req.body;
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    const revisionId = await DocumentModel.createRevision(
+      documentId,
+      req.user.id,
+      changeType,
+      changeDescription,
+      changeReason,
+      statusBefore,
+      statusAfter
+    );
+
+    res.status(201).json({
+      message: 'Revision created successfully',
+      revisionId,
+    });
+  } catch (error) {
+    console.error('Create revision error:', error);
+    res.status(500).json({ error: 'Failed to create revision' });
+  }
+};
+
 export const downloadDocumentFile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Use document from middleware if available

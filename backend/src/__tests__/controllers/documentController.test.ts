@@ -8,6 +8,8 @@ import {
   createDocumentVersion,
   uploadDocumentFile,
   downloadDocumentFile,
+  getDocumentRevisionHistory,
+  createDocumentRevision,
 } from '../../controllers/documentController';
 import { DocumentModel } from '../../models/DocumentModel';
 import { AuthRequest, UserRole, DocumentStatus } from '../../types';
@@ -15,6 +17,7 @@ import { validationResult } from 'express-validator';
 
 // Mock dependencies
 jest.mock('../../models/DocumentModel');
+jest.mock('../../models/DocumentRevisionModel');
 jest.mock('express-validator');
 
 describe('Document Controller', () => {
@@ -509,6 +512,128 @@ describe('Document Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to approve document' });
+    });
+  });
+
+  describe('getDocumentRevisionHistory', () => {
+    it('should return 404 if document not found', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(null);
+
+      await getDocumentRevisionHistory(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Document not found' });
+    });
+
+    it('should retrieve revision history successfully', async () => {
+      const mockDocument = {
+        id: 1,
+        title: 'Test Document',
+        status: DocumentStatus.APPROVED,
+      };
+      const mockRevisions = [
+        {
+          id: 1,
+          documentId: 1,
+          version: '1.0',
+          revisionNumber: 1,
+          changeType: 'create',
+          authorId: 1,
+          statusAfter: 'draft',
+        },
+      ];
+
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(mockDocument);
+      (DocumentModel.getRevisionHistory as jest.Mock).mockResolvedValue(mockRevisions);
+
+      await getDocumentRevisionHistory(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(DocumentModel.findById).toHaveBeenCalledWith(1);
+      expect(DocumentModel.getRevisionHistory).toHaveBeenCalledWith(1);
+      expect(mockJson).toHaveBeenCalledWith(mockRevisions);
+    });
+
+    it('should return 500 on database error', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.findById as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await getDocumentRevisionHistory(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get revision history' });
+    });
+  });
+
+  describe('createDocumentRevision', () => {
+    it('should return 401 if user not authenticated', async () => {
+      mockAuthRequest.user = undefined;
+
+      await createDocumentRevision(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(401);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'User not authenticated' });
+    });
+
+    it('should return 404 if document not found', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(null);
+
+      await createDocumentRevision(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Document not found' });
+    });
+
+    it('should create revision successfully', async () => {
+      const mockDocument = {
+        id: 1,
+        title: 'Test Document',
+        status: DocumentStatus.APPROVED,
+      };
+
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = {
+        changeType: 'update',
+        changeDescription: 'Updated content',
+        changeReason: 'Regulatory change',
+        statusBefore: 'approved',
+        statusAfter: 'approved',
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(mockDocument);
+      (DocumentModel.createRevision as jest.Mock).mockResolvedValue(123);
+
+      await createDocumentRevision(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(DocumentModel.createRevision).toHaveBeenCalledWith(
+        1,
+        1,
+        'update',
+        'Updated content',
+        'Regulatory change',
+        'approved',
+        'approved'
+      );
+      expect(mockStatus).toHaveBeenCalledWith(201);
+      expect(mockJson).toHaveBeenCalledWith({
+        message: 'Revision created successfully',
+        revisionId: 123,
+      });
+    });
+
+    it('should return 500 on database error', async () => {
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = {
+        changeType: 'update',
+        changeDescription: 'Test',
+      };
+      (DocumentModel.findById as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await createDocumentRevision(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to create revision' });
     });
   });
 });

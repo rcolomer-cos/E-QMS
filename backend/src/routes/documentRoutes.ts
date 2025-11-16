@@ -9,6 +9,8 @@ import {
   uploadDocumentFile,
   downloadDocumentFile,
   getDocumentVersionHistory,
+  getDocumentRevisionHistory,
+  createDocumentRevision,
   approveDocument,
 } from '../controllers/documentController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
@@ -34,6 +36,12 @@ router.get('/:id', validateId, checkDocumentPermission(DocumentAction.VIEW), get
 
 // Get document version history - requires VIEW permission
 router.get('/:id/versions', validateId, checkDocumentPermission(DocumentAction.VIEW), getDocumentVersionHistory);
+
+// Get document revision history - requires VIEW permission
+router.get('/:id/revisions', validateId, checkDocumentPermission(DocumentAction.VIEW), getDocumentRevisionHistory);
+
+// Create document revision entry - requires EDIT permission
+router.post('/:id/revisions', createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), createDocumentRevision);
 
 // Download document file - requires VIEW permission
 router.get('/:id/download', validateId, checkDocumentPermission(DocumentAction.VIEW), downloadDocumentFile);

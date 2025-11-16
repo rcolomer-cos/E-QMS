@@ -946,6 +946,145 @@ Get the version history for a document, showing all versions in the document's v
 }
 ```
 
+### Get Document Revision History
+Retrieve detailed revision history for a specific document with audit trail information.
+
+**Endpoint:** `GET /api/documents/:id/revisions`  
+**Access:** Requires VIEW permission on the document  
+**Permissions:**
+- Same as document VIEW permissions
+- Returns complete audit trail including change descriptions, reasons, and authors
+
+**Response:**
+```json
+[
+  {
+    "id": 15,
+    "documentId": 1,
+    "version": "1.2",
+    "revisionNumber": 5,
+    "changeDescription": "Updated section 4.3 based on ISO audit feedback",
+    "changeType": "update",
+    "changeReason": "Compliance requirement from ISO audit",
+    "authorId": 3,
+    "authorName": "Jane Smith",
+    "authorFirstName": "Jane",
+    "authorLastName": "Smith",
+    "authorEmail": "jane.smith@example.com",
+    "filePath": "/uploads/documents/qm-proc-1234567890-v1.2.pdf",
+    "fileName": "qm-procedure-v1.2.pdf",
+    "fileSize": 256789,
+    "fileHash": "a3b4c5d6e7f8...",
+    "statusBefore": "approved",
+    "statusAfter": "approved",
+    "previousRevisionId": 14,
+    "revisionDate": "2024-03-15T09:30:00Z"
+  },
+  {
+    "id": 14,
+    "documentId": 1,
+    "version": "1.1",
+    "revisionNumber": 4,
+    "changeDescription": "Minor corrections to terminology",
+    "changeType": "update",
+    "changeReason": "Consistency with updated standards",
+    "authorId": 2,
+    "authorName": "John Doe",
+    "authorFirstName": "John",
+    "authorLastName": "Doe",
+    "authorEmail": "john.doe@example.com",
+    "filePath": "/uploads/documents/qm-proc-1234567890-v1.1.pdf",
+    "fileName": "qm-procedure-v1.1.pdf",
+    "fileSize": 245678,
+    "statusBefore": "approved",
+    "statusAfter": "approved",
+    "previousRevisionId": 13,
+    "revisionDate": "2024-02-10T14:20:00Z"
+  }
+]
+```
+
+**Change Types:**
+- `create`: Initial document creation
+- `update`: Document content or metadata updated
+- `approve`: Document approved
+- `obsolete`: Document marked as obsolete
+- `review`: Document submitted for review
+- `version`: New version created
+
+**Error Response (404):**
+```json
+{
+  "error": "Document not found"
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "error": "You do not have permission to view this document"
+}
+```
+
+### Create Document Revision Entry
+Manually create a revision history entry for a document. This endpoint is useful for recording changes that don't automatically trigger revision tracking.
+
+**Endpoint:** `POST /api/documents/:id/revisions`  
+**Access:** Requires EDIT permission on the document  
+**Rate Limiting:** 10 requests per 15 minutes  
+**Request Body:**
+```json
+{
+  "changeType": "update",
+  "changeDescription": "Updated formatting and fixed typos in section 3",
+  "changeReason": "Internal quality review feedback",
+  "statusBefore": "approved",
+  "statusAfter": "approved"
+}
+```
+
+**Request Fields:**
+- `changeType` (required): One of: "create", "update", "approve", "obsolete", "review", "version"
+- `changeDescription` (optional): Description of what changed (max 2000 characters)
+- `changeReason` (optional): Reason for the change (max 1000 characters)
+- `statusBefore` (optional): Document status before this revision
+- `statusAfter` (optional): Document status after this revision
+
+**Response:**
+```json
+{
+  "message": "Revision created successfully",
+  "revisionId": 16
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "error": "Document not found"
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "error": "You do not have permission to edit this document"
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "error": "User not authenticated"
+}
+```
+
+**Notes:**
+- The system automatically captures the current user as the revision author
+- Version and file information are automatically captured from the current document state
+- Revision number is automatically incremented
+- Previous revision linkage is maintained automatically
+
 ---
 
 ## Role Hierarchy
