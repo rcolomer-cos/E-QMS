@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
+import { getInitStatus } from '../services/systemService';
 import '../styles/Login.css';
 
 function Login() {
@@ -9,6 +10,21 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // If the system needs setup, redirect to setup page
+    const checkSetup = async () => {
+      try {
+        const status = await getInitStatus();
+        if (status.needsSetup) {
+          navigate('/setup', { replace: true });
+        }
+      } catch {
+        // ignore; login may still work if API reachable
+      }
+    };
+    checkSetup();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

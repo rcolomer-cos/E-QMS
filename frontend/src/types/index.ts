@@ -21,6 +21,21 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface InitStatus {
+  needsSetup: boolean;
+  hasDatabase: boolean;
+  hasSuperUser: boolean;
+  databaseReady?: boolean;
+  missingTables?: string[];
+}
+
+export interface CreateSuperUserPayload {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
 export interface Document {
   id: number;
   title: string;

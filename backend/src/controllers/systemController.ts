@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { SystemService } from '../services/systemService';
 import { validationResult } from 'express-validator';
 import { validatePasswordStrength } from '../utils/passwordGenerator';
+import { config } from '../config';
 
 /**
  * Check if system needs initialization
@@ -62,7 +63,10 @@ export const createFirstSuperUser = async (req: Request, res: Response): Promise
     });
   } catch (error) {
     console.error('Create first superuser error:', error);
-    res.status(500).json({ error: 'Failed to create first superuser' });
+    const details = config.nodeEnv === 'development'
+      ? [ (error as any)?.message || 'Unknown error creating superuser' ]
+      : undefined;
+    res.status(500).json({ error: 'Failed to create first superuser', details });
   }
 };
 

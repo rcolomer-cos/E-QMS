@@ -24,34 +24,45 @@ export class SystemService {
     needsSetup: boolean;
     hasDatabase: boolean;
     hasSuperUser: boolean;
+    databaseReady?: boolean;
+    missingTables?: string[];
   }> {
     try {
       const pool = await getConnection();
-      
-      // Check if Users table exists
-      const tableCheck = await pool.request().query(`
-        SELECT COUNT(*) as count
+      const requiredTables = [
+        'DatabaseVersion',
+        'Roles',
+        'Users',
+        'UserRoles',
+        'Departments',
+        'Processes',
+        'ProcessOwners',
+        'Documents',
+        'DocumentRevisions',
+        'Notifications',
+        'Equipment'
+      ];
+
+      const tableListResult = await pool.request().query(`
+        SELECT TABLE_NAME
         FROM INFORMATION_SCHEMA.TABLES
-        WHERE TABLE_NAME = 'Users'
+        WHERE TABLE_NAME IN (${requiredTables.map(t => `'${t}'`).join(',')})
       `);
-      
-      const hasDatabase = tableCheck.recordset[0].count > 0;
-      
-      if (!hasDatabase) {
-        return {
-          needsSetup: true,
-          hasDatabase: false,
-          hasSuperUser: false,
-        };
-      }
+
+      const existingTables = tableListResult.recordset.map((r: any) => r.TABLE_NAME);
+      const missingTables = requiredTables.filter(t => !existingTables.includes(t));
+      const hasUsersTable = existingTables.includes('Users');
+      const databaseReady = missingTables.length === 0;
 
       // Check for superusers
-      const hasSuperUser = await UserModel.hasSuperusers();
+      const hasSuperUser = hasUsersTable ? await UserModel.hasSuperusers() : false;
 
       return {
         needsSetup: !hasSuperUser,
-        hasDatabase: true,
+        hasDatabase: hasUsersTable,
         hasSuperUser,
+        databaseReady,
+        missingTables,
       };
     } catch (error) {
       console.error('Error checking system initialization:', error);
@@ -59,6 +70,8 @@ export class SystemService {
         needsSetup: true,
         hasDatabase: false,
         hasSuperUser: false,
+        databaseReady: false,
+        missingTables: undefined,
       };
     }
   }

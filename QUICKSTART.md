@@ -67,31 +67,29 @@ Open your browser and navigate to:
 http://localhost:5173
 ```
 
-### 6. Create Your First Admin User
+### 6. Initial Setup (Create Superuser)
 
-After initializing the database, create an admin user by running the provided SQL script:
+After the backend is running and the database is initialized, open the frontend and complete the initial setup:
 
+1. Navigate to `http://localhost:5173/setup`
+2. If no superuser exists, you'll be prompted to create the first superuser account (email, password, first/last name)
+3. After creation, you'll be redirected to the login page
+
+Alternatively, you can use the API directly:
 ```bash
-# In SQL Server Management Studio (SSMS) or Azure Data Studio:
-# Open and execute: backend/database/13_insert_admin_user.sql
-```
-
-**Default Admin Credentials:**
-- Email: `admin@eqms.local`
-- Password: `Admin@123`
-
-⚠️ **Important:** Change the default password immediately after first login. The system will enforce this.
-
-**Alternative (Manual Creation):**
-If you prefer to create your own admin user with a custom password, you can use the SQL script as a template and modify the email and bcrypt-hashed password
+curl -X POST http://localhost:3000/api/system/init \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@yourcompany.com",
+    "password": "SecurePassword123!",
+    "firstName": "System",
+    "lastName": "Administrator"
   }'
 ```
 
 ### 7. Login
 
-Use the credentials:
-- **Username:** admin
-- **Password:** Admin123!
+Use the email and password you set for the superuser in the previous step.
 
 ## Available Features
 
@@ -118,7 +116,7 @@ curl http://localhost:3000/health
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "Admin123!"}'
+  -d '{"email": "admin@yourcompany.com", "password": "SecurePassword123!"}'
 ```
 
 ### List Documents (requires authentication)

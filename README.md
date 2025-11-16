@@ -70,6 +70,8 @@ ISO 9001:2015 compliant Quality Management System built with TypeScript, Node.js
    ```
    DB_SERVER=localhost
    DB_NAME=eqms
+   # Use either DB_PORT or DB_INSTANCE (for named instances)
+   # DB_INSTANCE=YourInstanceName
    DB_USER=sa
    DB_PASSWORD=YourStrongPassword123
    DB_PORT=1433
@@ -97,10 +99,16 @@ ISO 9001:2015 compliant Quality Management System built with TypeScript, Node.js
    npm run dev
    ```
 
+   Note: The backend loads environment variables from `backend/.env`. If you created `.env` only at the repository root, copy the DB-related values into `backend/.env` (or export them in the shell) and restart the backend. Named SQL Server instances are supported via `DB_INSTANCE`.
+
 6. **Access the application**
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:3000
    - API Health Check: http://localhost:3000/health
+
+### Initial Setup
+
+On first run, if no superuser exists, go to `http://localhost:5173/setup` to create the first superuser account. The backend also exposes `GET /api/system/init-status` and `POST /api/system/init` if you prefer using the API directly. After creating the superuser, proceed to the login page and sign in with the credentials you just created.
 
 ## Project Structure
 

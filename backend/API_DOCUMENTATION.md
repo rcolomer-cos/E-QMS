@@ -27,7 +27,9 @@ Check if the system needs initial setup (superuser creation).
 {
   "needsSetup": true,
   "hasDatabase": true,
-  "hasSuperUser": false
+  "hasSuperUser": false,
+  "databaseReady": true,
+  "missingTables": []
 }
 ```
 
@@ -45,6 +47,9 @@ Create the first superuser account when system is initialized.
   "lastName": "Doe"
 }
 ```
+
+Note: Email must be a fully qualified address with a domain (e.g., `user@example.com`), matching the database constraint.
+
 **Response:**
 ```json
 {

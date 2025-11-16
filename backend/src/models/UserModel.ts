@@ -53,7 +53,7 @@ export class UserModel {
         .input('firstName', sql.NVarChar, userData.firstName)
         .input('lastName', sql.NVarChar, userData.lastName)
         .input('department', sql.NVarChar, userData.department)
-        .input('createdBy', sql.Int, userData.createdBy)
+        .input('createdBy', sql.Int, userData.createdBy && userData.createdBy > 0 ? userData.createdBy : null)
         .input('mustChangePassword', sql.Bit, userData.mustChangePassword || false)
         .query(`
           INSERT INTO Users (
@@ -75,7 +75,7 @@ export class UserModel {
           .request()
           .input('userId', sql.Int, userId)
           .input('roleId', sql.Int, roleId)
-          .input('assignedBy', sql.Int, userData.createdBy)
+          .input('assignedBy', sql.Int, userData.createdBy && userData.createdBy > 0 ? userData.createdBy : null)
           .query(`
             INSERT INTO UserRoles (userId, roleId, assignedBy, active)
             VALUES (@userId, @roleId, @assignedBy, 1)

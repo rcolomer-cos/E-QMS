@@ -13,6 +13,7 @@ const config: sql.config = {
     encrypt: process.env.DB_ENCRYPT === 'true',
     trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true',
     enableArithAbort: true,
+    instanceName: process.env.DB_INSTANCE || undefined,
   },
   pool: {
     max: 10,
@@ -20,6 +21,13 @@ const config: sql.config = {
     idleTimeoutMillis: 30000,
   },
 };
+
+// If a named instance is specified, let the SQL Browser resolve the port
+// to avoid conflicts with a hard-coded TCP port
+if (process.env.DB_INSTANCE) {
+  // @ts-ignore - 'port' may be removed for named instances
+  delete (config as any).port;
+}
 
 let pool: sql.ConnectionPool | null = null;
 

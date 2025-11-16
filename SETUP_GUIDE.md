@@ -150,6 +150,8 @@ This will create all necessary tables including the new Users, Roles, and UserRo
    # Database Configuration
    DB_SERVER=localhost
    DB_NAME=eqms
+  # Use either DB_PORT or DB_INSTANCE (named instance). If DB_INSTANCE is set, port is optional.
+  # DB_INSTANCE=YourInstanceName
    DB_USER=sa
    DB_PASSWORD=YourStrongPassword123
    DB_PORT=1433
@@ -166,7 +168,9 @@ This will create all necessary tables including the new Users, Roles, and UserRo
    FRONTEND_URL=http://localhost:5173
    ```
 
-3. **Important:** Change `JWT_SECRET` to a secure random string in production
+3. Backend reads `.env` from the `backend/` directory. If you only created `.env` at the repo root, copy the DB-related values into `backend/.env` (or export them as environment variables) and restart the backend.
+
+4. **Important:** Change `JWT_SECRET` to a secure random string in production
 
 ### Step 2: Install Dependencies
 
@@ -219,15 +223,28 @@ Expected response:
 {
   "needsSetup": true,
   "hasDatabase": true,
-  "hasSuperUser": false
+  "hasSuperUser": false,
+  "databaseReady": true,
+  "missingTables": []
 }
 ```
 
-If `needsSetup` is `true`, you need to create the first superuser.
+If `needsSetup` is `true`, you need to create the first superuser. If `databaseReady` is `false`, complete the database setup (missing tables are listed in `missingTables`).
+
+Note: When creating the first superuser, use a fully qualified email with a domain (e.g., `admin@example.com`). The database enforces this via a constraint.
 
 ### Step 3: Create First Superuser
 
-You can do this via the frontend (when it's updated) or via API:
+You can do this via the frontend (recommended) or via API.
+
+**Frontend:**
+
+1. Start the frontend dev server (`cd frontend && npm run dev`)
+2. Navigate to `http://localhost:5173/setup`
+3. Fill in the form to create the first superuser (email, password, first/last name)
+4. You'll be redirected to the login page after success
+
+**API (Alternative):**
 
 ```bash
 curl -X POST http://localhost:3000/api/system/init \
@@ -421,9 +438,23 @@ curl -X DELETE http://localhost:3000/api/users/2/roles \
 4. Verify connection string in `.env`:
    ```env
    DB_SERVER=localhost
-   DB_PORT=1433
+  # EITHER use a fixed port (no instance)
+  DB_PORT=1433
+  # OR use a named instance (no fixed port; requires SQL Browser)
+  # DB_INSTANCE=YourInstanceName
    DB_TRUST_SERVER_CERTIFICATE=true
    ```
+
+### Named Instance Can't Connect
+
+If `GET /api/system/init-status` shows `hasDatabase: false` and `databaseReady: false` even after creating the DB and tables:
+
+1. Decide how to connect to the named instance:
+  - Use `DB_INSTANCE=<InstanceName>` and leave `DB_PORT` empty. Ensure the "SQL Server Browser" service is running (UDP 1434) and TCP/IP is enabled for the instance.
+  - OR configure a static TCP port for the instance in SQL Server Configuration Manager (Protocols → TCP/IP → IPAll → TCP Port), then set `DB_PORT=<thatPort>` and remove `DB_INSTANCE`.
+2. Verify SQL authentication (Mixed Mode) and that the login has access to the `EQMS` database.
+3. Allow inbound traffic for the SQL port and UDP 1434 (if using Browser) in Windows Firewall.
+4. Restart the backend after changing `.env`.
 
 ### Authentication Issues
 
