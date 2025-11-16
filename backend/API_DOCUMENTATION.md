@@ -129,6 +129,162 @@ Get authenticated user's profile.
 
 ---
 
+## Department Management Endpoints
+
+### Get All Departments
+Retrieve all active departments in the system.
+
+**Endpoint:** `GET /api/departments`  
+**Access:** Authenticated users (all roles)  
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "name": "Quality Assurance",
+    "code": "QA",
+    "description": "Quality assurance and testing department",
+    "managerId": 5,
+    "managerName": "John Doe",
+    "active": true,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z",
+    "createdBy": 1
+  },
+  {
+    "id": 2,
+    "name": "Information Technology",
+    "code": "IT",
+    "description": "IT infrastructure and development",
+    "managerId": null,
+    "managerName": null,
+    "active": true,
+    "createdAt": "2024-01-16T09:00:00Z",
+    "updatedAt": "2024-01-16T09:00:00Z",
+    "createdBy": 1
+  }
+]
+```
+
+### Get Department by ID
+Retrieve a specific department by its ID.
+
+**Endpoint:** `GET /api/departments/:id`  
+**Access:** Authenticated users (all roles)  
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "Quality Assurance",
+  "code": "QA",
+  "description": "Quality assurance and testing department",
+  "managerId": 5,
+  "managerName": "John Doe",
+  "active": true,
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z",
+  "createdBy": 1
+}
+```
+
+### Get Department by Code
+Retrieve a specific department by its code.
+
+**Endpoint:** `GET /api/departments/code/:code`  
+**Access:** Authenticated users (all roles)  
+**Example:** `GET /api/departments/code/QA`  
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "Quality Assurance",
+  "code": "QA",
+  "description": "Quality assurance and testing department",
+  "managerId": 5,
+  "managerName": "John Doe",
+  "active": true,
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z",
+  "createdBy": 1
+}
+```
+
+### Create Department
+Create a new department.
+
+**Endpoint:** `POST /api/departments`  
+**Access:** Admin, SuperUser  
+**Request Body:**
+```json
+{
+  "name": "Quality Assurance",
+  "code": "QA",
+  "description": "Quality assurance and testing department",
+  "managerId": 5
+}
+```
+
+**Validation Rules:**
+- `name`: Required, 1-100 characters
+- `code`: Required, 1-20 characters, uppercase letters, numbers, hyphens, underscores only
+- `description`: Optional, max 500 characters
+- `managerId`: Optional, must be a valid user ID
+
+**Response:**
+```json
+{
+  "message": "Department created successfully",
+  "departmentId": 1
+}
+```
+
+**Error Responses:**
+- `409 Conflict` - Department code or name already exists
+- `400 Bad Request` - Validation errors
+
+### Update Department
+Update an existing department.
+
+**Endpoint:** `PUT /api/departments/:id`  
+**Access:** Admin, SuperUser  
+**Request Body:** (all fields optional)
+```json
+{
+  "name": "Quality Assurance & Control",
+  "code": "QA",
+  "description": "Updated description",
+  "managerId": 6
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Department updated successfully"
+}
+```
+
+**Error Responses:**
+- `404 Not Found` - Department not found
+- `409 Conflict` - Updated code or name conflicts with existing department
+
+### Delete Department
+Soft delete a department (sets active flag to false).
+
+**Endpoint:** `DELETE /api/departments/:id`  
+**Access:** Admin, SuperUser  
+**Response:**
+```json
+{
+  "message": "Department deleted successfully"
+}
+```
+
+**Error Responses:**
+- `404 Not Found` - Department not found
+
+---
+
 ## User Management Endpoints
 
 ### Get All Users
