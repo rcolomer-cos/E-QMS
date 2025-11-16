@@ -26,6 +26,7 @@ function NCRDetail() {
   useEffect(() => {
     loadData();
     loadCurrentUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadCurrentUser = () => {
@@ -55,8 +56,9 @@ function NCRDetail() {
       setAttachments(attachmentsData.data);
       setUsers(usersData);
       setError('');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load NCR details');
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to load NCR details');
     } finally {
       setLoading(false);
     }
@@ -69,8 +71,9 @@ function NCRDetail() {
       await updateNCRStatus(ncr.id!, newStatus);
       setNcr({ ...ncr, status: newStatus });
       setError('');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to update status');
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to update status');
     }
   };
 
@@ -97,8 +100,9 @@ function NCRDetail() {
       await loadData();
       setIsEditing(false);
       setError('');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to update NCR');
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to update NCR');
     }
   };
 
@@ -116,8 +120,9 @@ function NCRDetail() {
       const attachmentsData = await getAttachmentsByEntity('ncr', ncr.id!);
       setAttachments(attachmentsData.data);
       setError('');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload attachment');
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to upload attachment');
       throw err;
     }
   };
@@ -128,8 +133,9 @@ function NCRDetail() {
       // Remove from local state
       setAttachments(attachments.filter((a) => a.id !== attachmentId));
       setError('');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete attachment');
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to delete attachment');
       throw err;
     }
   };
