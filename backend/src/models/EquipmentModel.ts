@@ -74,6 +74,16 @@ export class EquipmentModel {
     return result.recordset[0] || null;
   }
 
+  static async findByEquipmentNumber(equipmentNumber: string): Promise<Equipment | null> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input('equipmentNumber', sql.NVarChar, equipmentNumber)
+      .query('SELECT * FROM Equipment WHERE equipmentNumber = @equipmentNumber');
+
+    return result.recordset[0] || null;
+  }
+
   static async findAll(filters?: { status?: EquipmentStatus; department?: string }): Promise<Equipment[]> {
     const pool = await getConnection();
     const request = pool.request();

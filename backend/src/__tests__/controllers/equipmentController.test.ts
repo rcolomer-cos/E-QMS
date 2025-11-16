@@ -7,6 +7,7 @@ import {
   updateEquipment,
   deleteEquipment,
   getCalibrationDue,
+  getEquipmentReadOnly,
 } from '../../controllers/equipmentController';
 import { EquipmentModel } from '../../models/EquipmentModel';
 import { AuthRequest, UserRole, EquipmentStatus } from '../../types';
@@ -116,7 +117,7 @@ describe('Equipment Controller', () => {
       await createEquipment(mockAuthRequest as AuthRequest, mockResponse as Response);
 
       expect(EquipmentModel.create).toHaveBeenCalled();
-      expect(QRCode.toDataURL).toHaveBeenCalledWith('EQMS-EQ-001');
+      expect(QRCode.toDataURL).toHaveBeenCalledWith('http://localhost:5173/equipment/view/EQ-001');
       expect(mockStatus).toHaveBeenCalledWith(201);
       expect(mockJson).toHaveBeenCalledWith({
         message: 'Equipment created successfully',
@@ -418,6 +419,64 @@ describe('Equipment Controller', () => {
       (EquipmentModel.findByQRCode as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await getEquipmentByQR(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get equipment' });
+    });
+  });
+
+  describe('getEquipmentReadOnly', () => {
+    it('should return read-only equipment data by equipment number', async () => {
+      mockAuthRequest.params = { equipmentNumber: 'EQ-001' };
+      const mockEquipment = {
+        id: 1,
+        equipmentNumber: 'EQ-001',
+        name: 'Test Equipment',
+        description: 'Test description',
+        manufacturer: 'Test Manufacturer',
+        model: 'Model X',
+        serialNumber: 'SN-12345',
+        location: 'Lab A',
+        status: EquipmentStatus.OPERATIONAL,
+        nextCalibrationDate: new Date('2024-06-01'),
+        nextMaintenanceDate: new Date('2024-07-01'),
+        purchaseDate: new Date('2023-01-01'),
+        responsiblePerson: 1,
+      };
+      (EquipmentModel.findByEquipmentNumber as jest.Mock).mockResolvedValue(mockEquipment);
+
+      await getEquipmentReadOnly(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(EquipmentModel.findByEquipmentNumber).toHaveBeenCalledWith('EQ-001');
+      expect(mockJson).toHaveBeenCalledWith({
+        equipmentNumber: 'EQ-001',
+        name: 'Test Equipment',
+        description: 'Test description',
+        manufacturer: 'Test Manufacturer',
+        model: 'Model X',
+        serialNumber: 'SN-12345',
+        location: 'Lab A',
+        status: EquipmentStatus.OPERATIONAL,
+        nextCalibrationDate: mockEquipment.nextCalibrationDate,
+        nextMaintenanceDate: mockEquipment.nextMaintenanceDate,
+      });
+    });
+
+    it('should return 404 if equipment not found', async () => {
+      mockAuthRequest.params = { equipmentNumber: 'EQ-INVALID' };
+      (EquipmentModel.findByEquipmentNumber as jest.Mock).mockResolvedValue(null);
+
+      await getEquipmentReadOnly(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Equipment not found' });
+    });
+
+    it('should return 500 on database error', async () => {
+      mockAuthRequest.params = { equipmentNumber: 'EQ-001' };
+      (EquipmentModel.findByEquipmentNumber as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await getEquipmentReadOnly(mockAuthRequest as AuthRequest, mockResponse as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get equipment' });

@@ -20,8 +20,9 @@ export const createEquipment = async (req: AuthRequest, res: Response): Promise<
 
     const equipment: Equipment = req.body;
 
-    // Generate QR code
-    const qrData = `EQMS-${equipment.equipmentNumber}`;
+    // Generate QR code with URL to read-only page
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const qrData = `${frontendUrl}/equipment/view/${equipment.equipmentNumber}`;
     const qrCode = await QRCode.toDataURL(qrData);
     equipment.qrCode = qrCode;
 
@@ -146,5 +147,36 @@ export const getCalibrationDue = async (req: AuthRequest, res: Response): Promis
   } catch (error) {
     console.error('Get calibration due error:', error);
     res.status(500).json({ error: 'Failed to get calibration due equipment' });
+  }
+};
+
+export const getEquipmentReadOnly = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { equipmentNumber } = req.params;
+
+    const equipment = await EquipmentModel.findByEquipmentNumber(equipmentNumber);
+    if (!equipment) {
+      res.status(404).json({ error: 'Equipment not found' });
+      return;
+    }
+
+    // Return only essential, non-sensitive information for read-only public access
+    const readOnlyData = {
+      equipmentNumber: equipment.equipmentNumber,
+      name: equipment.name,
+      description: equipment.description,
+      manufacturer: equipment.manufacturer,
+      model: equipment.model,
+      serialNumber: equipment.serialNumber,
+      location: equipment.location,
+      status: equipment.status,
+      nextCalibrationDate: equipment.nextCalibrationDate,
+      nextMaintenanceDate: equipment.nextMaintenanceDate,
+    };
+
+    res.json(readOnlyData);
+  } catch (error) {
+    console.error('Get equipment read-only error:', error);
+    res.status(500).json({ error: 'Failed to get equipment' });
   }
 };

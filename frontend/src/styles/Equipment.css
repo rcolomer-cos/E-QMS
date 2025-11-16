@@ -436,3 +436,136 @@
   color: #0c5460;
   border: 1px solid #bee5eb;
 }
+
+/* Read-Only Page Styles */
+.readonly-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.readonly-container {
+  max-width: 800px;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.readonly-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+.readonly-logo h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.readonly-logo p {
+  margin: 0.5rem 0 0 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.readonly-content {
+  padding: 2rem;
+}
+
+.readonly-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.readonly-title h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #1a1a1a;
+}
+
+.readonly-section {
+  margin-bottom: 2rem;
+}
+
+.readonly-section h3 {
+  font-size: 1.2rem;
+  color: #667eea;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.readonly-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.readonly-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.readonly-item.readonly-full {
+  grid-column: 1 / -1;
+}
+
+.readonly-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.readonly-value {
+  font-size: 1rem;
+  color: #1a1a1a;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #667eea;
+}
+
+.readonly-footer {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  text-align: center;
+  border-top: 1px solid #e0e0e0;
+}
+
+.readonly-footer p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.error-container {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.error-container h2 {
+  color: #dc3545;
+  margin: 0 0 1rem 0;
+}
+
+.error-container p {
+  color: #666;
+  font-size: 1.1rem;
+}
