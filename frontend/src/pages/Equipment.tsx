@@ -5,6 +5,7 @@ import {
   createEquipment,
   updateEquipment,
   deleteEquipment,
+  regenerateQRCode,
   Equipment as EquipmentType,
 } from '../services/equipmentService';
 import { getUsers } from '../services/userService';
@@ -239,6 +240,25 @@ function EquipmentPage() {
     setSelectedEquipment(null);
   };
 
+  const handleRegenerateQR = async (id: number) => {
+    if (!window.confirm('Are you sure you want to regenerate the QR code for this equipment?')) {
+      return;
+    }
+
+    try {
+      const response = await regenerateQRCode(id);
+      // Update the selected equipment with the new QR code
+      if (selectedEquipment) {
+        setSelectedEquipment({ ...selectedEquipment, qrCode: response.qrCode });
+      }
+      // Reload the equipment list
+      await loadData();
+      setError('');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to regenerate QR code');
+    }
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
@@ -395,14 +415,30 @@ function EquipmentPage() {
             </div>
 
             {/* QR Code */}
-            {selectedEquipment.qrCode && (
-              <div className="detail-section">
-                <h3>QR Code</h3>
+            <div className="detail-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ margin: 0 }}>QR Code</h3>
+                <button 
+                  className="btn-secondary" 
+                  onClick={() => handleRegenerateQR(selectedEquipment.id!)}
+                  style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+                >
+                  Regenerate QR Code
+                </button>
+              </div>
+              {selectedEquipment.qrCode ? (
                 <div className="qr-code-container">
                   <img src={selectedEquipment.qrCode} alt="Equipment QR Code" />
+                  <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
+                    Scan this QR code to view equipment details
+                  </p>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="alert-banner alert-warning">
+                  No QR code available. Click "Regenerate QR Code" to generate one.
+                </div>
+              )}
+            </div>
 
             {/* Audit Trail */}
             <div className="detail-section">

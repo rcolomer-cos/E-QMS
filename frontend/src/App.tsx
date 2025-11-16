@@ -9,6 +9,7 @@ import Audits from './pages/Audits';
 import NCR from './pages/NCR';
 import CAPA from './pages/CAPA';
 import Equipment from './pages/Equipment';
+import EquipmentReadOnly from './pages/EquipmentReadOnly';
 import Training from './pages/Training';
 import Users from './pages/Users';
 import Departments from './pages/Departments';
@@ -20,7 +21,11 @@ function App() {
 
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/equipment/view/:equipmentNumber" element={<EquipmentReadOnly />} />
+      
+      {/* Protected routes */}
       <Route
         path="/"
         element={
