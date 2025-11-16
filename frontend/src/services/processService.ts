@@ -1,5 +1,5 @@
 import api from './api';
-import { Process } from '../types';
+import { Process, ProcessOwner } from '../types';
 
 export interface CreateProcessData {
   name: string;
@@ -19,6 +19,12 @@ export interface UpdateProcessData {
   processCategory?: string;
   objective?: string;
   scope?: string;
+}
+
+export interface AssignProcessOwnerData {
+  ownerId: number;
+  isPrimaryOwner?: boolean;
+  notes?: string;
 }
 
 /**
@@ -57,4 +63,30 @@ export const updateProcess = async (id: number, data: UpdateProcessData): Promis
  */
 export const deleteProcess = async (id: number): Promise<void> => {
   await api.delete(`/processes/${id}`);
+};
+
+/**
+ * Get all owners for a process
+ */
+export const getProcessOwners = async (processId: number): Promise<ProcessOwner[]> => {
+  const response = await api.get<ProcessOwner[]>(`/processes/${processId}/owners`);
+  return response.data;
+};
+
+/**
+ * Assign an owner to a process
+ */
+export const assignProcessOwner = async (
+  processId: number,
+  data: AssignProcessOwnerData
+): Promise<{ ownershipId: number }> => {
+  const response = await api.post<{ ownershipId: number }>(`/processes/${processId}/owners`, data);
+  return response.data;
+};
+
+/**
+ * Remove an owner from a process
+ */
+export const removeProcessOwner = async (processId: number, ownerId: number): Promise<void> => {
+  await api.delete(`/processes/${processId}/owners/${ownerId}`);
 };
