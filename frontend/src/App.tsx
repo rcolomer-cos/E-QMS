@@ -24,6 +24,7 @@ import InspectionRecords from './pages/InspectionRecords';
 import InspectionRecordDetail from './pages/InspectionRecordDetail';
 import ServiceRecords from './pages/ServiceRecords';
 import ServiceRecordDetail from './pages/ServiceRecordDetail';
+import AuditLogs from './pages/AuditLogs';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
         <Route path="inspection-records/:id" element={<InspectionRecordDetail />} />
         <Route path="service-records" element={<ServiceRecords />} />
         <Route path="service-records/:id" element={<ServiceRecordDetail />} />
+        <Route path="audit-logs" element={<AuditLogs />} />
       </Route>
     </Routes>
   );

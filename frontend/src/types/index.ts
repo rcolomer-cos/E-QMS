@@ -231,3 +231,51 @@ export interface ProcessOwner {
   active: boolean;
   notes?: string;
 }
+
+export interface AuditLogEntry {
+  id: number;
+  userId?: number;
+  userName?: string;
+  userEmail?: string;
+  action: string;
+  actionCategory: string;
+  actionDescription?: string;
+  entityType: string;
+  entityId?: number;
+  entityIdentifier?: string;
+  oldValues?: string;
+  newValues?: string;
+  changedFields?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  requestMethod?: string;
+  requestUrl?: string;
+  success: boolean;
+  errorMessage?: string;
+  statusCode?: number;
+  timestamp: string;
+  sessionId?: string;
+  additionalData?: string;
+}
+
+export interface AuditLogFilters {
+  userId?: number;
+  action?: string;
+  actionCategory?: string;
+  entityType?: string;
+  entityId?: number;
+  success?: boolean;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface AuditLogResponse {
+  data: AuditLogEntry[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+}

@@ -31,7 +31,11 @@ function Layout() {
               <li><Link to="/departments">Departments</Link></li>
               <li><Link to="/processes">Processes</Link></li>
               <li><Link to="/users">Users</Link></li>
+              <li><Link to="/audit-logs">Audit Logs</Link></li>
             </>
+          )}
+          {user?.role === 'manager' && (
+            <li><Link to="/audit-logs">Audit Logs</Link></li>
           )}
         </ul>
         <div className="navbar-user">
