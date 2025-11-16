@@ -29,9 +29,10 @@ function DocumentView() {
       setDocument(docData);
       setVersionHistory(versions);
       setError('');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load document:', err);
-      setError(err.response?.data?.error || 'Failed to load document');
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to load document');
     } finally {
       setLoading(false);
     }

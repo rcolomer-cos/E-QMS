@@ -19,10 +19,12 @@ function Documents() {
 
   useEffect(() => {
     loadDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   useEffect(() => {
     filterDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, documents]);
 
   const loadDocuments = async () => {
@@ -31,9 +33,10 @@ function Documents() {
       const data = await getDocuments(filters);
       setDocuments(data);
       setError('');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load documents:', err);
-      setError(err.response?.data?.error || 'Failed to load documents');
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to load documents');
     } finally {
       setLoading(false);
     }
