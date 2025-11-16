@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { Document } from '../models/DocumentModel';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -9,6 +10,7 @@ export interface AuthRequest extends Request {
     roles: string[]; // Array of role names
     roleIds: number[]; // Array of role IDs
   };
+  document?: Document; // Populated by permission middleware
 }
 
 export enum UserRole {

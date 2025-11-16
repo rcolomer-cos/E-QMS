@@ -508,6 +508,39 @@ Retrieve a specific role by ID with permissions.
 
 ## Document Management Endpoints
 
+### Document Permission Model
+
+The E-QMS system implements role-based access control (RBAC) for document management. Permissions are checked based on:
+1. User roles (Superuser, Admin, Manager, User, Viewer)
+2. Document ownership (ownerId and createdBy fields)
+3. Document status (draft, review, approved, obsolete)
+
+#### Permission Rules
+
+**VIEW Permission:**
+- **Approved documents**: All authenticated users can view
+- **Draft/Review documents**: Only owner, creator, managers, admins, and superusers
+- **Obsolete documents**: Only managers, admins, and superusers
+
+**EDIT Permission:**
+- **Draft/Review documents**: Owner, creator, managers, admins, and superusers
+- **Approved documents**: Only admins and superusers
+- **Obsolete documents**: Only admins and superusers
+
+**APPROVE Permission:**
+- Only managers, admins, and superusers can approve documents
+- Document must be in "review" status to be approved
+
+**DELETE Permission:**
+- Only admins and superusers can delete documents
+
+#### Permission Enforcement
+
+All document-specific endpoints (GET, PUT, DELETE, approve, upload, download, versions) enforce these permissions automatically via middleware. Attempting unauthorized actions will result in:
+- `401 Unauthorized`: User not authenticated
+- `403 Forbidden`: User authenticated but lacks required permissions
+- `404 Not Found`: Document doesn't exist or user lacks VIEW permission
+
 ### Create Document
 Create a new document in the system.
 
@@ -594,7 +627,12 @@ GET /api/documents?status=approved&category=Quality
 Retrieve a specific document by its ID.
 
 **Endpoint:** `GET /api/documents/:id`  
-**Access:** All authenticated users  
+**Access:** Role-based (see permissions below)  
+**Permissions:**
+- Approved documents: All authenticated users can view
+- Draft/Review documents: Only document owner, creator, managers, admins, and superusers can view
+- Obsolete documents: Only managers, admins, and superusers can view
+
 **Response:**
 ```json
 {
@@ -632,7 +670,11 @@ Retrieve a specific document by its ID.
 Update document metadata (does not update file - use upload endpoint for files).
 
 **Endpoint:** `PUT /api/documents/:id`  
-**Access:** Admin, Manager, User  
+**Access:** Role-based (see permissions below)  
+**Permissions:**
+- Draft/Review documents: Document owner, creator, managers, admins, and superusers can edit
+- Approved/Obsolete documents: Only admins and superusers can edit
+
 **Request Body (all fields optional):**
 ```json
 {
@@ -694,11 +736,39 @@ Update document metadata (does not update file - use upload endpoint for files).
 }
 ```
 
+### Approve Document
+Approve a document that is in review status.
+
+**Endpoint:** `POST /api/documents/:id/approve`  
+**Access:** Manager, Admin, Superuser  
+**Permissions:**
+- Only managers, admins, and superusers can approve documents
+- Document must be in "review" status to be approved
+
+**Response:**
+```json
+{
+  "message": "Document approved successfully"
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "error": "Access denied: insufficient permissions to approve this document"
+}
+```
+
+**Notes:**
+- Automatically sets document status to "approved"
+- Records approver ID and approval timestamp
+- Document must be in "review" status before it can be approved
+
 ### Delete Document
-Delete a document from the system (soft delete recommended in production).
+Delete a document from the system.
 
 **Endpoint:** `DELETE /api/documents/:id`  
-**Access:** Admin only  
+**Access:** Admin and Superuser only  
 **Response:**
 ```json
 {
@@ -717,8 +787,11 @@ Delete a document from the system (soft delete recommended in production).
 Create a new version of an existing document.
 
 **Endpoint:** `POST /api/documents/:id/version`  
-**Access:** Admin, Manager, User  
+**Access:** Role-based (requires VIEW permission on source document)  
 **Rate Limiting:** 10 requests per 15 minutes  
+**Permissions:**
+- User must have VIEW permission on the source document
+
 **Response:**
 ```json
 {
@@ -738,8 +811,11 @@ Create a new version of an existing document.
 Upload or replace the file for a document.
 
 **Endpoint:** `POST /api/documents/:id/upload`  
-**Access:** Admin, Manager, User  
+**Access:** Role-based (requires EDIT permission)  
 **Rate Limiting:** 10 requests per 15 minutes  
+**Permissions:**
+- User must have EDIT permission on the document (see Update Document permissions)
+
 **Content-Type:** `multipart/form-data`  
 **Form Data:**
 - `file`: The document file to upload
@@ -792,6 +868,82 @@ Upload or replace the file for a document.
 curl -X POST http://localhost:3000/api/documents/123/upload \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -F "file=@/path/to/document.pdf"
+```
+
+### Download Document File
+Download the file associated with a document.
+
+**Endpoint:** `GET /api/documents/:id/download`  
+**Access:** Role-based (requires VIEW permission)  
+**Permissions:**
+- User must have VIEW permission on the document (see Get Document by ID permissions)
+
+**Response:**
+- Returns the file with appropriate Content-Type and Content-Disposition headers
+- File is downloaded with its original filename
+
+**Error Response (404 - Document Not Found):**
+```json
+{
+  "error": "Document not found"
+}
+```
+
+**Error Response (404 - No File):**
+```json
+{
+  "error": "Document file not found"
+}
+```
+
+**Example using cURL:**
+```bash
+curl -X GET http://localhost:3000/api/documents/123/download \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -O
+```
+
+### Get Document Version History
+Get the version history for a document, showing all versions in the document's version chain.
+
+**Endpoint:** `GET /api/documents/:id/versions`  
+**Access:** Role-based (requires VIEW permission)  
+**Permissions:**
+- User must have VIEW permission on the document (see Get Document by ID permissions)
+
+**Response:**
+```json
+[
+  {
+    "id": 123,
+    "title": "Quality Management Procedure",
+    "version": "2.0",
+    "status": "approved",
+    "createdBy": 1,
+    "createdAt": "2024-02-15T10:00:00Z",
+    "approvedBy": 2,
+    "approvedAt": "2024-02-20T14:30:00Z",
+    "parentDocumentId": 100
+  },
+  {
+    "id": 100,
+    "title": "Quality Management Procedure",
+    "version": "1.0",
+    "status": "obsolete",
+    "createdBy": 1,
+    "createdAt": "2024-01-15T10:00:00Z",
+    "approvedBy": 2,
+    "approvedAt": "2024-01-20T14:30:00Z",
+    "parentDocumentId": null
+  }
+]
+```
+
+**Error Response (404):**
+```json
+{
+  "error": "Document not found"
+}
 ```
 
 ---
