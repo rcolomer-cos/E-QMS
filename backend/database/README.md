@@ -19,6 +19,9 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 9. **DocumentRevisions** - Detailed revision history and audit trail for documents
 10. **Notifications** - In-app notifications for users
 11. **Equipment** - Equipment metadata, calibration, and maintenance tracking
+12. **CalibrationRecords** - Calibration records for equipment with results and compliance tracking
+13. **InspectionRecords** - Inspection records for equipment with findings and compliance tracking
+14. **ServiceMaintenanceRecords** - Service and maintenance records for equipment with cost and downtime tracking
 
 ## Initial Setup
 
@@ -54,6 +57,9 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    09_create_document_revisions_table.sql
    10_create_notifications_table.sql
    11_create_equipment_table.sql
+   14_create_calibration_records_table.sql
+   15_create_inspection_records_table.sql
+   16_create_service_maintenance_records_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -161,6 +167,59 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation and update timestamps
 - **Performance Indexes**: Optimized for queries by status, location, department, responsible person, and maintenance/calibration dates
 - **ISO 9001 Compliance**: Supports equipment management and calibration control requirements
+
+### CalibrationRecords Table
+
+- **Equipment Reference**: Links to Equipment table with foreign key relationship
+- **Scheduling**: Tracks calibration date, due date, and next due date for compliance
+- **Personnel Tracking**: Records who performed and approved the calibration
+- **Calibration Details**: Stores calibration type, standards used, and certificate numbers
+- **Results and Measurements**: Captures result status (passed/failed), measured values, and tolerances
+- **External Services**: Tracks external calibration service providers and costs
+- **Findings and Actions**: Documents observations, findings, and corrective actions taken
+- **Attachments**: Supports file paths to calibration certificates and reports
+- **Status Tracking**: Monitors record status (scheduled, in_progress, completed, overdue, cancelled)
+- **Audit Trail**: Complete tracking of creation, updates, and responsible personnel
+- **Performance Indexes**: Optimized for queries by equipment, dates, status, results, and personnel
+- **ISO 9001 Compliance**: Supports calibration control and measurement traceability requirements
+
+### InspectionRecords Table
+
+- **Equipment Reference**: Links to Equipment table with foreign key relationship
+- **Scheduling**: Tracks inspection date, due date, and next due date for compliance
+- **Personnel Tracking**: Records who inspected and reviewed the inspection
+- **Inspection Details**: Stores inspection type, checklist reference, and parameters evaluated
+- **Results and Findings**: Captures overall result, detailed findings, and defects identified
+- **Compliance Tracking**: Monitors safety compliance and operational compliance separately
+- **Measurements**: Documents measurements taken and parameters evaluated during inspection
+- **Actions and Follow-up**: Records corrective actions, recommendations, and follow-up requirements
+- **Severity Assessment**: Classifies findings by severity (none, minor, moderate, major, critical)
+- **Attachments**: Supports file paths to inspection reports and photos
+- **Status Tracking**: Monitors record status (scheduled, in_progress, completed, overdue, cancelled)
+- **Audit Trail**: Complete tracking of creation, updates, and responsible personnel
+- **Performance Indexes**: Optimized for queries by equipment, dates, status, severity, and compliance flags
+- **ISO 9001 Compliance**: Supports inspection and monitoring requirements with full traceability
+
+### ServiceMaintenanceRecords Table
+
+- **Equipment Reference**: Links to Equipment table with foreign key relationship
+- **Scheduling**: Tracks service date, due date, and next due date for preventive maintenance
+- **Personnel Tracking**: Records who performed and approved the service/maintenance
+- **Service Details**: Stores service type (preventive, corrective, emergency, etc.), work order number, and priority
+- **Work Documentation**: Captures description, work performed, and hours spent
+- **Parts and Materials**: Tracks parts used, parts replaced, and associated costs
+- **Cost Management**: Records labor costs, materials costs, and total costs
+- **External Services**: Tracks external service providers, contacts, and invoice numbers
+- **Outcomes and Results**: Documents service outcome, equipment condition, and issues resolved
+- **Problem Analysis**: Records problems identified, root cause analysis, and preventive actions
+- **Follow-up and Recommendations**: Manages follow-up requirements and recommendations
+- **Testing and Verification**: Tracks functional testing performed and test results
+- **Downtime Tracking**: Monitors equipment downtime start, end, and total hours
+- **Attachments**: Supports file paths to service reports, invoices, and photos
+- **Status Tracking**: Monitors record status (scheduled, in_progress, completed, overdue, cancelled, on_hold)
+- **Audit Trail**: Complete tracking of creation, updates, and responsible personnel
+- **Performance Indexes**: Optimized for queries by equipment, dates, status, service type, priority, and costs
+- **ISO 9001 Compliance**: Supports maintenance management and equipment reliability requirements
 
 ## Role-Based Access Control (RBAC)
 
@@ -555,6 +614,210 @@ SELECT
 FROM Equipment e
 WHERE e.responsiblePerson = 1 -- Replace with actual user ID
 ORDER BY e.status, e.name;
+```
+
+### View Calibration History for Equipment
+
+```sql
+-- Get complete calibration history for a specific equipment
+SELECT 
+    cr.id,
+    cr.calibrationDate,
+    cr.result,
+    cr.passed,
+    cr.calibrationType,
+    cr.certificateNumber,
+    cr.resultValue,
+    u1.firstName + ' ' + u1.lastName AS performedBy,
+    u2.firstName + ' ' + u2.lastName AS approvedBy,
+    cr.findings
+FROM CalibrationRecords cr
+LEFT JOIN Users u1 ON cr.performedBy = u1.id
+LEFT JOIN Users u2 ON cr.approvedBy = u2.id
+WHERE cr.equipmentId = 1 -- Replace with actual equipment ID
+ORDER BY cr.calibrationDate DESC;
+```
+
+### View Failed Calibrations
+
+```sql
+-- Find all failed calibrations requiring attention
+SELECT 
+    e.equipmentNumber,
+    e.name,
+    cr.calibrationDate,
+    cr.result,
+    cr.resultValue,
+    cr.findings,
+    cr.correctiveAction,
+    u.firstName + ' ' + u.lastName AS performedBy
+FROM CalibrationRecords cr
+INNER JOIN Equipment e ON cr.equipmentId = e.id
+LEFT JOIN Users u ON cr.performedBy = u.id
+WHERE cr.passed = 0
+ORDER BY cr.calibrationDate DESC;
+```
+
+### View Inspection History for Equipment
+
+```sql
+-- Get complete inspection history for a specific equipment
+SELECT 
+    ir.id,
+    ir.inspectionDate,
+    ir.inspectionType,
+    ir.result,
+    ir.passed,
+    ir.severity,
+    ir.findings,
+    ir.defectsFound,
+    u1.firstName + ' ' + u1.lastName AS inspectedBy,
+    u2.firstName + ' ' + u2.lastName AS reviewedBy
+FROM InspectionRecords ir
+LEFT JOIN Users u1 ON ir.inspectedBy = u1.id
+LEFT JOIN Users u2 ON ir.reviewedBy = u2.id
+WHERE ir.equipmentId = 1 -- Replace with actual equipment ID
+ORDER BY ir.inspectionDate DESC;
+```
+
+### View Inspections Requiring Follow-up
+
+```sql
+-- Find all inspections that require follow-up
+SELECT 
+    e.equipmentNumber,
+    e.name,
+    ir.inspectionDate,
+    ir.inspectionType,
+    ir.result,
+    ir.severity,
+    ir.followUpDate,
+    ir.recommendedAction,
+    u.firstName + ' ' + u.lastName AS inspectedBy
+FROM InspectionRecords ir
+INNER JOIN Equipment e ON ir.equipmentId = e.id
+LEFT JOIN Users u ON ir.inspectedBy = u.id
+WHERE ir.followUpRequired = 1
+    AND (ir.followUpDate IS NULL OR ir.followUpDate >= GETDATE())
+ORDER BY ir.severity DESC, ir.followUpDate ASC;
+```
+
+### View Service/Maintenance History for Equipment
+
+```sql
+-- Get complete service and maintenance history for a specific equipment
+SELECT 
+    smr.id,
+    smr.serviceDate,
+    smr.serviceType,
+    smr.workOrderNumber,
+    smr.priority,
+    smr.outcome,
+    smr.description,
+    smr.workPerformed,
+    smr.totalCost,
+    smr.downtimeHours,
+    u1.firstName + ' ' + u1.lastName AS performedBy,
+    u2.firstName + ' ' + u2.lastName AS approvedBy
+FROM ServiceMaintenanceRecords smr
+LEFT JOIN Users u1 ON smr.performedBy = u1.id
+LEFT JOIN Users u2 ON smr.approvedBy = u2.id
+WHERE smr.equipmentId = 1 -- Replace with actual equipment ID
+ORDER BY smr.serviceDate DESC;
+```
+
+### View Maintenance Costs by Equipment
+
+```sql
+-- Calculate total maintenance costs per equipment
+SELECT 
+    e.equipmentNumber,
+    e.name,
+    e.department,
+    COUNT(smr.id) AS maintenanceCount,
+    SUM(smr.totalCost) AS totalCost,
+    AVG(smr.totalCost) AS avgCostPerMaintenance,
+    SUM(smr.downtimeHours) AS totalDowntimeHours
+FROM Equipment e
+LEFT JOIN ServiceMaintenanceRecords smr ON e.id = smr.equipmentId
+WHERE smr.status = 'completed'
+    AND smr.serviceDate >= DATEADD(year, -1, GETDATE()) -- Last year
+GROUP BY e.id, e.equipmentNumber, e.name, e.department
+ORDER BY totalCost DESC;
+```
+
+### View Preventive vs Corrective Maintenance
+
+```sql
+-- Compare preventive and corrective maintenance by service type
+SELECT 
+    smr.serviceType,
+    COUNT(*) AS recordCount,
+    SUM(smr.totalCost) AS totalCost,
+    AVG(smr.totalCost) AS avgCost,
+    AVG(smr.downtimeHours) AS avgDowntime
+FROM ServiceMaintenanceRecords smr
+WHERE smr.status = 'completed'
+    AND smr.serviceDate >= DATEADD(year, -1, GETDATE())
+GROUP BY smr.serviceType
+ORDER BY recordCount DESC;
+```
+
+### View Unresolved Issues from Service Records
+
+```sql
+-- Find service records with unresolved issues
+SELECT 
+    e.equipmentNumber,
+    e.name,
+    smr.serviceDate,
+    smr.serviceType,
+    smr.workOrderNumber,
+    smr.problemsIdentified,
+    smr.followUpDate,
+    smr.recommendations,
+    u.firstName + ' ' + u.lastName AS performedBy
+FROM ServiceMaintenanceRecords smr
+INNER JOIN Equipment e ON smr.equipmentId = e.id
+LEFT JOIN Users u ON smr.performedBy = u.id
+WHERE smr.issuesResolved = 0
+    OR smr.followUpRequired = 1
+ORDER BY smr.followUpDate ASC, smr.serviceDate DESC;
+```
+
+### View Equipment Compliance Dashboard
+
+```sql
+-- Comprehensive compliance status for all equipment
+SELECT 
+    e.equipmentNumber,
+    e.name,
+    e.department,
+    e.status,
+    e.nextCalibrationDate,
+    e.nextMaintenanceDate,
+    -- Latest calibration
+    (SELECT TOP 1 result 
+     FROM CalibrationRecords 
+     WHERE equipmentId = e.id 
+     ORDER BY calibrationDate DESC) AS lastCalibrationResult,
+    -- Latest inspection
+    (SELECT TOP 1 result 
+     FROM InspectionRecords 
+     WHERE equipmentId = e.id 
+     ORDER BY inspectionDate DESC) AS lastInspectionResult,
+    -- Pending follow-ups
+    (SELECT COUNT(*) 
+     FROM InspectionRecords 
+     WHERE equipmentId = e.id 
+     AND followUpRequired = 1) AS pendingInspectionFollowups,
+    (SELECT COUNT(*) 
+     FROM ServiceMaintenanceRecords 
+     WHERE equipmentId = e.id 
+     AND issuesResolved = 0) AS pendingMaintenanceIssues
+FROM Equipment e
+WHERE e.status != 'out_of_service'
+ORDER BY e.department, e.name;
 ```
 
 ## Migration from Old Schema
