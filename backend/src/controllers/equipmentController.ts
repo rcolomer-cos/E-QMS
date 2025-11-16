@@ -3,6 +3,7 @@ import { EquipmentModel, Equipment } from '../models/EquipmentModel';
 import { AuthRequest, EquipmentStatus } from '../types';
 import QRCode from 'qrcode';
 import { validationResult } from 'express-validator';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 export const createEquipment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -27,6 +28,16 @@ export const createEquipment = async (req: AuthRequest, res: Response): Promise<
     equipment.qrCode = qrCode;
 
     const equipmentId = await EquipmentModel.create(equipment);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.EQUIPMENT,
+      entityType: 'Equipment',
+      entityId: equipmentId,
+      entityIdentifier: equipment.equipmentNumber,
+      newValues: equipment,
+    });
 
     res.status(201).json({
       message: 'Equipment created successfully',
@@ -110,6 +121,17 @@ export const updateEquipment = async (req: AuthRequest, res: Response): Promise<
 
     await EquipmentModel.update(parseInt(id, 10), updates);
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.EQUIPMENT,
+      entityType: 'Equipment',
+      entityId: parseInt(id, 10),
+      entityIdentifier: equipment.equipmentNumber,
+      oldValues: equipment,
+      newValues: updates,
+    });
+
     res.json({ message: 'Equipment updated successfully' });
   } catch (error) {
     console.error('Update equipment error:', error);
@@ -129,6 +151,16 @@ export const deleteEquipment = async (req: AuthRequest, res: Response): Promise<
     }
 
     await EquipmentModel.delete(parseInt(id, 10));
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.EQUIPMENT,
+      entityType: 'Equipment',
+      entityId: parseInt(id, 10),
+      entityIdentifier: equipment.equipmentNumber,
+      oldValues: equipment,
+    });
 
     res.json({ message: 'Equipment deleted successfully' });
   } catch (error) {

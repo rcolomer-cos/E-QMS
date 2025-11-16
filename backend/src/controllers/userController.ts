@@ -4,6 +4,7 @@ import { RoleModel } from '../models/RoleModel';
 import { AuthRequest, UserRole } from '../types';
 import { validationResult } from 'express-validator';
 import { generatePasswordOptions, generateMemorablePassword } from '../utils/passwordGenerator';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 /**
  * Get all users (admin/superuser only)
@@ -108,6 +109,16 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
 
     const userId = await UserModel.create(userData);
 
+    // Log audit entry (without password)
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.USER_MANAGEMENT,
+      entityType: 'User',
+      entityId: userId,
+      entityIdentifier: email,
+      newValues: { email, firstName, lastName, department, roleIds },
+    });
+
     res.status(201).json({
       message: 'User created successfully',
       userId,
@@ -140,11 +151,23 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    await UserModel.update(parseInt(id, 10), {
+    const updates = {
       email,
       firstName,
       lastName,
       department,
+    };
+    await UserModel.update(parseInt(id, 10), updates);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.USER_MANAGEMENT,
+      entityType: 'User',
+      entityId: parseInt(id, 10),
+      entityIdentifier: user.email,
+      oldValues: { email: user.email, firstName: user.firstName, lastName: user.lastName, department: user.department },
+      newValues: updates,
     });
 
     res.json({ message: 'User updated successfully' });
@@ -191,6 +214,16 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     await UserModel.delete(userId);
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.USER_MANAGEMENT,
+      entityType: 'User',
+      entityId: userId,
+      entityIdentifier: user.email,
+      oldValues: { email: user.email, firstName: user.firstName, lastName: user.lastName },
+    });
 
     res.json({ message: 'User deleted successfully' });
   } catch (error) {

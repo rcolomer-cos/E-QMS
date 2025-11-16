@@ -4,6 +4,7 @@ import { AuthRequest, DocumentStatus } from '../types';
 import { validationResult } from 'express-validator';
 import { getConnection } from '../config/database';
 import { NotificationService } from '../services/notificationService';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -24,6 +25,16 @@ export const createDocument = async (req: AuthRequest, res: Response): Promise<v
     };
 
     const documentId = await DocumentModel.create(document);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      newValues: document,
+    });
 
     res.status(201).json({
       message: 'Document created successfully',
@@ -131,8 +142,20 @@ export const updateDocument = async (req: AuthRequest, res: Response): Promise<v
     const documentId = parseInt(id, 10);
     
     // Document existence and permissions already checked by middleware
+    const document = req.document;
     const updates = req.body;
     await DocumentModel.update(documentId, updates);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document?.title,
+      oldValues: document,
+      newValues: updates,
+    });
 
     res.json({ message: 'Document updated successfully' });
   } catch (error) {
@@ -145,8 +168,19 @@ export const deleteDocument = async (req: AuthRequest, res: Response): Promise<v
   try {
     // Permissions already checked by middleware
     const { id } = req.params;
+    const document = req.document;
 
     await DocumentModel.delete(parseInt(id, 10));
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: parseInt(id, 10),
+      entityIdentifier: document?.title,
+      oldValues: document,
+    });
 
     res.json({ message: 'Document deleted successfully' });
   } catch (error) {
@@ -381,6 +415,18 @@ export const approveDocument = async (req: AuthRequest, res: Response): Promise<
       documentId,
       revisionId,
       actorName: `${req.user.firstName} ${req.user.lastName}`,
+    });
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: { status: document.status },
+      newValues: { status: DocumentStatus.APPROVED },
+      actionDescription: `Document approved by ${req.user.firstName} ${req.user.lastName}`,
     });
 
     res.json({ message: 'Document approved successfully' });
