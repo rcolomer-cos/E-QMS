@@ -10,6 +10,9 @@ import {
   downloadDocumentFile,
   getDocumentRevisionHistory,
   createDocumentRevision,
+  approveDocument,
+  rejectDocument,
+  requestChangesDocument,
 } from '../../controllers/documentController';
 import { DocumentModel } from '../../models/DocumentModel';
 import { AuthRequest, UserRole, DocumentStatus } from '../../types';
@@ -481,18 +484,28 @@ describe('Document Controller', () => {
       mockAuthRequest.user = undefined;
       mockAuthRequest.params = { id: '1' };
 
-      const { approveDocument } = require('../../controllers/documentController');
       await approveDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
       expect(mockJson).toHaveBeenCalledWith({ error: 'User not authenticated' });
     });
 
-    it('should approve document successfully', async () => {
+    it('should approve document successfully without comments', async () => {
+      const mockDocument = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        status: DocumentStatus.REVIEW,
+        version: '1.0',
+        createdBy: 1,
+      };
       mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = {};
+      mockAuthRequest.document = mockDocument;
       (DocumentModel.update as jest.Mock).mockResolvedValue(undefined);
+      (DocumentModel.createRevision as jest.Mock).mockResolvedValue(1);
 
-      const { approveDocument } = require('../../controllers/documentController');
       await approveDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
 
       expect(DocumentModel.update).toHaveBeenCalledWith(1, {
@@ -500,14 +513,33 @@ describe('Document Controller', () => {
         approvedBy: 1,
         approvedAt: expect.any(Date),
       });
+      expect(DocumentModel.createRevision).toHaveBeenCalledWith(
+        1,
+        1,
+        'approve',
+        'Document approved',
+        undefined,
+        DocumentStatus.REVIEW,
+        DocumentStatus.APPROVED
+      );
       expect(mockJson).toHaveBeenCalledWith({ message: 'Document approved successfully' });
     });
 
     it('should return 500 on database error', async () => {
+      const mockDocument = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        status: DocumentStatus.REVIEW,
+        version: '1.0',
+        createdBy: 1,
+      };
       mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = {};
+      mockAuthRequest.document = mockDocument;
       (DocumentModel.update as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-      const { approveDocument } = require('../../controllers/documentController');
       await approveDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(500);
@@ -636,4 +668,177 @@ describe('Document Controller', () => {
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to create revision' });
     });
   });
+
+  describe('rejectDocument', () => {
+    it('should return 401 if user is not authenticated', async () => {
+      mockAuthRequest.user = undefined;
+
+      await rejectDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(401);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'User not authenticated' });
+    });
+
+    it('should return 400 if rejection reason is missing', async () => {
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = {};
+
+      await rejectDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Rejection reason is required' });
+    });
+
+    it('should return 404 if document is not found', async () => {
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = { reason: 'Does not meet requirements' };
+      mockAuthRequest.document = undefined;
+
+      await rejectDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Document not found' });
+    });
+
+    it('should reject document successfully and update status to draft', async () => {
+      const mockDocument = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        status: DocumentStatus.REVIEW,
+        version: '1.0',
+        createdBy: 1,
+      };
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = { reason: 'Does not meet quality standards' };
+      mockAuthRequest.document = mockDocument;
+      (DocumentModel.update as jest.Mock).mockResolvedValue(undefined);
+      (DocumentModel.createRevision as jest.Mock).mockResolvedValue(1);
+
+      await rejectDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(DocumentModel.update).toHaveBeenCalledWith(1, {
+        status: DocumentStatus.DRAFT,
+      });
+      expect(DocumentModel.createRevision).toHaveBeenCalledWith(
+        1,
+        1,
+        'update',
+        'Document rejected: Does not meet quality standards',
+        'Does not meet quality standards',
+        DocumentStatus.REVIEW,
+        DocumentStatus.DRAFT
+      );
+      expect(mockJson).toHaveBeenCalledWith({ message: 'Document rejected successfully' });
+    });
+
+    it('should return 500 if rejection fails', async () => {
+      const mockDocument = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        status: DocumentStatus.REVIEW,
+        version: '1.0',
+        createdBy: 1,
+      };
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = { reason: 'Does not meet requirements' };
+      mockAuthRequest.document = mockDocument;
+      (DocumentModel.update as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await rejectDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to reject document' });
+    });
+  });
+
+  describe('requestChangesDocument', () => {
+    it('should return 401 if user is not authenticated', async () => {
+      mockAuthRequest.user = undefined;
+
+      await requestChangesDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(401);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'User not authenticated' });
+    });
+
+    it('should return 400 if change request description is missing', async () => {
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = {};
+
+      await requestChangesDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Change request description is required' });
+    });
+
+    it('should return 404 if document is not found', async () => {
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = { changes: 'Update section 3.2' };
+      mockAuthRequest.document = undefined;
+
+      await requestChangesDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Document not found' });
+    });
+
+    it('should request changes successfully and update status to draft', async () => {
+      const mockDocument = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        status: DocumentStatus.REVIEW,
+        version: '1.0',
+        createdBy: 1,
+      };
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = { changes: 'Please update section 3.2 with more details' };
+      mockAuthRequest.document = mockDocument;
+      (DocumentModel.update as jest.Mock).mockResolvedValue(undefined);
+      (DocumentModel.createRevision as jest.Mock).mockResolvedValue(1);
+
+      await requestChangesDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(DocumentModel.update).toHaveBeenCalledWith(1, {
+        status: DocumentStatus.DRAFT,
+      });
+      expect(DocumentModel.createRevision).toHaveBeenCalledWith(
+        1,
+        1,
+        'update',
+        'Changes requested: Please update section 3.2 with more details',
+        'Please update section 3.2 with more details',
+        DocumentStatus.REVIEW,
+        DocumentStatus.DRAFT
+      );
+      expect(mockJson).toHaveBeenCalledWith({ message: 'Changes requested successfully' });
+    });
+
+    it('should return 500 if request changes fails', async () => {
+      const mockDocument = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        status: DocumentStatus.REVIEW,
+        version: '1.0',
+        createdBy: 1,
+      };
+      mockAuthRequest.params = { id: '1' };
+      mockAuthRequest.body = { changes: 'Update required' };
+      mockAuthRequest.document = mockDocument;
+      (DocumentModel.update as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await requestChangesDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to request changes' });
+    });
+  });
+
 });

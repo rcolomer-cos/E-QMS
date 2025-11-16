@@ -9,6 +9,8 @@ export enum DocumentAction {
   VIEW = 'view',
   EDIT = 'edit',
   APPROVE = 'approve',
+  REJECT = 'reject',
+  REQUEST_CHANGES = 'request_changes',
   DELETE = 'delete',
 }
 
@@ -112,6 +114,58 @@ const canApproveDocument = (user: AuthRequest['user'], document: Document): bool
 };
 
 /**
+ * Check if user can reject a document
+ * Rules:
+ * - Only managers, admins, and superusers can reject documents
+ * - Document must be in 'review' status to be rejected
+ */
+const canRejectDocument = (user: AuthRequest['user'], document: Document): boolean => {
+  if (!user) return false;
+
+  const { roles } = user;
+
+  // Only managers, admins, and superusers can reject
+  if (!roles.includes(UserRole.MANAGER) && 
+      !roles.includes(UserRole.ADMIN) && 
+      !roles.includes(UserRole.SUPERUSER)) {
+    return false;
+  }
+
+  // Document must be in review status
+  if (document.status !== 'review') {
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Check if user can request changes for a document
+ * Rules:
+ * - Only managers, admins, and superusers can request changes
+ * - Document must be in 'review' status
+ */
+const canRequestChangesDocument = (user: AuthRequest['user'], document: Document): boolean => {
+  if (!user) return false;
+
+  const { roles } = user;
+
+  // Only managers, admins, and superusers can request changes
+  if (!roles.includes(UserRole.MANAGER) && 
+      !roles.includes(UserRole.ADMIN) && 
+      !roles.includes(UserRole.SUPERUSER)) {
+    return false;
+  }
+
+  // Document must be in review status
+  if (document.status !== 'review') {
+    return false;
+  }
+
+  return true;
+};
+
+/**
  * Check if user can delete a document
  * Rules:
  * - Only admins and superusers can delete documents
@@ -182,6 +236,14 @@ export const checkDocumentPermission = (action: DocumentAction) => {
           hasPermission = canApproveDocument(req.user, document);
           errorMessage = 'Access denied: insufficient permissions to approve this document';
           break;
+        case DocumentAction.REJECT:
+          hasPermission = canRejectDocument(req.user, document);
+          errorMessage = 'Access denied: insufficient permissions to reject this document';
+          break;
+        case DocumentAction.REQUEST_CHANGES:
+          hasPermission = canRequestChangesDocument(req.user, document);
+          errorMessage = 'Access denied: insufficient permissions to request changes for this document';
+          break;
         default:
           hasPermission = false;
           errorMessage = 'Invalid action';
@@ -206,5 +268,7 @@ export const documentPermissions = {
   canViewDocument,
   canEditDocument,
   canApproveDocument,
+  canRejectDocument,
+  canRequestChangesDocument,
   canDeleteDocument,
 };

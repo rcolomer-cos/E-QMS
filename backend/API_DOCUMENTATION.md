@@ -531,15 +531,26 @@ The E-QMS system implements role-based access control (RBAC) for document manage
 - Only managers, admins, and superusers can approve documents
 - Document must be in "review" status to be approved
 
+**REJECT Permission:**
+- Only managers, admins, and superusers can reject documents
+- Document must be in "review" status to be rejected
+- Rejection reason is required
+
+**REQUEST_CHANGES Permission:**
+- Only managers, admins, and superusers can request changes
+- Document must be in "review" status
+- Change request description is required
+
 **DELETE Permission:**
 - Only admins and superusers can delete documents
 
 #### Permission Enforcement
 
-All document-specific endpoints (GET, PUT, DELETE, approve, upload, download, versions) enforce these permissions automatically via middleware. Attempting unauthorized actions will result in:
+All document-specific endpoints (GET, PUT, DELETE, approve, reject, request-changes, upload, download, versions) enforce these permissions automatically via middleware. Attempting unauthorized actions will result in:
 - `401 Unauthorized`: User not authenticated
 - `403 Forbidden`: User authenticated but lacks required permissions
 - `404 Not Found`: Document doesn't exist or user lacks VIEW permission
+- `400 Bad Request`: Missing required fields (e.g., rejection reason, change request description)
 
 ### Create Document
 Create a new document in the system.
@@ -745,6 +756,13 @@ Approve a document that is in review status.
 - Only managers, admins, and superusers can approve documents
 - Document must be in "review" status to be approved
 
+**Request Body (Optional):**
+```json
+{
+  "comments": "Approved after thorough review"
+}
+```
+
 **Response:**
 ```json
 {
@@ -762,7 +780,98 @@ Approve a document that is in review status.
 **Notes:**
 - Automatically sets document status to "approved"
 - Records approver ID and approval timestamp
+- Creates a revision history entry for audit trail
+- Optional comments can be included with the approval
 - Document must be in "review" status before it can be approved
+
+### Reject Document
+Reject a document that is in review status and send it back to draft.
+
+**Endpoint:** `POST /api/documents/:id/reject`  
+**Access:** Manager, Admin, Superuser  
+**Rate Limiting:** 10 requests per 15 minutes  
+**Permissions:**
+- Only managers, admins, and superusers can reject documents
+- Document must be in "review" status to be rejected
+
+**Request Body:**
+```json
+{
+  "reason": "Does not meet quality standards in section 3.2"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Document rejected successfully"
+}
+```
+
+**Error Response (400):**
+```json
+{
+  "error": "Rejection reason is required"
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "error": "Access denied: insufficient permissions to reject this document"
+}
+```
+
+**Notes:**
+- Automatically sets document status back to "draft"
+- Creates a revision history entry with rejection reason
+- Reason field is required for audit trail compliance
+- Document creator can then make corrections and resubmit
+
+### Request Changes for Document
+Request changes to a document that is in review status.
+
+**Endpoint:** `POST /api/documents/:id/request-changes`  
+**Access:** Manager, Admin, Superuser  
+**Rate Limiting:** 10 requests per 15 minutes  
+**Permissions:**
+- Only managers, admins, and superusers can request changes
+- Document must be in "review" status
+
+**Request Body:**
+```json
+{
+  "changes": "Please update section 3.2 with more details about the validation process"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Changes requested successfully"
+}
+```
+
+**Error Response (400):**
+```json
+{
+  "error": "Change request description is required"
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "error": "Access denied: insufficient permissions to request changes for this document"
+}
+```
+
+**Notes:**
+- Automatically sets document status back to "draft"
+- Creates a revision history entry with change request details
+- Changes field is required to specify what needs to be updated
+- Document creator receives clear guidance on required modifications
+- Different from rejection in that it provides constructive feedback
 
 ### Delete Document
 Delete a document from the system.

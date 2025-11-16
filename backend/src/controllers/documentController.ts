@@ -301,8 +301,15 @@ export const approveDocument = async (req: AuthRequest, res: Response): Promise<
 
     const { id } = req.params;
     const documentId = parseInt(id, 10);
+    const { comments } = req.body;
 
     // Document existence and permissions already checked by middleware
+    const document = req.document;
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
     // Update document status to approved
     await DocumentModel.update(documentId, {
       status: DocumentStatus.APPROVED,
@@ -310,9 +317,112 @@ export const approveDocument = async (req: AuthRequest, res: Response): Promise<
       approvedAt: new Date(),
     });
 
+    // Create revision entry for approval
+    await DocumentModel.createRevision(
+      documentId,
+      req.user.id,
+      'approve',
+      comments || 'Document approved',
+      undefined,
+      document.status,
+      DocumentStatus.APPROVED
+    );
+
     res.json({ message: 'Document approved successfully' });
   } catch (error) {
     console.error('Approve document error:', error);
     res.status(500).json({ error: 'Failed to approve document' });
+  }
+};
+
+export const rejectDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { reason } = req.body;
+
+    if (!reason || reason.trim().length === 0) {
+      res.status(400).json({ error: 'Rejection reason is required' });
+      return;
+    }
+
+    // Document existence and permissions already checked by middleware
+    const document = req.document;
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    // Update document status back to draft
+    await DocumentModel.update(documentId, {
+      status: DocumentStatus.DRAFT,
+    });
+
+    // Create revision entry for rejection
+    await DocumentModel.createRevision(
+      documentId,
+      req.user.id,
+      'update',
+      `Document rejected: ${reason}`,
+      reason,
+      document.status,
+      DocumentStatus.DRAFT
+    );
+
+    res.json({ message: 'Document rejected successfully' });
+  } catch (error) {
+    console.error('Reject document error:', error);
+    res.status(500).json({ error: 'Failed to reject document' });
+  }
+};
+
+export const requestChangesDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { changes } = req.body;
+
+    if (!changes || changes.trim().length === 0) {
+      res.status(400).json({ error: 'Change request description is required' });
+      return;
+    }
+
+    // Document existence and permissions already checked by middleware
+    const document = req.document;
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    // Update document status back to draft for changes
+    await DocumentModel.update(documentId, {
+      status: DocumentStatus.DRAFT,
+    });
+
+    // Create revision entry for change request
+    await DocumentModel.createRevision(
+      documentId,
+      req.user.id,
+      'update',
+      `Changes requested: ${changes}`,
+      changes,
+      document.status,
+      DocumentStatus.DRAFT
+    );
+
+    res.json({ message: 'Changes requested successfully' });
+  } catch (error) {
+    console.error('Request changes error:', error);
+    res.status(500).json({ error: 'Failed to request changes' });
   }
 };

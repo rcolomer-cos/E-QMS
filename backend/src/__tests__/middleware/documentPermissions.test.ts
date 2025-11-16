@@ -548,4 +548,372 @@ describe('Document Permissions Middleware', () => {
       expect(mockNext).not.toHaveBeenCalled();
     });
   });
+
+  describe('checkDocumentPermission - REJECT action', () => {
+    const middleware = checkDocumentPermission(DocumentAction.REJECT);
+
+    it('should allow managers to reject documents in review status', async () => {
+      mockAuthRequest.user = {
+        id: 1,
+        email: 'manager@example.com',
+        firstName: 'Manager',
+        lastName: 'User',
+        roles: [UserRole.MANAGER],
+        roleIds: [2],
+      };
+      const document: Document = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        version: '1.0',
+        status: DocumentStatus.REVIEW,
+        createdBy: 2,
+        ownerId: 2,
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(document);
+
+      await middleware(mockAuthRequest as AuthRequest, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockAuthRequest.document).toBe(document);
+    });
+
+    it('should deny regular users from rejecting documents', async () => {
+      const document: Document = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        version: '1.0',
+        status: DocumentStatus.REVIEW,
+        createdBy: 2,
+        ownerId: 2,
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(document);
+
+      await middleware(mockAuthRequest as AuthRequest, mockResponse as Response, mockNext);
+
+      expect(mockStatus).toHaveBeenCalledWith(403);
+      expect(mockJson).toHaveBeenCalledWith({
+        error: 'Access denied: insufficient permissions to reject this document',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should deny rejecting documents not in review status', async () => {
+      mockAuthRequest.user = {
+        id: 1,
+        email: 'manager@example.com',
+        firstName: 'Manager',
+        lastName: 'User',
+        roles: [UserRole.MANAGER],
+        roleIds: [2],
+      };
+      const document: Document = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        version: '1.0',
+        status: DocumentStatus.APPROVED,
+        createdBy: 2,
+        ownerId: 2,
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(document);
+
+      await middleware(mockAuthRequest as AuthRequest, mockResponse as Response, mockNext);
+
+      expect(mockStatus).toHaveBeenCalledWith(403);
+      expect(mockJson).toHaveBeenCalledWith({
+        error: 'Access denied: insufficient permissions to reject this document',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should allow admins to reject documents in review status', async () => {
+      mockAuthRequest.user = {
+        id: 1,
+        email: 'admin@example.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        roles: [UserRole.ADMIN],
+        roleIds: [3],
+      };
+      const document: Document = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        version: '1.0',
+        status: DocumentStatus.REVIEW,
+        createdBy: 2,
+        ownerId: 2,
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(document);
+
+      await middleware(mockAuthRequest as AuthRequest, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+  });
+
+  describe('checkDocumentPermission - REQUEST_CHANGES action', () => {
+    const middleware = checkDocumentPermission(DocumentAction.REQUEST_CHANGES);
+
+    it('should allow managers to request changes for documents in review status', async () => {
+      mockAuthRequest.user = {
+        id: 1,
+        email: 'manager@example.com',
+        firstName: 'Manager',
+        lastName: 'User',
+        roles: [UserRole.MANAGER],
+        roleIds: [2],
+      };
+      const document: Document = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        version: '1.0',
+        status: DocumentStatus.REVIEW,
+        createdBy: 2,
+        ownerId: 2,
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(document);
+
+      await middleware(mockAuthRequest as AuthRequest, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockAuthRequest.document).toBe(document);
+    });
+
+    it('should deny regular users from requesting changes', async () => {
+      const document: Document = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        version: '1.0',
+        status: DocumentStatus.REVIEW,
+        createdBy: 2,
+        ownerId: 2,
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(document);
+
+      await middleware(mockAuthRequest as AuthRequest, mockResponse as Response, mockNext);
+
+      expect(mockStatus).toHaveBeenCalledWith(403);
+      expect(mockJson).toHaveBeenCalledWith({
+        error: 'Access denied: insufficient permissions to request changes for this document',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should deny requesting changes for documents not in review status', async () => {
+      mockAuthRequest.user = {
+        id: 1,
+        email: 'manager@example.com',
+        firstName: 'Manager',
+        lastName: 'User',
+        roles: [UserRole.MANAGER],
+        roleIds: [2],
+      };
+      const document: Document = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        version: '1.0',
+        status: DocumentStatus.DRAFT,
+        createdBy: 2,
+        ownerId: 2,
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(document);
+
+      await middleware(mockAuthRequest as AuthRequest, mockResponse as Response, mockNext);
+
+      expect(mockStatus).toHaveBeenCalledWith(403);
+      expect(mockJson).toHaveBeenCalledWith({
+        error: 'Access denied: insufficient permissions to request changes for this document',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should allow superusers to request changes for documents in review status', async () => {
+      mockAuthRequest.user = {
+        id: 1,
+        email: 'superuser@example.com',
+        firstName: 'Super',
+        lastName: 'User',
+        roles: [UserRole.SUPERUSER],
+        roleIds: [1],
+      };
+      const document: Document = {
+        id: 1,
+        title: 'Test Document',
+        documentType: 'policy',
+        category: 'Quality',
+        version: '1.0',
+        status: DocumentStatus.REVIEW,
+        createdBy: 2,
+        ownerId: 2,
+      };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(document);
+
+      await middleware(mockAuthRequest as AuthRequest, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+  });
+
+  describe('Permission helper functions', () => {
+    describe('canRejectDocument', () => {
+      it('should return true for managers with document in review status', () => {
+        const user = {
+          id: 1,
+          email: 'manager@example.com',
+          firstName: 'Manager',
+          lastName: 'User',
+          roles: [UserRole.MANAGER],
+          roleIds: [2],
+        };
+        const document: Document = {
+          id: 1,
+          title: 'Test',
+          documentType: 'policy',
+          category: 'Quality',
+          version: '1.0',
+          status: DocumentStatus.REVIEW,
+          createdBy: 2,
+        };
+
+        const result = documentPermissions.canRejectDocument(user, document);
+
+        expect(result).toBe(true);
+      });
+
+      it('should return false for regular users', () => {
+        const user = {
+          id: 1,
+          email: 'user@example.com',
+          firstName: 'User',
+          lastName: 'Test',
+          roles: [UserRole.USER],
+          roleIds: [1],
+        };
+        const document: Document = {
+          id: 1,
+          title: 'Test',
+          documentType: 'policy',
+          category: 'Quality',
+          version: '1.0',
+          status: DocumentStatus.REVIEW,
+          createdBy: 2,
+        };
+
+        const result = documentPermissions.canRejectDocument(user, document);
+
+        expect(result).toBe(false);
+      });
+
+      it('should return false for documents not in review status', () => {
+        const user = {
+          id: 1,
+          email: 'manager@example.com',
+          firstName: 'Manager',
+          lastName: 'User',
+          roles: [UserRole.MANAGER],
+          roleIds: [2],
+        };
+        const document: Document = {
+          id: 1,
+          title: 'Test',
+          documentType: 'policy',
+          category: 'Quality',
+          version: '1.0',
+          status: DocumentStatus.APPROVED,
+          createdBy: 2,
+        };
+
+        const result = documentPermissions.canRejectDocument(user, document);
+
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('canRequestChangesDocument', () => {
+      it('should return true for admins with document in review status', () => {
+        const user = {
+          id: 1,
+          email: 'admin@example.com',
+          firstName: 'Admin',
+          lastName: 'User',
+          roles: [UserRole.ADMIN],
+          roleIds: [3],
+        };
+        const document: Document = {
+          id: 1,
+          title: 'Test',
+          documentType: 'policy',
+          category: 'Quality',
+          version: '1.0',
+          status: DocumentStatus.REVIEW,
+          createdBy: 2,
+        };
+
+        const result = documentPermissions.canRequestChangesDocument(user, document);
+
+        expect(result).toBe(true);
+      });
+
+      it('should return false for viewers', () => {
+        const user = {
+          id: 1,
+          email: 'viewer@example.com',
+          firstName: 'Viewer',
+          lastName: 'User',
+          roles: [UserRole.VIEWER],
+          roleIds: [6],
+        };
+        const document: Document = {
+          id: 1,
+          title: 'Test',
+          documentType: 'policy',
+          category: 'Quality',
+          version: '1.0',
+          status: DocumentStatus.REVIEW,
+          createdBy: 2,
+        };
+
+        const result = documentPermissions.canRequestChangesDocument(user, document);
+
+        expect(result).toBe(false);
+      });
+
+      it('should return false for documents in draft status', () => {
+        const user = {
+          id: 1,
+          email: 'manager@example.com',
+          firstName: 'Manager',
+          lastName: 'User',
+          roles: [UserRole.MANAGER],
+          roleIds: [2],
+        };
+        const document: Document = {
+          id: 1,
+          title: 'Test',
+          documentType: 'policy',
+          category: 'Quality',
+          version: '1.0',
+          status: DocumentStatus.DRAFT,
+          createdBy: 2,
+        };
+
+        const result = documentPermissions.canRequestChangesDocument(user, document);
+
+        expect(result).toBe(false);
+      });
+    });
+  });
 });
