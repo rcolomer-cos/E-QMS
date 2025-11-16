@@ -352,3 +352,14 @@ export const getOverdueCAPAs = async (_req: AuthRequest, res: Response): Promise
     res.status(500).json({ error: 'Failed to get overdue CAPAs' });
   }
 };
+
+export const getCAPADashboardStats = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const stats = await CAPAModel.getDashboardStats();
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Get CAPA dashboard stats error:', error);
+    res.status(500).json({ error: 'Failed to get CAPA dashboard statistics' });
+  }
+};

@@ -133,11 +133,16 @@ function CAPA() {
     <div className="page">
       <div className="page-header">
         <h1>Corrective and Preventive Actions (CAPA)</h1>
-        {canCreateCAPA() && (
-          <button className="btn-primary" onClick={() => setShowCreateForm(true)}>
-            Create CAPA
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-secondary" onClick={() => navigate('/capa/dashboard')}>
+            Dashboard
           </button>
-        )}
+          {canCreateCAPA() && (
+            <button className="btn-primary" onClick={() => setShowCreateForm(true)}>
+              Create CAPA
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>

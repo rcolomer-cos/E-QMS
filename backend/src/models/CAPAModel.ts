@@ -144,4 +144,65 @@ export class CAPAModel {
 
     return result.recordset;
   }
+
+  static async getDashboardStats(): Promise<{
+    totalOpen: number;
+    totalInProgress: number;
+    totalCompleted: number;
+    totalVerified: number;
+    totalClosed: number;
+    totalOverdue: number;
+    byPriority: { priority: string; count: number }[];
+    byType: { type: string; count: number }[];
+  }> {
+    const pool = await getConnection();
+    
+    // Get status counts
+    const statusResult = await pool.request().query(`
+      SELECT 
+        SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as totalOpen,
+        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as totalInProgress,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as totalCompleted,
+        SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as totalVerified,
+        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as totalClosed,
+        SUM(CASE WHEN targetDate < GETDATE() AND status NOT IN ('completed', 'verified', 'closed') THEN 1 ELSE 0 END) as totalOverdue
+      FROM CAPAs
+    `);
+
+    // Get priority breakdown
+    const priorityResult = await pool.request().query(`
+      SELECT priority, COUNT(*) as count
+      FROM CAPAs
+      WHERE status NOT IN ('closed')
+      GROUP BY priority
+      ORDER BY 
+        CASE priority
+          WHEN 'urgent' THEN 1
+          WHEN 'high' THEN 2
+          WHEN 'medium' THEN 3
+          WHEN 'low' THEN 4
+        END
+    `);
+
+    // Get type breakdown
+    const typeResult = await pool.request().query(`
+      SELECT type, COUNT(*) as count
+      FROM CAPAs
+      WHERE status NOT IN ('closed')
+      GROUP BY type
+    `);
+
+    const stats = statusResult.recordset[0];
+    
+    return {
+      totalOpen: stats.totalOpen || 0,
+      totalInProgress: stats.totalInProgress || 0,
+      totalCompleted: stats.totalCompleted || 0,
+      totalVerified: stats.totalVerified || 0,
+      totalClosed: stats.totalClosed || 0,
+      totalOverdue: stats.totalOverdue || 0,
+      byPriority: priorityResult.recordset.map(r => ({ priority: r.priority, count: r.count })),
+      byType: typeResult.recordset.map(r => ({ type: r.type, count: r.count })),
+    };
+  }
 }
