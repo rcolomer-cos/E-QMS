@@ -52,7 +52,9 @@ export function validateClassification(
   const errors: string[] = [];
 
   // Import validation functions
-  const { isValidSource, isValidType, isValidSeverity } = require('../constants/ncrClassification');
+  const { isValidSource, isValidType, isValidSeverity } = 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('../constants/ncrClassification');
 
   if (!isValidSource(source)) {
     errors.push(`Invalid source: ${source}`);

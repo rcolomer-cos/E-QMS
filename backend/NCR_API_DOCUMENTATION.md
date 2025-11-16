@@ -45,13 +45,15 @@ Create a new Non-Conformance Report.
 - `ncrNumber` (string, required): Unique NCR identifier (max 100 chars)
 - `title` (string, required): NCR title/summary (max 500 chars)
 - `description` (string, required): Detailed description (max 2000 chars)
-- `source` (string, required): Source of NCR (max 200 chars)
-- `category` (string, required): Category of non-conformity (max 100 chars)
+- `source` (enum, required): One of: Internal Audit, External Audit, Customer Complaint, Supplier Issue, Process Monitoring, Inspection, Management Review, Employee Report, Other
+- `category` (enum, required): One of: Product Quality, Process Deviation, Documentation, Equipment/Facility, Personnel/Training, Safety, Environmental, Regulatory Compliance, Supplier Quality, Other
 - `status` (enum, required): One of: open, in_progress, resolved, closed, rejected
-- `severity` (enum, required): One of: minor, major, critical
+- `severity` (enum, required): One of: minor, major, critical (impacts score: minor=1, major=5, critical=10)
 - `detectedDate` (datetime, required): When non-conformity was detected
 - `reportedBy` (integer, required): User ID who reported the NCR
 - `assignedTo` (integer, optional): User ID assigned to resolve the NCR
+
+**Note:** The `source` and `category` fields use standardized classification rules. See `/api/ncrs/classification-options` for the complete list and descriptions.
 
 **Success Response:**
 ```json
@@ -101,6 +103,7 @@ GET /api/ncrs?page=1&limit=20&status=open&severity=major
       "category": "Product Quality",
       "status": "open",
       "severity": "major",
+      "impactScore": 5,
       "detectedDate": "2024-01-15T10:30:00Z",
       "reportedBy": 1,
       "assignedTo": 5,
@@ -122,6 +125,11 @@ GET /api/ncrs?page=1&limit=20&status=open&severity=major
   }
 }
 ```
+
+**Note:** Each NCR in the response includes an `impactScore` field calculated based on severity:
+- Minor: 1 point
+- Major: 5 points
+- Critical: 10 points
 
 **Status Codes:**
 - `200 OK`: Success
@@ -152,6 +160,7 @@ Retrieve a specific NCR by its ID.
   "category": "Product Quality",
   "status": "open",
   "severity": "major",
+  "impactScore": 5,
   "detectedDate": "2024-01-15T10:30:00Z",
   "reportedBy": 1,
   "assignedTo": 5,
@@ -327,6 +336,73 @@ Delete an NCR from the system.
 
 ---
 
+### 8. Get NCR Classification Options
+Get standardized classification options and rules for NCRs.
+
+**Endpoint:** `GET /api/ncrs/classification-options`
+
+**Required Roles:** All authenticated users
+
+**Success Response:**
+```json
+{
+  "severities": ["minor", "major", "critical"],
+  "sources": [
+    "Internal Audit",
+    "External Audit",
+    "Customer Complaint",
+    "Supplier Issue",
+    "Process Monitoring",
+    "Inspection",
+    "Management Review",
+    "Employee Report",
+    "Other"
+  ],
+  "types": [
+    "Product Quality",
+    "Process Deviation",
+    "Documentation",
+    "Equipment/Facility",
+    "Personnel/Training",
+    "Safety",
+    "Environmental",
+    "Regulatory Compliance",
+    "Supplier Quality",
+    "Other"
+  ],
+  "severityDescriptions": {
+    "minor": "Low impact to quality, safety, or compliance. Minimal disruption to operations.",
+    "major": "Significant impact to quality, safety, or compliance. Requires prompt attention.",
+    "critical": "Severe impact to quality, safety, or compliance. Requires immediate action."
+  },
+  "sourceDescriptions": {
+    "Internal Audit": "Issues identified during internal quality system audits",
+    ...
+  },
+  "typeDescriptions": {
+    "Product Quality": "Non-conformances related to product specifications, characteristics, or quality requirements",
+    ...
+  },
+  "impactScores": {
+    "minor": 1,
+    "major": 5,
+    "critical": 10
+  }
+}
+```
+
+**Status Codes:**
+- `200 OK`: Success
+- `401 Unauthorized`: Missing or invalid token
+- `500 Internal Server Error`: Server error
+
+**Usage:**
+- Frontend can dynamically populate dropdowns with these options
+- Ensures consistency between frontend and backend validation
+- Provides descriptions for user guidance
+
+---
+
 ## RBAC Permission Matrix
 
 | Endpoint | Admin | Manager | Auditor | User | Viewer |
@@ -334,6 +410,7 @@ Delete an NCR from the system.
 | POST /api/ncrs | ✅ | ✅ | ✅ | ❌ | ❌ |
 | GET /api/ncrs | ✅ | ✅ | ✅ | ✅ | ✅ |
 | GET /api/ncrs/:id | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GET /api/ncrs/classification-options | ✅ | ✅ | ✅ | ✅ | ✅ |
 | PUT /api/ncrs/:id | ✅ | ✅ | ✅ | ❌ | ❌ |
 | PUT /api/ncrs/:id/status | ✅ | ✅ | ✅* | ❌ | ❌ |
 | PUT /api/ncrs/:id/assign | ✅ | ✅ | ✅ | ❌ | ❌ |

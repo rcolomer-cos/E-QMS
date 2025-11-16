@@ -86,8 +86,8 @@ export const getNCRById = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Add impact score
-    const { addImpactScore } = require('../services/ncrService');
-    const ncrWithImpact = addImpactScore(ncr);
+    const ncrService = await import('../services/ncrService');
+    const ncrWithImpact = ncrService.addImpactScore(ncr);
 
     res.json(ncrWithImpact);
   } catch (error) {
@@ -229,24 +229,16 @@ export const deleteNCR = async (req: AuthRequest, res: Response): Promise<void> 
 
 export const getNCRClassificationOptions = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const {
-      getAllSeverities,
-      getAllSources,
-      getAllTypes,
-      SEVERITY_DESCRIPTIONS,
-      SOURCE_DESCRIPTIONS,
-      TYPE_DESCRIPTIONS,
-      IMPACT_SCORES,
-    } = require('../constants/ncrClassification');
+    const ncrClassification = await import('../constants/ncrClassification');
 
     res.json({
-      severities: getAllSeverities(),
-      sources: getAllSources(),
-      types: getAllTypes(),
-      severityDescriptions: SEVERITY_DESCRIPTIONS,
-      sourceDescriptions: SOURCE_DESCRIPTIONS,
-      typeDescriptions: TYPE_DESCRIPTIONS,
-      impactScores: IMPACT_SCORES,
+      severities: ncrClassification.getAllSeverities(),
+      sources: ncrClassification.getAllSources(),
+      types: ncrClassification.getAllTypes(),
+      severityDescriptions: ncrClassification.SEVERITY_DESCRIPTIONS,
+      sourceDescriptions: ncrClassification.SOURCE_DESCRIPTIONS,
+      typeDescriptions: ncrClassification.TYPE_DESCRIPTIONS,
+      impactScores: ncrClassification.IMPACT_SCORES,
     });
   } catch (error) {
     console.error('Get NCR classification options error:', error);
