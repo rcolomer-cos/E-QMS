@@ -1,62 +1,66 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getCAPAs,
   getCAPAsAssignedToMe,
   getOverdueCAPAs,
-  updateCAPAStatus,
-  completeCAPA,
-  verifyCAPA,
+  createCAPA,
+  CreateCAPAData,
   CAPA as CAPAType,
 } from '../services/capaService';
+import { getUsers } from '../services/userService';
+import { User } from '../types';
+import CAPAForm from '../components/CAPAForm';
 
 type ViewMode = 'all' | 'assigned' | 'overdue';
 
 function CAPA() {
+  const navigate = useNavigate();
   const [capas, setCapas] = useState<CAPAType[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('all');
-  const [selectedCAPA, setSelectedCAPA] = useState<CAPAType | null>(null);
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-
-  // Form states
-  const [statusUpdate, setStatusUpdate] = useState<{
-    status: 'open' | 'in_progress' | 'completed' | 'verified' | 'closed';
-    notes: string;
-  }>({
-    status: 'open',
-    notes: '',
-  });
-  const [completionData, setCompletionData] = useState({
-    rootCause: '',
-    proposedAction: '',
-  });
-  const [verificationData, setVerificationData] = useState({
-    effectiveness: '',
-  });
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
-    loadCAPAs();
+    loadData();
+    loadCurrentUser();
   }, [viewMode]);
 
-  const loadCAPAs = async () => {
+  const loadCurrentUser = () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+      } catch (err) {
+        console.error('Failed to parse user from localStorage:', err);
+      }
+    }
+  };
+
+  const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      let response;
+      let capaResponse;
       
       if (viewMode === 'assigned') {
-        response = await getCAPAsAssignedToMe();
-        setCapas(response.data);
+        capaResponse = await getCAPAsAssignedToMe();
+        setCapas(capaResponse.data);
       } else if (viewMode === 'overdue') {
-        response = await getOverdueCAPAs();
-        setCapas(response.data);
+        capaResponse = await getOverdueCAPAs();
+        setCapas(capaResponse.data);
       } else {
         const result = await getCAPAs();
         setCapas(result.data);
       }
+
+      // Load users for form
+      const usersData = await getUsers();
+      setUsers(usersData);
     } catch (err) {
       setError('Failed to load CAPAs');
       console.error('Error loading CAPAs:', err);
@@ -65,48 +69,20 @@ function CAPA() {
     }
   };
 
-  const handleStatusUpdate = async () => {
-    if (!selectedCAPA) return;
-
+  const handleCreateCAPA = async (data: CreateCAPAData) => {
     try {
-      await updateCAPAStatus(selectedCAPA.id, statusUpdate);
-      setShowStatusModal(false);
-      setSelectedCAPA(null);
-      loadCAPAs();
+      await createCAPA(data);
+      setShowCreateForm(false);
+      loadData();
     } catch (err) {
-      alert('Failed to update CAPA status');
-      console.error('Error updating status:', err);
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to create CAPA');
+      throw err;
     }
   };
 
-  const handleComplete = async () => {
-    if (!selectedCAPA) return;
-
-    try {
-      await completeCAPA(selectedCAPA.id, completionData);
-      setShowCompleteModal(false);
-      setSelectedCAPA(null);
-      setCompletionData({ rootCause: '', proposedAction: '' });
-      loadCAPAs();
-    } catch (err) {
-      alert('Failed to complete CAPA');
-      console.error('Error completing CAPA:', err);
-    }
-  };
-
-  const handleVerify = async () => {
-    if (!selectedCAPA) return;
-
-    try {
-      await verifyCAPA(selectedCAPA.id, verificationData);
-      setShowVerifyModal(false);
-      setSelectedCAPA(null);
-      setVerificationData({ effectiveness: '' });
-      loadCAPAs();
-    } catch (err) {
-      alert('Failed to verify CAPA');
-      console.error('Error verifying CAPA:', err);
-    }
+  const handleViewCAPA = (capaId: number) => {
+    navigate(`/capa/${capaId}`);
   };
 
   const isOverdue = (targetDate: string) => {
@@ -134,11 +110,33 @@ function CAPA() {
     return priorityMap[priority] || 'priority-low';
   };
 
+  const canCreateCAPA = () => {
+    if (!currentUser) return false;
+    return ['admin', 'manager', 'auditor'].includes(currentUser.role.toLowerCase());
+  };
+
+  if (showCreateForm) {
+    return (
+      <div className="page">
+        <CAPAForm
+          onSubmit={handleCreateCAPA}
+          onCancel={() => setShowCreateForm(false)}
+          users={users}
+          currentUserId={currentUser?.id || 0}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <div className="page-header">
         <h1>Corrective and Preventive Actions (CAPA)</h1>
-        <button className="btn-primary">Create CAPA</button>
+        {canCreateCAPA() && (
+          <button className="btn-primary" onClick={() => setShowCreateForm(true)}>
+            Create CAPA
+          </button>
+        )}
       </div>
 
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
@@ -210,144 +208,16 @@ function CAPA() {
                   <td>
                     <button 
                       className="btn-small"
-                      onClick={() => {
-                        setSelectedCAPA(capa);
-                        setStatusUpdate({ status: capa.status, notes: '' });
-                        setShowStatusModal(true);
-                      }}
+                      onClick={() => handleViewCAPA(capa.id)}
                     >
-                      Update Status
+                      View Details
                     </button>
-                    {capa.status === 'in_progress' && (
-                      <button 
-                        className="btn-small"
-                        onClick={() => {
-                          setSelectedCAPA(capa);
-                          setCompletionData({
-                            rootCause: capa.rootCause || '',
-                            proposedAction: capa.proposedAction || '',
-                          });
-                          setShowCompleteModal(true);
-                        }}
-                      >
-                        Complete
-                      </button>
-                    )}
-                    {capa.status === 'completed' && (
-                      <button 
-                        className="btn-small"
-                        onClick={() => {
-                          setSelectedCAPA(capa);
-                          setVerificationData({ effectiveness: '' });
-                          setShowVerifyModal(true);
-                        }}
-                      >
-                        Verify
-                      </button>
-                    )}
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      )}
-
-      {/* Status Update Modal */}
-      {showStatusModal && selectedCAPA && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>Update CAPA Status</h2>
-            <p><strong>CAPA:</strong> {selectedCAPA.capaNumber} - {selectedCAPA.title}</p>
-            <div className="form-group">
-              <label>Status:</label>
-              <select
-                value={statusUpdate.status}
-                onChange={(e) => setStatusUpdate({ ...statusUpdate, status: e.target.value as any })}
-              >
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="verified">Verified</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Notes (optional):</label>
-              <textarea
-                value={statusUpdate.notes}
-                onChange={(e) => setStatusUpdate({ ...statusUpdate, notes: e.target.value })}
-                rows={4}
-              />
-            </div>
-            <div className="modal-actions">
-              <button className="btn-primary" onClick={handleStatusUpdate}>Update</button>
-              <button className="btn-secondary" onClick={() => setShowStatusModal(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Complete CAPA Modal */}
-      {showCompleteModal && selectedCAPA && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>Complete CAPA</h2>
-            <p><strong>CAPA:</strong> {selectedCAPA.capaNumber} - {selectedCAPA.title}</p>
-            <div className="form-group">
-              <label>Root Cause:</label>
-              <textarea
-                value={completionData.rootCause}
-                onChange={(e) => setCompletionData({ ...completionData, rootCause: e.target.value })}
-                rows={4}
-                placeholder="Describe the root cause analysis..."
-              />
-            </div>
-            <div className="form-group">
-              <label>Proposed Action:</label>
-              <textarea
-                value={completionData.proposedAction}
-                onChange={(e) => setCompletionData({ ...completionData, proposedAction: e.target.value })}
-                rows={4}
-                placeholder="Describe the corrective/preventive action taken..."
-              />
-            </div>
-            <div className="modal-actions">
-              <button className="btn-primary" onClick={handleComplete}>Complete</button>
-              <button className="btn-secondary" onClick={() => setShowCompleteModal(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Verify CAPA Modal */}
-      {showVerifyModal && selectedCAPA && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>Verify CAPA Effectiveness</h2>
-            <p><strong>CAPA:</strong> {selectedCAPA.capaNumber} - {selectedCAPA.title}</p>
-            <div className="form-group">
-              <label>Effectiveness Verification:</label>
-              <textarea
-                value={verificationData.effectiveness}
-                onChange={(e) => setVerificationData({ effectiveness: e.target.value })}
-                rows={6}
-                placeholder="Describe the effectiveness of the action taken..."
-                required
-              />
-            </div>
-            <div className="modal-actions">
-              <button 
-                className="btn-primary" 
-                onClick={handleVerify}
-                disabled={!verificationData.effectiveness.trim()}
-              >
-                Verify
-              </button>
-              <button className="btn-secondary" onClick={() => setShowVerifyModal(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
       )}
 
       <style>{`
