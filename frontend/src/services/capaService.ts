@@ -176,3 +176,22 @@ export const getOverdueCAPAs = async (): Promise<{ data: CAPA[] }> => {
   const response = await api.get<{ data: CAPA[] }>('/capas/overdue');
   return response.data;
 };
+
+export interface CAPADashboardStats {
+  totalOpen: number;
+  totalInProgress: number;
+  totalCompleted: number;
+  totalVerified: number;
+  totalClosed: number;
+  totalOverdue: number;
+  byPriority: { priority: string; count: number }[];
+  byType: { type: string; count: number }[];
+}
+
+/**
+ * Get CAPA dashboard statistics
+ */
+export const getCAPADashboardStats = async (): Promise<CAPADashboardStats> => {
+  const response = await api.get<CAPADashboardStats>('/capas/dashboard/stats');
+  return response.data;
+};

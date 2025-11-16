@@ -11,6 +11,7 @@ import NCR from './pages/NCR';
 import NCRDetail from './pages/NCRDetail';
 import CAPA from './pages/CAPA';
 import CAPADetail from './pages/CAPADetail';
+import CAPADashboard from './pages/CAPADashboard';
 import Equipment from './pages/Equipment';
 import EquipmentReadOnly from './pages/EquipmentReadOnly';
 import Training from './pages/Training';
@@ -50,6 +51,7 @@ function App() {
         <Route path="ncr" element={<NCR />} />
         <Route path="ncr/:id" element={<NCRDetail />} />
         <Route path="capa" element={<CAPA />} />
+        <Route path="capa/dashboard" element={<CAPADashboard />} />
         <Route path="capa/:id" element={<CAPADetail />} />
         <Route path="equipment" element={<Equipment />} />
         <Route path="training" element={<Training />} />

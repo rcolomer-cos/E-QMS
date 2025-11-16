@@ -11,6 +11,7 @@ import {
   verifyCAPA,
   getCAPAsAssignedToMe,
   getOverdueCAPAs,
+  getCAPADashboardStats,
 } from '../controllers/capaController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { 
@@ -34,6 +35,9 @@ router.use(authenticateToken);
 router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateCAPA, createCAPA);
 
 // Workflow-specific routes (placed before :id routes to avoid conflicts)
+// Get dashboard statistics - Accessible to all authenticated users
+router.get('/dashboard/stats', getCAPADashboardStats);
+
 // Get CAPAs assigned to current user - Accessible to all authenticated users
 router.get('/assigned-to-me', getCAPAsAssignedToMe);
 
