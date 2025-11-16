@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getDocumentById, getDocumentVersionHistory, uploadDocumentFile } from '../services/documentService';
+import { getDocumentById, getDocumentVersionHistory, uploadDocumentFile, downloadDocumentFile } from '../services/documentService';
 import { Document } from '../types';
 import FileUpload from '../components/FileUpload';
 import '../styles/DocumentView.css';
@@ -75,6 +75,18 @@ function DocumentView() {
     }
   };
 
+  const handleDownload = async () => {
+    if (!id || !document?.fileName) return;
+    
+    try {
+      await downloadDocumentFile(parseInt(id, 10), document.fileName);
+    } catch (err) {
+      console.error('Download failed:', err);
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to download file');
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading document...</div>;
   }
@@ -112,7 +124,9 @@ function DocumentView() {
             </button>
           )}
           {document.fileName && (
-            <button className="btn-primary">Download</button>
+            <button className="btn-primary" onClick={handleDownload}>
+              Download File
+            </button>
           )}
         </div>
       </div>
