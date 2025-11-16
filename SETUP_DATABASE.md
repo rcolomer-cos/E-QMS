@@ -55,7 +55,30 @@ This script will:
 - Insert default roles
 - Display a summary of what was created
 
-#### Step 3: Verify Installation
+#### Step 3: Create Initial Admin User
+
+After creating all tables, create an admin user by executing the provided script:
+
+1. Open the file: `backend/database/13_insert_admin_user.sql`
+2. Ensure you're connected to the `eqms` database
+3. Execute the script (F5 or Execute button)
+
+This script will:
+- Create an admin user with email `admin@eqms.local`
+- Assign the admin role to the user
+- Set a default password `Admin@123` (must be changed on first login)
+- Display login credentials and security warnings
+
+**Default Admin Credentials:**
+- Email: `admin@eqms.local`
+- Password: `Admin@123`
+
+⚠️ **Security Notes:**
+- Change the default password immediately after first login
+- The system enforces a password change on first login
+- Delete or secure the script file after use in production
+
+#### Step 4: Verify Installation
 
 Run this query to verify all tables were created:
 
@@ -71,6 +94,13 @@ ORDER BY name;
 -- Check roles
 SELECT * FROM Roles ORDER BY level DESC;
 
+-- Check admin user
+SELECT u.email, u.firstName, u.lastName, u.department, r.displayName as role
+FROM Users u
+INNER JOIN UserRoles ur ON u.id = ur.userId
+INNER JOIN Roles r ON ur.roleId = r.id
+WHERE u.email = 'admin@eqms.local';
+
 -- Check version history
 SELECT * FROM DatabaseVersion ORDER BY appliedDate;
 ```
@@ -78,6 +108,7 @@ SELECT * FROM DatabaseVersion ORDER BY appliedDate;
 You should see:
 - 4 core tables created
 - 6 roles inserted (superuser, admin, manager, auditor, user, viewer)
+- 1 admin user created
 - Version records in DatabaseVersion
 
 ### Method 2: Using Node.js Initialization Script
