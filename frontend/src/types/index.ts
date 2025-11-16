@@ -112,9 +112,22 @@ export interface NCR {
   id: number;
   ncrNumber: string;
   title: string;
-  status: string;
-  severity: string;
+  description: string;
+  source: string;
+  category: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed' | 'rejected';
+  severity: 'minor' | 'major' | 'critical';
   detectedDate: string;
+  reportedBy: number;
+  assignedTo?: number;
+  rootCause?: string;
+  containmentAction?: string;
+  correctiveAction?: string;
+  verifiedBy?: number;
+  verifiedDate?: string;
+  closedDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CAPA {
