@@ -56,7 +56,26 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    11_create_equipment_table.sql
    ```
 
-3. **Optional: Load Sample Data** (for development/testing):
+3. **Create Initial Admin User** (required for first-time setup):
+   
+   After creating all tables, create an initial admin user to access the system:
+   
+   ```
+   13_insert_admin_user.sql
+   ```
+   
+   **Default Credentials:**
+   - Email: `admin@eqms.local`
+   - Password: `Admin@123`
+   
+   **Important Security Notes:**
+   - ⚠️ Change the default password immediately after first login
+   - The system enforces a password change on first login
+   - Only use this script for initial setup or development
+   - Delete or secure this script file after use in production
+   - Safe to run multiple times (checks if admin user exists before inserting)
+
+4. **Optional: Load Sample Data** (for development/testing):
    
    After creating all tables and users, you can optionally load sample data:
    
@@ -73,7 +92,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    - Ideal for development, testing, and demonstration purposes
    - **Do not use in production** without reviewing and customizing the data
 
-4. **Verify Installation**:
+5. **Verify Installation**:
    ```sql
    -- Check database version
    SELECT * FROM DatabaseVersion ORDER BY appliedDate DESC;

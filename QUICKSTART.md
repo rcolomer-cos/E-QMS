@@ -67,37 +67,23 @@ Open your browser and navigate to:
 http://localhost:5173
 ```
 
-### 6. Create Your First User
+### 6. Create Your First Admin User
 
-Since the system starts empty, you'll need to create an admin user manually in the database:
+After initializing the database, create an admin user by running the provided SQL script:
 
-```sql
-USE eqms;
-
--- Create admin user (password: Admin123!)
-INSERT INTO Users (username, email, password, role, firstName, lastName, active)
-VALUES (
-  'admin',
-  'admin@example.com',
-  '$2b$10$YourHashedPasswordHere', -- Use bcrypt to hash "Admin123!"
-  'admin',
-  'System',
-  'Administrator',
-  1
-);
+```bash
+# In SQL Server Management Studio (SSMS) or Azure Data Studio:
+# Open and execute: backend/database/13_insert_admin_user.sql
 ```
 
-Or create a user via API:
-```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "email": "admin@example.com",
-    "password": "Admin123!",
-    "role": "admin",
-    "firstName": "System",
-    "lastName": "Administrator"
+**Default Admin Credentials:**
+- Email: `admin@eqms.local`
+- Password: `Admin@123`
+
+⚠️ **Important:** Change the default password immediately after first login. The system will enforce this.
+
+**Alternative (Manual Creation):**
+If you prefer to create your own admin user with a custom password, you can use the SQL script as a template and modify the email and bcrypt-hashed password
   }'
 ```
 
