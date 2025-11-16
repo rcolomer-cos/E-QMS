@@ -116,6 +116,89 @@ export const updateNCR = async (req: AuthRequest, res: Response): Promise<void> 
   }
 };
 
+export const updateNCRStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Check if NCR exists
+    const ncr = await NCRModel.findById(parseInt(id, 10));
+    if (!ncr) {
+      res.status(404).json({ error: 'NCR not found' });
+      return;
+    }
+
+    // Additional check: Only Admin and Manager can close NCRs
+    if (status === 'closed') {
+      const hasClosePermission = req.user.roles.some(role => 
+        role === 'admin' || role === 'manager' || role === 'superuser'
+      );
+      if (!hasClosePermission) {
+        res.status(403).json({ error: 'Only Admin and Manager can close NCRs' });
+        return;
+      }
+    }
+
+    await NCRModel.update(parseInt(id, 10), { status });
+
+    res.json({ 
+      message: 'NCR status updated successfully',
+      status 
+    });
+  } catch (error) {
+    console.error('Update NCR status error:', error);
+    res.status(500).json({ error: 'Failed to update NCR status' });
+  }
+};
+
+export const assignNCR = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { assignedTo } = req.body;
+
+    // Check if NCR exists
+    const ncr = await NCRModel.findById(parseInt(id, 10));
+    if (!ncr) {
+      res.status(404).json({ error: 'NCR not found' });
+      return;
+    }
+
+    await NCRModel.update(parseInt(id, 10), { assignedTo });
+
+    res.json({ 
+      message: 'NCR assigned successfully',
+      assignedTo 
+    });
+  } catch (error) {
+    console.error('Assign NCR error:', error);
+    res.status(500).json({ error: 'Failed to assign NCR' });
+  }
+};
+
 export const deleteNCR = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
