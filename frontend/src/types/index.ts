@@ -106,3 +106,17 @@ export interface Process {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface ProcessOwner {
+  id: number;
+  processId: number;
+  ownerId: number;
+  ownerName?: string;
+  ownerEmail?: string;
+  assignedAt?: string;
+  assignedBy?: number;
+  assignedByName?: string;
+  isPrimaryOwner: boolean;
+  active: boolean;
+  notes?: string;
+}
