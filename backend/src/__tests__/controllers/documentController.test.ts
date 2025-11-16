@@ -2,6 +2,7 @@ import { Response } from 'express';
 import {
   createDocument,
   getDocuments,
+  getPendingDocuments,
   getDocumentById,
   updateDocument,
   deleteDocument,
@@ -21,6 +22,7 @@ import { validationResult } from 'express-validator';
 // Mock dependencies
 jest.mock('../../models/DocumentModel');
 jest.mock('../../models/DocumentRevisionModel');
+jest.mock('../../config/database');
 jest.mock('express-validator');
 
 describe('Document Controller', () => {
@@ -179,6 +181,48 @@ describe('Document Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get documents' });
+    });
+  });
+
+  describe('getPendingDocuments', () => {
+    let mockPool: any;
+
+    beforeEach(() => {
+      mockPool = {
+        request: jest.fn().mockReturnThis(),
+        query: jest.fn(),
+      };
+      const { getConnection } = require('../../config/database');
+      (getConnection as jest.Mock).mockResolvedValue(mockPool);
+    });
+
+    it('should return pending documents with enriched data', async () => {
+      const mockPendingDocs = [
+        {
+          id: 1,
+          title: 'Document Pending Review',
+          status: 'review',
+          creatorFirstName: 'John',
+          creatorLastName: 'Doe',
+          latestRevisionNumber: 2,
+          latestChangeDescription: 'Updated content',
+        },
+      ];
+      mockPool.query.mockResolvedValue({ recordset: mockPendingDocs });
+
+      await getPendingDocuments(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockPool.query).toHaveBeenCalled();
+      expect(mockJson).toHaveBeenCalledWith(mockPendingDocs);
+    });
+
+    it('should return 500 on database error', async () => {
+      mockPool.query.mockRejectedValue(new Error('Database error'));
+
+      await getPendingDocuments(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get pending documents' });
     });
   });
 

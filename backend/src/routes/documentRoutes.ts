@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createDocument,
   getDocuments,
+  getPendingDocuments,
   getDocumentById,
   updateDocument,
   deleteDocument,
@@ -32,6 +33,9 @@ router.post('/', createLimiter, validateDocument, authorizeRoles(UserRole.ADMIN,
 
 // List documents - all authenticated users can list (filtering happens in controller if needed)
 router.get('/', getDocuments);
+
+// Get pending documents (in review status) with enriched data
+router.get('/pending', getPendingDocuments);
 
 // Get document by ID - requires VIEW permission
 router.get('/:id', validateId, checkDocumentPermission(DocumentAction.VIEW), getDocumentById);

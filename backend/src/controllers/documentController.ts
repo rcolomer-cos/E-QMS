@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { DocumentModel, Document } from '../models/DocumentModel';
 import { AuthRequest, DocumentStatus } from '../types';
 import { validationResult } from 'express-validator';
+import { getConnection } from '../config/database';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -47,6 +48,50 @@ export const getDocuments = async (req: AuthRequest, res: Response): Promise<voi
   } catch (error) {
     console.error('Get documents error:', error);
     res.status(500).json({ error: 'Failed to get documents' });
+  }
+};
+
+export const getPendingDocuments = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pool = await getConnection();
+    
+    // Get documents in 'review' status with creator and latest revision information
+    const result = await pool
+      .request()
+      .query(`
+        SELECT 
+          d.*,
+          creator.firstName AS creatorFirstName,
+          creator.lastName AS creatorLastName,
+          creator.email AS creatorEmail,
+          owner.firstName AS ownerFirstName,
+          owner.lastName AS ownerLastName,
+          owner.email AS ownerEmail,
+          latestRev.revisionNumber AS latestRevisionNumber,
+          latestRev.changeDescription AS latestChangeDescription,
+          latestRev.changeType AS latestChangeType,
+          latestRev.revisionDate AS latestRevisionDate,
+          latestRev.authorId AS latestRevisionAuthorId,
+          revAuthor.firstName AS latestRevisionAuthorFirstName,
+          revAuthor.lastName AS latestRevisionAuthorLastName
+        FROM Documents d
+        LEFT JOIN Users creator ON d.createdBy = creator.id
+        LEFT JOIN Users owner ON d.ownerId = owner.id
+        LEFT JOIN (
+          SELECT 
+            dr.*,
+            ROW_NUMBER() OVER (PARTITION BY dr.documentId ORDER BY dr.revisionDate DESC) AS rn
+          FROM DocumentRevisions dr
+        ) latestRev ON d.id = latestRev.documentId AND latestRev.rn = 1
+        LEFT JOIN Users revAuthor ON latestRev.authorId = revAuthor.id
+        WHERE d.status = 'review'
+        ORDER BY d.updatedAt DESC, d.createdAt DESC
+      `);
+
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Get pending documents error:', error);
+    res.status(500).json({ error: 'Failed to get pending documents' });
   }
 };
 

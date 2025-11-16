@@ -1,5 +1,5 @@
 import api from './api';
-import { Document } from '../types';
+import { Document, PendingDocument } from '../types';
 
 export interface DocumentFilters {
   status?: string;
@@ -72,4 +72,21 @@ export const downloadDocumentFile = async (id: number, fileName: string): Promis
   link.click();
   link.remove();
   window.URL.revokeObjectURL(url);
+};
+
+export const getPendingDocuments = async (): Promise<PendingDocument[]> => {
+  const response = await api.get('/documents/pending');
+  return response.data;
+};
+
+export const approveDocument = async (id: number, comments?: string): Promise<void> => {
+  await api.post(`/documents/${id}/approve`, { comments });
+};
+
+export const rejectDocument = async (id: number, reason: string): Promise<void> => {
+  await api.post(`/documents/${id}/reject`, { reason });
+};
+
+export const requestChanges = async (id: number, changes: string): Promise<void> => {
+  await api.post(`/documents/${id}/request-changes`, { changes });
 };
