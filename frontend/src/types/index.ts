@@ -116,9 +116,25 @@ export interface Equipment {
   id: number;
   equipmentNumber: string;
   name: string;
-  status: string;
+  description?: string;
+  manufacturer?: string;
+  model?: string;
+  serialNumber?: string;
   location: string;
+  department?: string;
+  status: string;
+  purchaseDate?: string;
+  lastCalibrationDate?: string;
   nextCalibrationDate?: string;
+  calibrationInterval?: number;
+  lastMaintenanceDate?: string;
+  nextMaintenanceDate?: string;
+  maintenanceInterval?: number;
+  qrCode?: string;
+  responsiblePerson?: number;
+  responsiblePersonName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Training {
