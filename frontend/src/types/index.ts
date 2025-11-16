@@ -79,3 +79,30 @@ export interface Training {
   scheduledDate: string;
   category: string;
 }
+
+export interface Department {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  managerId?: number;
+  managerName?: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Process {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  departmentId?: number;
+  departmentName?: string;
+  processCategory?: string;
+  objective?: string;
+  scope?: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}

@@ -9,6 +9,8 @@ import CAPA from './pages/CAPA';
 import Equipment from './pages/Equipment';
 import Training from './pages/Training';
 import Users from './pages/Users';
+import Departments from './pages/Departments';
+import Processes from './pages/Processes';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
         <Route path="equipment" element={<Equipment />} />
         <Route path="training" element={<Training />} />
         <Route path="users" element={<Users />} />
+        <Route path="departments" element={<Departments />} />
+        <Route path="processes" element={<Processes />} />
       </Route>
     </Routes>
   );
