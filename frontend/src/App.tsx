@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Documents from './pages/Documents';
+import DocumentView from './pages/DocumentView';
 import Audits from './pages/Audits';
 import NCR from './pages/NCR';
 import CAPA from './pages/CAPA';
@@ -27,6 +28,7 @@ function App() {
       >
         <Route index element={<Dashboard />} />
         <Route path="documents" element={<Documents />} />
+        <Route path="documents/:id" element={<DocumentView />} />
         <Route path="audits" element={<Audits />} />
         <Route path="ncr" element={<NCR />} />
         <Route path="capa" element={<CAPA />} />

@@ -177,3 +177,24 @@ export const uploadDocumentFile = async (req: AuthRequest, res: Response): Promi
     res.status(500).json({ error: 'Failed to upload document file' });
   }
 };
+
+export const getDocumentVersionHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    const versions = await DocumentModel.getVersionHistory(documentId);
+
+    res.json(versions);
+  } catch (error) {
+    console.error('Get version history error:', error);
+    res.status(500).json({ error: 'Failed to get version history' });
+  }
+};
