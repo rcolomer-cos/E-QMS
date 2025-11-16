@@ -478,3 +478,377 @@ export const validateEquipmentUpdate = [
     .isInt({ min: 1 })
     .withMessage('Invalid responsible person ID'),
 ];
+
+// NCR validators
+export const validateNCR = [
+  body('ncrNumber')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('NCR number is required and must not exceed 100 characters'),
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title is required and must not exceed 500 characters'),
+  body('description')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Description is required and must not exceed 2000 characters'),
+  body('source')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Source is required and must not exceed 200 characters'),
+  body('category')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Category is required and must not exceed 100 characters'),
+  body('status')
+    .isIn(['open', 'in_progress', 'resolved', 'closed', 'rejected'])
+    .withMessage('Invalid status'),
+  body('severity')
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Severity is required and must not exceed 50 characters'),
+  body('detectedDate')
+    .isISO8601()
+    .withMessage('Detected date must be a valid date'),
+  body('reportedBy')
+    .isInt({ min: 1 })
+    .withMessage('Reporter ID is required and must be a valid user ID'),
+  body('assignedTo')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid assigned user ID'),
+];
+
+export const validateNCRUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must not exceed 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('status')
+    .optional()
+    .isIn(['open', 'in_progress', 'resolved', 'closed', 'rejected'])
+    .withMessage('Invalid status'),
+  body('assignedTo')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid assigned user ID'),
+  body('rootCause')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Root cause must not exceed 2000 characters'),
+  body('containmentAction')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Containment action must not exceed 2000 characters'),
+  body('correctiveAction')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Corrective action must not exceed 2000 characters'),
+];
+
+// CAPA validators
+export const validateCAPA = [
+  body('capaNumber')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('CAPA number is required and must not exceed 100 characters'),
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title is required and must not exceed 500 characters'),
+  body('description')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Description is required and must not exceed 2000 characters'),
+  body('type')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Type is required and must not exceed 100 characters'),
+  body('source')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Source is required and must not exceed 200 characters'),
+  body('status')
+    .isIn(['open', 'in_progress', 'completed', 'verified', 'closed'])
+    .withMessage('Invalid status'),
+  body('priority')
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Priority is required and must not exceed 50 characters'),
+  body('proposedAction')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Proposed action is required and must not exceed 2000 characters'),
+  body('actionOwner')
+    .isInt({ min: 1 })
+    .withMessage('Action owner ID is required and must be a valid user ID'),
+  body('targetDate')
+    .isISO8601()
+    .withMessage('Target date must be a valid date'),
+  body('createdBy')
+    .isInt({ min: 1 })
+    .withMessage('Creator ID is required and must be a valid user ID'),
+  body('ncrId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid NCR ID'),
+  body('auditId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid audit ID'),
+];
+
+export const validateCAPAUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must not exceed 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('status')
+    .optional()
+    .isIn(['open', 'in_progress', 'completed', 'verified', 'closed'])
+    .withMessage('Invalid status'),
+  body('proposedAction')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Proposed action must not exceed 2000 characters'),
+  body('rootCause')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Root cause must not exceed 2000 characters'),
+  body('effectiveness')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Effectiveness must not exceed 2000 characters'),
+];
+
+// Training validators
+export const validateTraining = [
+  body('trainingNumber')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Training number is required and must not exceed 100 characters'),
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title is required and must not exceed 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('category')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Category is required and must not exceed 100 characters'),
+  body('status')
+    .isIn(['scheduled', 'completed', 'expired', 'cancelled'])
+    .withMessage('Invalid status'),
+  body('scheduledDate')
+    .isISO8601()
+    .withMessage('Scheduled date must be a valid date'),
+  body('createdBy')
+    .isInt({ min: 1 })
+    .withMessage('Creator ID is required and must be a valid user ID'),
+  body('duration')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Duration must be a positive integer'),
+  body('expiryMonths')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Expiry months must be a positive integer'),
+];
+
+export const validateTrainingUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must not exceed 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('status')
+    .optional()
+    .isIn(['scheduled', 'completed', 'expired', 'cancelled'])
+    .withMessage('Invalid status'),
+  body('completedDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Completed date must be a valid date'),
+];
+
+// Calibration Record validators
+export const validateCalibrationRecord = [
+  body('equipmentId')
+    .isInt({ min: 1 })
+    .withMessage('Equipment ID is required and must be a valid ID'),
+  body('calibrationDate')
+    .isISO8601()
+    .withMessage('Calibration date must be a valid date'),
+  body('performedBy')
+    .isInt({ min: 1 })
+    .withMessage('Performed by ID is required and must be a valid user ID'),
+  body('result')
+    .isIn(['pending', 'passed', 'failed', 'conditional'])
+    .withMessage('Invalid result'),
+  body('passed')
+    .isBoolean()
+    .withMessage('Passed must be a boolean value'),
+  body('status')
+    .isIn(['scheduled', 'in_progress', 'completed', 'overdue', 'cancelled'])
+    .withMessage('Invalid status'),
+  body('createdBy')
+    .isInt({ min: 1 })
+    .withMessage('Creator ID is required and must be a valid user ID'),
+  body('nextDueDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Next due date must be a valid date'),
+  body('certificateNumber')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Certificate number must not exceed 100 characters'),
+];
+
+export const validateCalibrationRecordUpdate = [
+  body('result')
+    .optional()
+    .isIn(['pending', 'passed', 'failed', 'conditional'])
+    .withMessage('Invalid result'),
+  body('passed')
+    .optional()
+    .isBoolean()
+    .withMessage('Passed must be a boolean value'),
+  body('status')
+    .optional()
+    .isIn(['scheduled', 'in_progress', 'completed', 'overdue', 'cancelled'])
+    .withMessage('Invalid status'),
+  body('findings')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Findings must not exceed 2000 characters'),
+  body('correctiveAction')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Corrective action must not exceed 2000 characters'),
+];
+
+// Inspection Record validators
+export const validateInspectionRecord = [
+  body('equipmentId')
+    .isInt({ min: 1 })
+    .withMessage('Equipment ID is required and must be a valid ID'),
+  body('inspectionDate')
+    .isISO8601()
+    .withMessage('Inspection date must be a valid date'),
+  body('inspectedBy')
+    .isInt({ min: 1 })
+    .withMessage('Inspected by ID is required and must be a valid user ID'),
+  body('inspectionType')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Inspection type is required and must not exceed 100 characters'),
+  body('result')
+    .isIn(['pending', 'passed', 'passed_with_observations', 'failed', 'conditional'])
+    .withMessage('Invalid result'),
+  body('passed')
+    .isBoolean()
+    .withMessage('Passed must be a boolean value'),
+  body('status')
+    .isIn(['scheduled', 'in_progress', 'completed', 'overdue', 'cancelled'])
+    .withMessage('Invalid status'),
+  body('createdBy')
+    .isInt({ min: 1 })
+    .withMessage('Creator ID is required and must be a valid user ID'),
+];
+
+export const validateInspectionRecordUpdate = [
+  body('result')
+    .optional()
+    .isIn(['pending', 'passed', 'passed_with_observations', 'failed', 'conditional'])
+    .withMessage('Invalid result'),
+  body('passed')
+    .optional()
+    .isBoolean()
+    .withMessage('Passed must be a boolean value'),
+  body('status')
+    .optional()
+    .isIn(['scheduled', 'in_progress', 'completed', 'overdue', 'cancelled'])
+    .withMessage('Invalid status'),
+  body('findings')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Findings must not exceed 2000 characters'),
+];
+
+// Service/Maintenance Record validators
+export const validateServiceMaintenanceRecord = [
+  body('equipmentId')
+    .isInt({ min: 1 })
+    .withMessage('Equipment ID is required and must be a valid ID'),
+  body('serviceDate')
+    .isISO8601()
+    .withMessage('Service date must be a valid date'),
+  body('performedBy')
+    .isInt({ min: 1 })
+    .withMessage('Performed by ID is required and must be a valid user ID'),
+  body('serviceType')
+    .isIn(['preventive', 'corrective', 'predictive', 'emergency', 'breakdown', 'routine', 'upgrade', 'installation', 'decommission'])
+    .withMessage('Invalid service type'),
+  body('description')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Description is required and must not exceed 2000 characters'),
+  body('outcome')
+    .isIn(['completed', 'partially_completed', 'failed', 'deferred', 'cancelled'])
+    .withMessage('Invalid outcome'),
+  body('status')
+    .isIn(['scheduled', 'in_progress', 'completed', 'overdue', 'cancelled', 'on_hold'])
+    .withMessage('Invalid status'),
+  body('createdBy')
+    .isInt({ min: 1 })
+    .withMessage('Creator ID is required and must be a valid user ID'),
+];
+
+export const validateServiceMaintenanceRecordUpdate = [
+  body('outcome')
+    .optional()
+    .isIn(['completed', 'partially_completed', 'failed', 'deferred', 'cancelled'])
+    .withMessage('Invalid outcome'),
+  body('status')
+    .optional()
+    .isIn(['scheduled', 'in_progress', 'completed', 'overdue', 'cancelled', 'on_hold'])
+    .withMessage('Invalid status'),
+  body('workPerformed')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Work performed must not exceed 2000 characters'),
+];
+
