@@ -506,6 +506,296 @@ Retrieve a specific role by ID with permissions.
 
 ---
 
+## Document Management Endpoints
+
+### Create Document
+Create a new document in the system.
+
+**Endpoint:** `POST /api/documents`  
+**Access:** Admin, Manager, User  
+**Rate Limiting:** 10 requests per 15 minutes  
+**Request Body:**
+```json
+{
+  "title": "Quality Management Procedure",
+  "description": "Detailed procedure for quality management processes",
+  "documentType": "Procedure",
+  "category": "Quality",
+  "version": "1.0",
+  "status": "draft",
+  "ownerId": 5,
+  "effectiveDate": "2024-02-01T00:00:00Z",
+  "reviewDate": "2024-08-01T00:00:00Z",
+  "expiryDate": "2025-02-01T00:00:00Z"
+}
+```
+**Validation Rules:**
+- `title`: Required, 1-500 characters
+- `description`: Optional, max 2000 characters
+- `documentType`: Required, max 100 characters
+- `category`: Required, max 100 characters
+- `version`: Optional, max 50 characters (defaults to "1.0")
+- `status`: Optional, one of: "draft", "review", "approved", "obsolete" (defaults to "draft")
+- `ownerId`: Optional, valid user ID
+- `effectiveDate`, `reviewDate`, `expiryDate`: Optional, ISO 8601 date format
+
+**Response:**
+```json
+{
+  "message": "Document created successfully",
+  "documentId": 123
+}
+```
+
+### Get All Documents
+Retrieve all documents with optional filtering.
+
+**Endpoint:** `GET /api/documents`  
+**Access:** All authenticated users  
+**Query Parameters:**
+- `status` (optional): Filter by status ("draft", "review", "approved", "obsolete")
+- `category` (optional): Filter by category
+- `documentType` (optional): Filter by document type
+
+**Example:**
+```bash
+GET /api/documents?status=approved&category=Quality
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "title": "Quality Management Procedure",
+    "description": "Detailed procedure for quality management processes",
+    "documentType": "Procedure",
+    "category": "Quality",
+    "version": "1.0",
+    "parentDocumentId": null,
+    "status": "approved",
+    "ownerId": 5,
+    "filePath": "/uploads/documents/qm-proc-1234567890.pdf",
+    "fileName": "qm-procedure.pdf",
+    "fileSize": 245678,
+    "createdBy": 1,
+    "approvedBy": 2,
+    "approvedAt": "2024-01-20T14:30:00Z",
+    "effectiveDate": "2024-02-01T00:00:00Z",
+    "reviewDate": "2024-08-01T00:00:00Z",
+    "expiryDate": "2025-02-01T00:00:00Z",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-20T14:30:00Z"
+  }
+]
+```
+
+### Get Document by ID
+Retrieve a specific document by its ID.
+
+**Endpoint:** `GET /api/documents/:id`  
+**Access:** All authenticated users  
+**Response:**
+```json
+{
+  "id": 1,
+  "title": "Quality Management Procedure",
+  "description": "Detailed procedure for quality management processes",
+  "documentType": "Procedure",
+  "category": "Quality",
+  "version": "1.0",
+  "parentDocumentId": null,
+  "status": "approved",
+  "ownerId": 5,
+  "filePath": "/uploads/documents/qm-proc-1234567890.pdf",
+  "fileName": "qm-procedure.pdf",
+  "fileSize": 245678,
+  "createdBy": 1,
+  "approvedBy": 2,
+  "approvedAt": "2024-01-20T14:30:00Z",
+  "effectiveDate": "2024-02-01T00:00:00Z",
+  "reviewDate": "2024-08-01T00:00:00Z",
+  "expiryDate": "2025-02-01T00:00:00Z",
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-20T14:30:00Z"
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "error": "Document not found"
+}
+```
+
+### Update Document
+Update document metadata (does not update file - use upload endpoint for files).
+
+**Endpoint:** `PUT /api/documents/:id`  
+**Access:** Admin, Manager, User  
+**Request Body (all fields optional):**
+```json
+{
+  "title": "Updated Quality Management Procedure",
+  "description": "Updated description",
+  "documentType": "Updated Procedure",
+  "category": "Updated Quality",
+  "version": "1.1",
+  "status": "review",
+  "ownerId": 6,
+  "filePath": "/new/path/document.pdf",
+  "fileName": "updated-document.pdf",
+  "fileSize": 300000,
+  "effectiveDate": "2024-03-01T00:00:00Z",
+  "reviewDate": "2024-09-01T00:00:00Z",
+  "expiryDate": "2025-03-01T00:00:00Z",
+  "approvedBy": 3,
+  "approvedAt": "2024-02-15T10:00:00Z"
+}
+```
+
+**Validation Rules:**
+- `title`: 1-500 characters if provided
+- `description`: max 2000 characters if provided
+- `documentType`: max 100 characters if provided
+- `category`: max 100 characters if provided
+- `version`: max 50 characters if provided
+- `status`: one of "draft", "review", "approved", "obsolete" if provided
+- `ownerId`, `approvedBy`: valid user ID if provided
+- `filePath`: max 1000 characters if provided
+- `fileName`: max 500 characters if provided
+- `fileSize`: non-negative integer if provided
+- `effectiveDate`, `reviewDate`, `expiryDate`, `approvedAt`: ISO 8601 date format if provided
+
+**Response:**
+```json
+{
+  "message": "Document updated successfully"
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "error": "Document not found"
+}
+```
+
+**Error Response (400 - Validation):**
+```json
+{
+  "errors": [
+    {
+      "msg": "Title must be between 1 and 500 characters",
+      "param": "title",
+      "location": "body"
+    }
+  ]
+}
+```
+
+### Delete Document
+Delete a document from the system (soft delete recommended in production).
+
+**Endpoint:** `DELETE /api/documents/:id`  
+**Access:** Admin only  
+**Response:**
+```json
+{
+  "message": "Document deleted successfully"
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "error": "Access denied"
+}
+```
+
+### Create Document Version
+Create a new version of an existing document.
+
+**Endpoint:** `POST /api/documents/:id/version`  
+**Access:** Admin, Manager, User  
+**Rate Limiting:** 10 requests per 15 minutes  
+**Response:**
+```json
+{
+  "message": "Document version created successfully",
+  "documentId": 124
+}
+```
+
+**Behavior:**
+- Creates a new document record with incremented version number
+- Links to parent document via `parentDocumentId`
+- Resets status to "draft"
+- Clears approval information
+- Copies all other metadata from parent
+
+### Upload Document File
+Upload or replace the file for a document.
+
+**Endpoint:** `POST /api/documents/:id/upload`  
+**Access:** Admin, Manager, User  
+**Rate Limiting:** 10 requests per 15 minutes  
+**Content-Type:** `multipart/form-data`  
+**Form Data:**
+- `file`: The document file to upload
+
+**Allowed File Types:**
+- PDF (`application/pdf`)
+- Word (`.doc`, `.docx`)
+- Excel (`.xls`, `.xlsx`)
+- PowerPoint (`.ppt`, `.pptx`)
+- Text files (`.txt`)
+- Images (`.jpg`, `.jpeg`, `.png`, `.gif`)
+
+**File Size Limit:** 10 MB
+
+**Response:**
+```json
+{
+  "message": "Document file uploaded successfully",
+  "file": {
+    "fileName": "qm-procedure.pdf",
+    "fileSize": 245678,
+    "filePath": "/uploads/documents/qm-procedure-1234567890-987654321.pdf"
+  }
+}
+```
+
+**Error Response (400 - No File):**
+```json
+{
+  "error": "No file uploaded"
+}
+```
+
+**Error Response (400 - Invalid File Type):**
+```json
+{
+  "error": "Invalid file type. Only PDF, Word, Excel, PowerPoint, text, and image files are allowed."
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "error": "Document not found"
+}
+```
+
+**Example using cURL:**
+```bash
+curl -X POST http://localhost:3000/api/documents/123/upload \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "file=@/path/to/document.pdf"
+```
+
+---
+
 ## Role Hierarchy
 
 The system has the following predefined roles:

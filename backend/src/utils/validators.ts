@@ -42,20 +42,116 @@ export const validateLogin = [
 export const validateDocument = [
   body('title')
     .trim()
-    .isLength({ min: 1, max: 200 })
-    .withMessage('Title must be between 1 and 200 characters'),
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must be between 1 and 500 characters'),
   body('description')
     .optional()
     .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Description must not exceed 1000 characters'),
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
   body('documentType')
-    .isIn(['procedure', 'work_instruction', 'form', 'record', 'policy', 'manual'])
-    .withMessage('Invalid document type'),
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Document type is required and must not exceed 100 characters'),
   body('category')
     .trim()
-    .notEmpty()
-    .withMessage('Category is required'),
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Category is required and must not exceed 100 characters'),
+  body('version')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Version must not exceed 50 characters'),
+  body('status')
+    .optional()
+    .isIn(['draft', 'review', 'approved', 'obsolete'])
+    .withMessage('Invalid status'),
+  body('ownerId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid owner ID'),
+  body('effectiveDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Effective date must be a valid date'),
+  body('reviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Review date must be a valid date'),
+  body('expiryDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Expiry date must be a valid date'),
+];
+
+export const validateDocumentUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must be between 1 and 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('documentType')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Document type must not exceed 100 characters'),
+  body('category')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Category must not exceed 100 characters'),
+  body('version')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Version must not exceed 50 characters'),
+  body('status')
+    .optional()
+    .isIn(['draft', 'review', 'approved', 'obsolete'])
+    .withMessage('Invalid status'),
+  body('ownerId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid owner ID'),
+  body('filePath')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('File path must not exceed 1000 characters'),
+  body('fileName')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('File name must not exceed 500 characters'),
+  body('fileSize')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('File size must be a non-negative integer'),
+  body('effectiveDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Effective date must be a valid date'),
+  body('reviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Review date must be a valid date'),
+  body('expiryDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Expiry date must be a valid date'),
+  body('approvedBy')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid approver ID'),
+  body('approvedAt')
+    .optional()
+    .isISO8601()
+    .withMessage('Approval date must be a valid date'),
 ];
 
 export const validateId: ValidationChain = param('id')

@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { DocumentModel, Document } from '../models/DocumentModel';
-import { AuthRequest, UserRole } from '../types';
+import { AuthRequest, UserRole, DocumentStatus } from '../types';
 import { validationResult } from 'express-validator';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -33,14 +33,14 @@ export const createDocument = async (req: AuthRequest, res: Response): Promise<v
   }
 };
 
-export const getDocuments = async (req: AuthRequest, res: Response) => {
+export const getDocuments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { status, category, documentType } = req.query;
 
     const documents = await DocumentModel.findAll({
-      status: status as any,
-      category: category as string,
-      documentType: documentType as string,
+      status: status as DocumentStatus | undefined,
+      category: category as string | undefined,
+      documentType: documentType as string | undefined,
     });
 
     res.json(documents);
@@ -67,12 +67,26 @@ export const getDocumentById = async (req: AuthRequest, res: Response): Promise<
   }
 };
 
-export const updateDocument = async (req: AuthRequest, res: Response) => {
+export const updateDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
 
-    await DocumentModel.update(parseInt(id, 10), updates);
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    const updates = req.body;
+    await DocumentModel.update(documentId, updates);
 
     res.json({ message: 'Document updated successfully' });
   } catch (error) {
@@ -117,5 +131,49 @@ export const createDocumentVersion = async (req: AuthRequest, res: Response): Pr
   } catch (error) {
     console.error('Create document version error:', error);
     res.status(500).json({ error: 'Failed to create document version' });
+  }
+};
+
+export const uploadDocumentFile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    // Check if file was uploaded
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Update document with file information
+    await DocumentModel.update(documentId, {
+      filePath: req.file.path,
+      fileName: req.file.originalname,
+      fileSize: req.file.size,
+    });
+
+    res.json({
+      message: 'Document file uploaded successfully',
+      file: {
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        filePath: req.file.path,
+      },
+    });
+  } catch (error) {
+    console.error('Upload document file error:', error);
+    res.status(500).json({ error: 'Failed to upload document file' });
   }
 };
