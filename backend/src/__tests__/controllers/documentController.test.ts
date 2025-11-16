@@ -10,6 +10,9 @@ import {
   downloadDocumentFile,
   getDocumentRevisionHistory,
   createDocumentRevision,
+  approveDocument,
+  rejectDocument,
+  requestChangesDocument,
 } from '../../controllers/documentController';
 import { DocumentModel } from '../../models/DocumentModel';
 import { AuthRequest, UserRole, DocumentStatus } from '../../types';
@@ -477,8 +480,6 @@ describe('Document Controller', () => {
   });
 
   describe('approveDocument', () => {
-    const { approveDocument } = require('../../controllers/documentController');
-
     it('should return 401 if user is not authenticated', async () => {
       mockAuthRequest.user = undefined;
       mockAuthRequest.params = { id: '1' };
@@ -669,8 +670,6 @@ describe('Document Controller', () => {
   });
 
   describe('rejectDocument', () => {
-    const { rejectDocument } = require('../../controllers/documentController');
-
     it('should return 401 if user is not authenticated', async () => {
       mockAuthRequest.user = undefined;
 
@@ -757,8 +756,6 @@ describe('Document Controller', () => {
   });
 
   describe('requestChangesDocument', () => {
-    const { requestChangesDocument } = require('../../controllers/documentController');
-
     it('should return 401 if user is not authenticated', async () => {
       mockAuthRequest.user = undefined;
 
