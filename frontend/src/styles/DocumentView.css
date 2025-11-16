@@ -355,3 +355,71 @@
     padding: 0.5rem;
   }
 }
+
+/* Revision History Styles */
+.revision-history {
+  margin-top: 1rem;
+}
+
+.change-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.change-type-create {
+  background-color: #d1f2eb;
+  color: #0a6847;
+}
+
+.change-type-update {
+  background-color: #cfe2ff;
+  color: #084298;
+}
+
+.change-type-approve {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.change-type-obsolete {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.change-type-review {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.change-type-version {
+  background-color: #e7e7ff;
+  color: #4a4aff;
+}
+
+.description-cell {
+  max-width: 300px;
+}
+
+.change-reason {
+  margin-top: 0.25rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.status-transition {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.author-email {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}

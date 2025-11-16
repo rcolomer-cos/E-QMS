@@ -44,6 +44,29 @@ export interface Document {
   updatedAt?: string;
 }
 
+export interface DocumentRevision {
+  id: number;
+  documentId: number;
+  version: string;
+  revisionNumber: number;
+  changeDescription?: string;
+  changeType: 'create' | 'update' | 'approve' | 'obsolete' | 'review' | 'version';
+  changeReason?: string;
+  authorId: number;
+  authorName?: string;
+  authorFirstName?: string;
+  authorLastName?: string;
+  authorEmail?: string;
+  filePath?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileHash?: string;
+  statusBefore?: string;
+  statusAfter: string;
+  previousRevisionId?: number;
+  revisionDate?: string;
+}
+
 export interface PendingDocument extends Document {
   creatorFirstName?: string;
   creatorLastName?: string;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getDocumentById, getDocumentVersionHistory, uploadDocumentFile, downloadDocumentFile } from '../services/documentService';
-import { Document } from '../types';
+import { getDocumentById, getDocumentVersionHistory, getDocumentRevisionHistory, uploadDocumentFile, downloadDocumentFile } from '../services/documentService';
+import { Document, DocumentRevision } from '../types';
 import FileUpload from '../components/FileUpload';
 import '../styles/DocumentView.css';
 
@@ -10,9 +10,11 @@ function DocumentView() {
   const navigate = useNavigate();
   const [document, setDocument] = useState<Document | null>(null);
   const [versionHistory, setVersionHistory] = useState<Document[]>([]);
+  const [revisionHistory, setRevisionHistory] = useState<DocumentRevision[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showRevisionHistory, setShowRevisionHistory] = useState(false);
   const [showUploadSection, setShowUploadSection] = useState(false);
 
   useEffect(() => {
@@ -24,12 +26,14 @@ function DocumentView() {
   const loadDocument = async (documentId: number) => {
     try {
       setLoading(true);
-      const [docData, versions] = await Promise.all([
+      const [docData, versions, revisions] = await Promise.all([
         getDocumentById(documentId),
         getDocumentVersionHistory(documentId),
+        getDocumentRevisionHistory(documentId),
       ]);
       setDocument(docData);
       setVersionHistory(versions);
+      setRevisionHistory(revisions);
       setError('');
     } catch (err) {
       console.error('Failed to load document:', err);
@@ -303,6 +307,91 @@ function DocumentView() {
                               </button>
                             )}
                           </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Revision History Section */}
+          <section className="document-section">
+            <div className="section-header">
+              <h2>Revision History</h2>
+              <button
+                className="btn-toggle"
+                onClick={() => setShowRevisionHistory(!showRevisionHistory)}
+              >
+                {showRevisionHistory ? 'Hide' : 'Show'} ({revisionHistory.length} revisions)
+              </button>
+            </div>
+            
+            {showRevisionHistory && (
+              <div className="revision-history">
+                {revisionHistory.length === 0 ? (
+                  <p className="no-data">No revision history available</p>
+                ) : (
+                  <table className="version-table">
+                    <thead>
+                      <tr>
+                        <th>Rev #</th>
+                        <th>Version</th>
+                        <th>Change Type</th>
+                        <th>Description</th>
+                        <th>Status Change</th>
+                        <th>Author</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {revisionHistory.map((revision) => (
+                        <tr key={revision.id}>
+                          <td>{revision.revisionNumber}</td>
+                          <td>
+                            <span className="version-badge">{revision.version}</span>
+                          </td>
+                          <td>
+                            <span className={`change-type-badge change-type-${revision.changeType}`}>
+                              {revision.changeType}
+                            </span>
+                          </td>
+                          <td className="description-cell">
+                            {revision.changeDescription || 'No description'}
+                            {revision.changeReason && (
+                              <div className="change-reason">
+                                <em>Reason: {revision.changeReason}</em>
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {revision.statusBefore && revision.statusAfter && (
+                              <span className="status-transition">
+                                <span className={`status-badge status-${revision.statusBefore}`}>
+                                  {revision.statusBefore}
+                                </span>
+                                {' → '}
+                                <span className={`status-badge status-${revision.statusAfter}`}>
+                                  {revision.statusAfter}
+                                </span>
+                              </span>
+                            )}
+                            {!revision.statusBefore && revision.statusAfter && (
+                              <span className={`status-badge status-${revision.statusAfter}`}>
+                                {revision.statusAfter}
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            {revision.authorFirstName && revision.authorLastName
+                              ? `${revision.authorFirstName} ${revision.authorLastName}`
+                              : revision.authorName || `User ${revision.authorId}`}
+                            {revision.authorEmail && (
+                              <div className="author-email">{revision.authorEmail}</div>
+                            )}
+                          </td>
+                          <td>{formatDateTime(revision.revisionDate)}</td>
                         </tr>
                       ))}
                     </tbody>
