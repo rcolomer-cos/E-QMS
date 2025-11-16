@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { DocumentModel, Document } from '../models/DocumentModel';
-import { AuthRequest, UserRole, DocumentStatus } from '../types';
+import { AuthRequest, DocumentStatus } from '../types';
 import { validationResult } from 'express-validator';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -52,8 +52,14 @@ export const getDocuments = async (req: AuthRequest, res: Response): Promise<voi
 
 export const getDocumentById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    // Document is already loaded by permission middleware and stored in req.document
+    if (req.document) {
+      res.json(req.document);
+      return;
+    }
 
+    // Fallback if middleware didn't load document (shouldn't happen with permission middleware)
+    const { id } = req.params;
     const document = await DocumentModel.findById(parseInt(id, 10));
     if (!document) {
       res.status(404).json({ error: 'Document not found' });
@@ -78,13 +84,7 @@ export const updateDocument = async (req: AuthRequest, res: Response): Promise<v
     const { id } = req.params;
     const documentId = parseInt(id, 10);
     
-    // Check if document exists
-    const document = await DocumentModel.findById(documentId);
-    if (!document) {
-      res.status(404).json({ error: 'Document not found' });
-      return;
-    }
-
+    // Document existence and permissions already checked by middleware
     const updates = req.body;
     await DocumentModel.update(documentId, updates);
 
@@ -97,11 +97,7 @@ export const updateDocument = async (req: AuthRequest, res: Response): Promise<v
 
 export const deleteDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user || !req.user.roles.includes(UserRole.ADMIN) && !req.user.roles.includes(UserRole.SUPERUSER)) {
-      res.status(403).json({ error: 'Access denied' });
-      return;
-    }
-
+    // Permissions already checked by middleware
     const { id } = req.params;
 
     await DocumentModel.delete(parseInt(id, 10));
@@ -201,14 +197,19 @@ export const getDocumentVersionHistory = async (req: AuthRequest, res: Response)
 
 export const downloadDocumentFile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
-    const documentId = parseInt(id, 10);
-
-    // Check if document exists
-    const document = await DocumentModel.findById(documentId);
+    // Use document from middleware if available
+    let document = req.document;
+    
     if (!document) {
-      res.status(404).json({ error: 'Document not found' });
-      return;
+      const { id } = req.params;
+      const documentId = parseInt(id, 10);
+      const fetchedDocument = await DocumentModel.findById(documentId);
+      
+      if (!fetchedDocument) {
+        res.status(404).json({ error: 'Document not found' });
+        return;
+      }
+      document = fetchedDocument;
     }
 
     // Check if document has a file
@@ -229,5 +230,30 @@ export const downloadDocumentFile = async (req: AuthRequest, res: Response): Pro
   } catch (error) {
     console.error('Download document file error:', error);
     res.status(500).json({ error: 'Failed to download document file' });
+  }
+};
+
+export const approveDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    // Document existence and permissions already checked by middleware
+    // Update document status to approved
+    await DocumentModel.update(documentId, {
+      status: DocumentStatus.APPROVED,
+      approvedBy: req.user.id,
+      approvedAt: new Date(),
+    });
+
+    res.json({ message: 'Document approved successfully' });
+  } catch (error) {
+    console.error('Approve document error:', error);
+    res.status(500).json({ error: 'Failed to approve document' });
   }
 };
