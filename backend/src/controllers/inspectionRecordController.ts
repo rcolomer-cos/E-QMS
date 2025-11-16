@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { InspectionRecordModel, InspectionRecord, InspectionStatus, InspectionResult } from '../models/InspectionRecordModel';
 import { AuthRequest } from '../types';
 import { validationResult } from 'express-validator';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 export const createInspectionRecord = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -20,6 +21,16 @@ export const createInspectionRecord = async (req: AuthRequest, res: Response): P
     const record: InspectionRecord = req.body;
 
     const recordId = await InspectionRecordModel.create(record);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.INSPECTION,
+      entityType: 'InspectionRecord',
+      entityId: recordId,
+      entityIdentifier: `Equipment ${record.equipmentId} - ${record.inspectionType}`,
+      newValues: record,
+    });
 
     res.status(201).json({
       message: 'Inspection record created successfully',
@@ -111,6 +122,17 @@ export const updateInspectionRecord = async (req: AuthRequest, res: Response): P
 
     await InspectionRecordModel.update(parseInt(id, 10), updates);
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.INSPECTION,
+      entityType: 'InspectionRecord',
+      entityId: parseInt(id, 10),
+      entityIdentifier: `Equipment ${record.equipmentId} - ${record.inspectionType}`,
+      oldValues: record,
+      newValues: updates,
+    });
+
     res.json({ message: 'Inspection record updated successfully' });
   } catch (error) {
     console.error('Update inspection record error:', error);
@@ -130,6 +152,16 @@ export const deleteInspectionRecord = async (req: AuthRequest, res: Response): P
     }
 
     await InspectionRecordModel.delete(parseInt(id, 10));
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.INSPECTION,
+      entityType: 'InspectionRecord',
+      entityId: parseInt(id, 10),
+      entityIdentifier: `Equipment ${record.equipmentId} - ${record.inspectionType}`,
+      oldValues: record,
+    });
 
     res.json({ message: 'Inspection record deleted successfully' });
   } catch (error) {

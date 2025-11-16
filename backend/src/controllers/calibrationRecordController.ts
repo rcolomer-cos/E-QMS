@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { CalibrationRecordModel, CalibrationRecord, CalibrationStatus, CalibrationResult } from '../models/CalibrationRecordModel';
 import { AuthRequest } from '../types';
 import { validationResult } from 'express-validator';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 export const createCalibrationRecord = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -20,6 +21,16 @@ export const createCalibrationRecord = async (req: AuthRequest, res: Response): 
     const record: CalibrationRecord = req.body;
 
     const recordId = await CalibrationRecordModel.create(record);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.CALIBRATION,
+      entityType: 'CalibrationRecord',
+      entityId: recordId,
+      entityIdentifier: `Equipment ${record.equipmentId}`,
+      newValues: record,
+    });
 
     res.status(201).json({
       message: 'Calibration record created successfully',
@@ -110,6 +121,17 @@ export const updateCalibrationRecord = async (req: AuthRequest, res: Response): 
 
     await CalibrationRecordModel.update(parseInt(id, 10), updates);
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.CALIBRATION,
+      entityType: 'CalibrationRecord',
+      entityId: parseInt(id, 10),
+      entityIdentifier: `Equipment ${record.equipmentId}`,
+      oldValues: record,
+      newValues: updates,
+    });
+
     res.json({ message: 'Calibration record updated successfully' });
   } catch (error) {
     console.error('Update calibration record error:', error);
@@ -129,6 +151,16 @@ export const deleteCalibrationRecord = async (req: AuthRequest, res: Response): 
     }
 
     await CalibrationRecordModel.delete(parseInt(id, 10));
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.CALIBRATION,
+      entityType: 'CalibrationRecord',
+      entityId: parseInt(id, 10),
+      entityIdentifier: `Equipment ${record.equipmentId}`,
+      oldValues: record,
+    });
 
     res.json({ message: 'Calibration record deleted successfully' });
   } catch (error) {

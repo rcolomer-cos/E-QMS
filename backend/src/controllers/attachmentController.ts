@@ -5,6 +5,7 @@ import { validationResult } from 'express-validator';
 import path from 'path';
 import fs from 'fs/promises';
 import { createReadStream } from 'fs';
+import { logAudit, AuditActionCategory, AuditAction } from '../services/auditLogService';
 
 export const uploadAttachment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -62,6 +63,19 @@ export const uploadAttachment = async (req: AuthRequest, res: Response): Promise
     };
 
     const attachmentId = await AttachmentModel.create(attachment);
+
+    // Log audit entry
+    await logAudit({
+      req,
+      action: AuditAction.UPLOAD,
+      actionCategory: AuditActionCategory.ATTACHMENT,
+      actionDescription: `Uploaded attachment ${attachment.fileName}`,
+      entityType: entityType,
+      entityId: parsedEntityId,
+      entityIdentifier: attachment.fileName,
+      success: true,
+      statusCode: 201,
+    });
 
     res.status(201).json({
       message: 'Attachment uploaded successfully',
