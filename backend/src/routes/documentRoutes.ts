@@ -7,6 +7,7 @@ import {
   deleteDocument,
   createDocumentVersion,
   uploadDocumentFile,
+  downloadDocumentFile,
   getDocumentVersionHistory,
 } from '../controllers/documentController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
@@ -23,6 +24,7 @@ router.post('/', createLimiter, validateDocument, authorizeRoles(UserRole.ADMIN,
 router.get('/', getDocuments);
 router.get('/:id', validateId, getDocumentById);
 router.get('/:id/versions', validateId, getDocumentVersionHistory);
+router.get('/:id/download', validateId, downloadDocumentFile);
 router.put('/:id', validateId, validateDocumentUpdate, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.USER), updateDocument);
 router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteDocument);
 router.post('/:id/version', createLimiter, validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.USER), createDocumentVersion);

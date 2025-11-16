@@ -305,6 +305,17 @@
   color: #7f8c8d;
 }
 
+.upload-section {
+  background-color: #f8f9fa;
+}
+
+.section-description {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 768px) {
   .document-view-page {
     padding: 1rem;

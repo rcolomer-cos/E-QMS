@@ -7,6 +7,7 @@ import {
   deleteDocument,
   createDocumentVersion,
   uploadDocumentFile,
+  downloadDocumentFile,
 } from '../../controllers/documentController';
 import { DocumentModel } from '../../models/DocumentModel';
 import { AuthRequest, UserRole, DocumentStatus } from '../../types';
@@ -415,6 +416,86 @@ describe('Document Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to upload document file' });
+    });
+  });
+
+  describe('downloadDocumentFile', () => {
+    let mockDownload: jest.Mock;
+
+    beforeEach(() => {
+      mockDownload = jest.fn((_path, _filename, callback) => {
+        callback(null);
+      });
+      mockResponse.download = mockDownload;
+    });
+
+    it('should return 404 if document not found', async () => {
+      mockAuthRequest.params = { id: '999' };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue(null);
+
+      await downloadDocumentFile(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Document not found' });
+    });
+
+    it('should return 404 if document has no file', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue({
+        id: 1,
+        filePath: null,
+        fileName: null,
+      });
+
+      await downloadDocumentFile(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Document file not found' });
+    });
+
+    it('should download document file successfully', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue({
+        id: 1,
+        filePath: '/uploads/documents/test-file.pdf',
+        fileName: 'test-file.pdf',
+      });
+
+      await downloadDocumentFile(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockDownload).toHaveBeenCalledWith(
+        '/uploads/documents/test-file.pdf',
+        'test-file.pdf',
+        expect.any(Function)
+      );
+    });
+
+    it('should handle download error', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.findById as jest.Mock).mockResolvedValue({
+        id: 1,
+        filePath: '/uploads/documents/test-file.pdf',
+        fileName: 'test-file.pdf',
+      });
+      mockDownload.mockImplementation((_path, _filename, callback) => {
+        callback(new Error('File not accessible'));
+      });
+      (mockResponse as Response & { headersSent: boolean }).headersSent = false;
+
+      await downloadDocumentFile(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to download file' });
+    });
+
+    it('should return 500 on database error', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.findById as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await downloadDocumentFile(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to download document file' });
     });
   });
 });

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getDocumentById, getDocumentVersionHistory } from '../services/documentService';
+import { getDocumentById, getDocumentVersionHistory, uploadDocumentFile, downloadDocumentFile } from '../services/documentService';
 import { Document } from '../types';
+import FileUpload from '../components/FileUpload';
 import '../styles/DocumentView.css';
 
 function DocumentView() {
@@ -12,6 +13,7 @@ function DocumentView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showUploadSection, setShowUploadSection] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -59,6 +61,32 @@ function DocumentView() {
     navigate(`/documents/${versionId}`);
   };
 
+  const handleFileUpload = async (file: File) => {
+    if (!id) return;
+    
+    try {
+      await uploadDocumentFile(parseInt(id, 10), file);
+      // Reload document to show updated file information
+      await loadDocument(parseInt(id, 10));
+      setShowUploadSection(false);
+    } catch (err) {
+      console.error('Upload failed:', err);
+      throw err; // Let FileUpload component handle the error display
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!id || !document?.fileName) return;
+    
+    try {
+      await downloadDocumentFile(parseInt(id, 10), document.fileName);
+    } catch (err) {
+      console.error('Download failed:', err);
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to download file');
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading document...</div>;
   }
@@ -87,12 +115,38 @@ function DocumentView() {
         <div className="header-actions">
           <button className="btn-secondary">Edit</button>
           <button className="btn-secondary">Create New Version</button>
-          <button className="btn-primary">Download</button>
+          {!document.fileName && (
+            <button 
+              className="btn-primary" 
+              onClick={() => setShowUploadSection(!showUploadSection)}
+            >
+              {showUploadSection ? 'Cancel Upload' : 'Upload File'}
+            </button>
+          )}
+          {document.fileName && (
+            <button className="btn-primary" onClick={handleDownload}>
+              Download File
+            </button>
+          )}
         </div>
       </div>
 
       <div className="document-content">
         <div className="document-sections">
+          {/* File Upload Section */}
+          {showUploadSection && !document.fileName && (
+            <section className="document-section upload-section">
+              <h2>Upload Document File</h2>
+              <p className="section-description">
+                Upload a file to attach to this document. Once uploaded, the file information will be linked to this document record.
+              </p>
+              <FileUpload
+                onFileSelect={() => {}}
+                onUpload={handleFileUpload}
+              />
+            </section>
+          )}
+
           {/* Metadata Section */}
           <section className="document-section">
             <h2>Document Information</h2>

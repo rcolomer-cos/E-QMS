@@ -198,3 +198,36 @@ export const getDocumentVersionHistory = async (req: AuthRequest, res: Response)
     res.status(500).json({ error: 'Failed to get version history' });
   }
 };
+
+export const downloadDocumentFile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    // Check if document has a file
+    if (!document.filePath || !document.fileName) {
+      res.status(404).json({ error: 'Document file not found' });
+      return;
+    }
+
+    // Send file
+    res.download(document.filePath, document.fileName, (err) => {
+      if (err) {
+        console.error('File download error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Failed to download file' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Download document file error:', error);
+    res.status(500).json({ error: 'Failed to download document file' });
+  }
+};
