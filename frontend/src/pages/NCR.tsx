@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getNCRs, createNCR, CreateNCRData } from '../services/ncrService';
 import { getUsers } from '../services/userService';
 import { NCR as NCRType, User } from '../types';
@@ -7,6 +8,7 @@ import api from '../services/api';
 import '../styles/NCR.css';
 
 function NCR() {
+  const navigate = useNavigate();
   const [ncrs, setNcrs] = useState<NCRType[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,8 +149,12 @@ function NCR() {
                   </td>
                   <td>{formatDate(ncr.detectedDate)}</td>
                   <td className="actions-cell">
-                    <button className="btn-view">View</button>
-                    <button className="btn-edit">Edit</button>
+                    <button 
+                      className="btn-view" 
+                      onClick={() => navigate(`/ncr/${ncr.id}`)}
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
               ))
