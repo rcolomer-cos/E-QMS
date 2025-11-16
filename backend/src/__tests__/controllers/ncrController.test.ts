@@ -110,8 +110,8 @@ describe('NCR Controller', () => {
   describe('getNCRs', () => {
     it('should return paginated NCRs', async () => {
       const mockNCRs = [
-        { id: 1, ncrNumber: 'NCR-001', title: 'Test 1' },
-        { id: 2, ncrNumber: 'NCR-002', title: 'Test 2' },
+        { id: 1, ncrNumber: 'NCR-001', title: 'Test 1', severity: 'minor' },
+        { id: 2, ncrNumber: 'NCR-002', title: 'Test 2', severity: 'major' },
       ];
       mockAuthRequest.query = { page: '1', limit: '10' };
       (NCRModel.findAll as jest.Mock).mockResolvedValue(mockNCRs);
@@ -120,7 +120,10 @@ describe('NCR Controller', () => {
 
       expect(NCRModel.findAll).toHaveBeenCalledWith({ status: undefined, severity: undefined });
       expect(mockJson).toHaveBeenCalledWith({
-        data: mockNCRs,
+        data: [
+          { ...mockNCRs[0], impactScore: 1 },
+          { ...mockNCRs[1], impactScore: 5 },
+        ],
         pagination: {
           page: 1,
           limit: 10,
@@ -164,14 +167,14 @@ describe('NCR Controller', () => {
 
   describe('getNCRById', () => {
     it('should return NCR by ID', async () => {
-      const mockNCR = { id: 1, ncrNumber: 'NCR-001', title: 'Test NCR' };
+      const mockNCR = { id: 1, ncrNumber: 'NCR-001', title: 'Test NCR', severity: 'critical' };
       mockAuthRequest.params = { id: '1' };
       (NCRModel.findById as jest.Mock).mockResolvedValue(mockNCR);
 
       await getNCRById(mockAuthRequest as AuthRequest, mockResponse as Response);
 
       expect(NCRModel.findById).toHaveBeenCalledWith(1);
-      expect(mockJson).toHaveBeenCalledWith(mockNCR);
+      expect(mockJson).toHaveBeenCalledWith({ ...mockNCR, impactScore: 10 });
     });
 
     it('should return 404 if NCR not found', async () => {

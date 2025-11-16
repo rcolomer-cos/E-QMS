@@ -7,6 +7,7 @@ import {
   updateNCRStatus,
   assignNCR,
   deleteNCR,
+  getNCRClassificationOptions,
 } from '../controllers/ncrController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { 
@@ -23,6 +24,9 @@ const router = Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Get NCR classification options - Accessible to all authenticated users
+router.get('/classification-options', getNCRClassificationOptions);
 
 // Create NCR - Requires ADMIN, MANAGER, or AUDITOR role
 router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCR, createNCR);
