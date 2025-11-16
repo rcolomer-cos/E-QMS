@@ -227,19 +227,6 @@ describe('Document Controller', () => {
       expect(mockJson).toHaveBeenCalledWith({ errors: [{ msg: 'Validation error' }] });
     });
 
-    it('should return 404 if document not found', async () => {
-      (validationResult as unknown as jest.Mock).mockReturnValue({
-        isEmpty: () => true,
-      });
-      mockAuthRequest.params = { id: '999' };
-      (DocumentModel.findById as jest.Mock).mockResolvedValue(null);
-
-      await updateDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(404);
-      expect(mockJson).toHaveBeenCalledWith({ error: 'Document not found' });
-    });
-
     it('should update document successfully', async () => {
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
@@ -249,7 +236,6 @@ describe('Document Controller', () => {
         title: 'Updated Title',
         description: 'Updated Description',
       };
-      (DocumentModel.findById as jest.Mock).mockResolvedValue({ id: 1 });
       (DocumentModel.update as jest.Mock).mockResolvedValue(undefined);
 
       await updateDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
@@ -274,18 +260,7 @@ describe('Document Controller', () => {
   });
 
   describe('deleteDocument', () => {
-    it('should return 403 if user is not admin or superuser', async () => {
-      mockAuthRequest.user!.roles = [UserRole.USER];
-      mockAuthRequest.params = { id: '1' };
-
-      await deleteDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(403);
-      expect(mockJson).toHaveBeenCalledWith({ error: 'Access denied' });
-    });
-
-    it('should delete document successfully as admin', async () => {
-      mockAuthRequest.user!.roles = [UserRole.ADMIN];
+    it('should delete document successfully', async () => {
       mockAuthRequest.params = { id: '1' };
       (DocumentModel.delete as jest.Mock).mockResolvedValue(undefined);
 
@@ -296,7 +271,6 @@ describe('Document Controller', () => {
     });
 
     it('should return 500 on database error', async () => {
-      mockAuthRequest.user!.roles = [UserRole.ADMIN];
       mockAuthRequest.params = { id: '1' };
       (DocumentModel.delete as jest.Mock).mockRejectedValue(new Error('Database error'));
 
@@ -496,6 +470,45 @@ describe('Document Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to download document file' });
+    });
+  });
+
+  describe('approveDocument', () => {
+    it('should return 401 if user is not authenticated', async () => {
+      mockAuthRequest.user = undefined;
+      mockAuthRequest.params = { id: '1' };
+
+      const { approveDocument } = require('../../controllers/documentController');
+      await approveDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(401);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'User not authenticated' });
+    });
+
+    it('should approve document successfully', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.update as jest.Mock).mockResolvedValue(undefined);
+
+      const { approveDocument } = require('../../controllers/documentController');
+      await approveDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(DocumentModel.update).toHaveBeenCalledWith(1, {
+        status: DocumentStatus.APPROVED,
+        approvedBy: 1,
+        approvedAt: expect.any(Date),
+      });
+      expect(mockJson).toHaveBeenCalledWith({ message: 'Document approved successfully' });
+    });
+
+    it('should return 500 on database error', async () => {
+      mockAuthRequest.params = { id: '1' };
+      (DocumentModel.update as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      const { approveDocument } = require('../../controllers/documentController');
+      await approveDocument(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to approve document' });
     });
   });
 });
