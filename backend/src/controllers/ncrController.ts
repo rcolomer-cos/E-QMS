@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { NCRModel, NCR } from '../models/NCRModel';
 import { AuthRequest, NCRStatus } from '../types';
 import { validationResult } from 'express-validator';
+import { addImpactScores } from '../services/ncrService';
 
 export const createNCR = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -51,10 +52,13 @@ export const getNCRs = async (req: AuthRequest, res: Response): Promise<void> =>
 
     const allNCRs = await NCRModel.findAll(filters);
 
+    // Add impact scores to NCRs
+    const ncrsWithImpact = addImpactScores(allNCRs);
+
     // Apply pagination
     const startIndex = (pageNum - 1) * limitNum;
     const endIndex = startIndex + limitNum;
-    const paginatedNCRs = allNCRs.slice(startIndex, endIndex);
+    const paginatedNCRs = ncrsWithImpact.slice(startIndex, endIndex);
 
     res.json({
       data: paginatedNCRs,
@@ -81,7 +85,11 @@ export const getNCRById = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    res.json(ncr);
+    // Add impact score
+    const { addImpactScore } = require('../services/ncrService');
+    const ncrWithImpact = addImpactScore(ncr);
+
+    res.json(ncrWithImpact);
   } catch (error) {
     console.error('Get NCR error:', error);
     res.status(500).json({ error: 'Failed to get NCR' });
@@ -216,5 +224,32 @@ export const deleteNCR = async (req: AuthRequest, res: Response): Promise<void> 
   } catch (error) {
     console.error('Delete NCR error:', error);
     res.status(500).json({ error: 'Failed to delete NCR' });
+  }
+};
+
+export const getNCRClassificationOptions = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const {
+      getAllSeverities,
+      getAllSources,
+      getAllTypes,
+      SEVERITY_DESCRIPTIONS,
+      SOURCE_DESCRIPTIONS,
+      TYPE_DESCRIPTIONS,
+      IMPACT_SCORES,
+    } = require('../constants/ncrClassification');
+
+    res.json({
+      severities: getAllSeverities(),
+      sources: getAllSources(),
+      types: getAllTypes(),
+      severityDescriptions: SEVERITY_DESCRIPTIONS,
+      sourceDescriptions: SOURCE_DESCRIPTIONS,
+      typeDescriptions: TYPE_DESCRIPTIONS,
+      impactScores: IMPACT_SCORES,
+    });
+  } catch (error) {
+    console.error('Get NCR classification options error:', error);
+    res.status(500).json({ error: 'Failed to get NCR classification options' });
   }
 };

@@ -2,6 +2,7 @@ import { useState, FormEvent, ChangeEvent } from 'react';
 import { CreateNCRData } from '../services/ncrService';
 import { User } from '../types';
 import FileUpload from './FileUpload';
+import { getAllSources, getAllTypes, getAllSeverities } from '../constants/ncrClassification';
 
 interface NCRFormProps {
   onSubmit: (data: CreateNCRData, files: File[]) => Promise<void>;
@@ -39,31 +40,10 @@ const NCRForm = ({ onSubmit, onCancel, users, currentUserId }: NCRFormProps) => 
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Predefined options for dropdowns
-  const sourceOptions = [
-    'Internal Audit',
-    'External Audit',
-    'Customer Complaint',
-    'Supplier Issue',
-    'Process Monitoring',
-    'Inspection',
-    'Management Review',
-    'Employee Report',
-    'Other',
-  ];
-
-  const categoryOptions = [
-    'Product Quality',
-    'Process Deviation',
-    'Documentation',
-    'Equipment/Facility',
-    'Personnel/Training',
-    'Safety',
-    'Environmental',
-    'Regulatory Compliance',
-    'Supplier Quality',
-    'Other',
-  ];
+  // Use standardized classification options
+  const sourceOptions = getAllSources();
+  const categoryOptions = getAllTypes();
+  const severityOptions = getAllSeverities();
 
   // Validate field
   const validateField = (name: keyof CreateNCRData, value: any): string | undefined => {
@@ -247,9 +227,11 @@ const NCRForm = ({ onSubmit, onCancel, users, currentUserId }: NCRFormProps) => 
             onBlur={handleBlur}
             className={errors.severity && touched.severity ? 'error' : ''}
           >
-            <option value="minor">Minor</option>
-            <option value="major">Major</option>
-            <option value="critical">Critical</option>
+            {severityOptions.map((option) => (
+              <option key={option} value={option}>
+                {option.charAt(0).toUpperCase() + option.slice(1)}
+              </option>
+            ))}
           </select>
           {errors.severity && touched.severity && (
             <span className="error-message">{errors.severity}</span>

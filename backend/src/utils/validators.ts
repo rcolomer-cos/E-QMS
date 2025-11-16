@@ -1,4 +1,5 @@
 import { body, param, ValidationChain } from 'express-validator';
+import { getAllSeverities, getAllSources, getAllTypes } from '../constants/ncrClassification';
 
 export const validateUser = [
   body('email')
@@ -495,19 +496,19 @@ export const validateNCR = [
     .withMessage('Description is required and must not exceed 2000 characters'),
   body('source')
     .trim()
-    .isLength({ min: 1, max: 200 })
-    .withMessage('Source is required and must not exceed 200 characters'),
+    .isIn(getAllSources())
+    .withMessage(`Invalid source. Must be one of: ${getAllSources().join(', ')}`),
   body('category')
     .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Category is required and must not exceed 100 characters'),
+    .isIn(getAllTypes())
+    .withMessage(`Invalid category. Must be one of: ${getAllTypes().join(', ')}`),
   body('status')
     .isIn(['open', 'in_progress', 'resolved', 'closed', 'rejected'])
     .withMessage('Invalid status'),
   body('severity')
     .trim()
-    .isLength({ min: 1, max: 50 })
-    .withMessage('Severity is required and must not exceed 50 characters'),
+    .isIn(getAllSeverities())
+    .withMessage(`Invalid severity. Must be one of: ${getAllSeverities().join(', ')}`),
   body('detectedDate')
     .isISO8601()
     .withMessage('Detected date must be a valid date'),
@@ -531,10 +532,25 @@ export const validateNCRUpdate = [
     .trim()
     .isLength({ max: 2000 })
     .withMessage('Description must not exceed 2000 characters'),
+  body('source')
+    .optional()
+    .trim()
+    .isIn(getAllSources())
+    .withMessage(`Invalid source. Must be one of: ${getAllSources().join(', ')}`),
+  body('category')
+    .optional()
+    .trim()
+    .isIn(getAllTypes())
+    .withMessage(`Invalid category. Must be one of: ${getAllTypes().join(', ')}`),
   body('status')
     .optional()
     .isIn(['open', 'in_progress', 'resolved', 'closed', 'rejected'])
     .withMessage('Invalid status'),
+  body('severity')
+    .optional()
+    .trim()
+    .isIn(getAllSeverities())
+    .withMessage(`Invalid severity. Must be one of: ${getAllSeverities().join(', ')}`),
   body('assignedTo')
     .optional()
     .isInt({ min: 1 })
