@@ -28,9 +28,20 @@ export interface Document {
   documentType: string;
   category: string;
   version: string;
+  parentDocumentId?: number;
   status: string;
+  ownerId?: number;
+  filePath?: string;
   fileName?: string;
+  fileSize?: number;
+  createdBy: number;
+  approvedBy?: number;
+  approvedAt?: string;
+  effectiveDate?: string;
+  reviewDate?: string;
+  expiryDate?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Audit {
