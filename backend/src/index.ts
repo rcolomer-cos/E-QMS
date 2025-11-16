@@ -20,6 +20,12 @@ import equipmentRoutes from './routes/equipmentRoutes';
 import departmentRoutes from './routes/departmentRoutes';
 import processRoutes from './routes/processRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import ncrRoutes from './routes/ncrRoutes';
+import capaRoutes from './routes/capaRoutes';
+import trainingRoutes from './routes/trainingRoutes';
+import calibrationRecordRoutes from './routes/calibrationRecordRoutes';
+import inspectionRecordRoutes from './routes/inspectionRecordRoutes';
+import serviceMaintenanceRecordRoutes from './routes/serviceMaintenanceRecordRoutes';
 
 dotenv.config();
 
@@ -65,6 +71,12 @@ app.use('/api/equipment', equipmentRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/processes', processRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ncrs', ncrRoutes);
+app.use('/api/capas', capaRoutes);
+app.use('/api/trainings', trainingRoutes);
+app.use('/api/calibration-records', calibrationRecordRoutes);
+app.use('/api/inspection-records', inspectionRecordRoutes);
+app.use('/api/service-maintenance-records', serviceMaintenanceRecordRoutes);
 
 // 404 handler
 app.use((_req, res) => {
