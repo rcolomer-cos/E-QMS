@@ -1,52 +1,176 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getNCRs, createNCR, CreateNCRData } from '../services/ncrService';
+import { getUsers } from '../services/userService';
+import { NCR as NCRType, User } from '../types';
+import NCRForm from '../components/NCRForm';
+import api from '../services/api';
+import '../styles/NCR.css';
 
 function NCR() {
-  const [ncrs] = useState([]);
+  const [ncrs, setNcrs] = useState<NCRType[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    loadData();
+    loadCurrentUser();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [ncrData, usersData] = await Promise.all([
+        getNCRs(),
+        getUsers(),
+      ]);
+      setNcrs(ncrData.data);
+      setUsers(usersData);
+      setError('');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCurrentUser = () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+      } catch (err) {
+        console.error('Failed to parse user from localStorage:', err);
+      }
+    }
+  };
+
+  const handleCreateNCR = async (data: CreateNCRData, files: File[]) => {
+    try {
+      // Create the NCR
+      const response = await createNCR(data);
+      const ncrId = response.id;
+
+      // Upload attachments if any
+      if (files.length > 0) {
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('entityType', 'ncr');
+          formData.append('entityId', ncrId.toString());
+          formData.append('description', `NCR attachment: ${file.name}`);
+          
+          await api.post('/attachments', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        }
+      }
+
+      // Reload data and close modal
+      await loadData();
+      setShowModal(false);
+      setError('');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to create NCR');
+      throw err;
+    }
+  };
+
+  const handleOpenModal = () => {
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (loading) {
+    return <div className="loading">Loading NCRs...</div>;
+  }
 
   return (
-    <div className="page">
+    <div className="ncr-page">
       <div className="page-header">
-        <h1>Non-Conformance Reports (NCR)</h1>
-        <button className="btn-primary">Create NCR</button>
+        <div>
+          <h1>Non-Conformance Reports (NCR)</h1>
+          <p className="subtitle">Manage and track non-conformances</p>
+        </div>
+        <button className="btn-add" onClick={handleOpenModal}>
+          Create NCR
+        </button>
       </div>
 
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>NCR Number</th>
-            <th>Title</th>
-            <th>Severity</th>
-            <th>Status</th>
-            <th>Detected Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ncrs.length === 0 ? (
+      {error && <div className="error-message">{error}</div>}
+
+      <div className="table-container">
+        <table className="data-table">
+          <thead>
             <tr>
-              <td colSpan={6}>No NCRs found</td>
+              <th>NCR Number</th>
+              <th>Title</th>
+              <th>Severity</th>
+              <th>Status</th>
+              <th>Detected Date</th>
+              <th>Actions</th>
             </tr>
-          ) : (
-            ncrs.map((ncr: any) => (
-              <tr key={ncr.id}>
-                <td>{ncr.ncrNumber}</td>
-                <td>{ncr.title}</td>
-                <td>{ncr.severity}</td>
-                <td>
-                  <span className={`status-badge status-${ncr.status}`}>
-                    {ncr.status}
-                  </span>
-                </td>
-                <td>{new Date(ncr.detectedDate).toLocaleDateString()}</td>
-                <td>
-                  <button className="btn-small">View</button>
-                  <button className="btn-small">Edit</button>
+          </thead>
+          <tbody>
+            {ncrs.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="no-data">
+                  No NCRs found
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              ncrs.map((ncr) => (
+                <tr key={ncr.id}>
+                  <td>{ncr.ncrNumber}</td>
+                  <td>{ncr.title}</td>
+                  <td>
+                    <span className={`severity-badge severity-${ncr.severity}`}>
+                      {ncr.severity}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-badge status-${ncr.status}`}>
+                      {ncr.status.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td>{formatDate(ncr.detectedDate)}</td>
+                  <td className="actions-cell">
+                    <button className="btn-view">View</button>
+                    <button className="btn-edit">Edit</button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal for creating NCR */}
+      {showModal && currentUser && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Create New NCR</h2>
+            <NCRForm
+              onSubmit={handleCreateNCR}
+              onCancel={handleCloseModal}
+              users={users}
+              currentUserId={currentUser.id}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
