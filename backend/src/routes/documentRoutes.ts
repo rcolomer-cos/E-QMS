@@ -12,6 +12,8 @@ import {
   getDocumentRevisionHistory,
   createDocumentRevision,
   approveDocument,
+  rejectDocument,
+  requestChangesDocument,
 } from '../controllers/documentController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { checkDocumentPermission, DocumentAction } from '../middleware/documentPermissions';
@@ -51,6 +53,12 @@ router.put('/:id', validateId, validateDocumentUpdate, checkDocumentPermission(D
 
 // Approve document - requires APPROVE permission
 router.post('/:id/approve', validateId, checkDocumentPermission(DocumentAction.APPROVE), approveDocument);
+
+// Reject document - requires REJECT permission
+router.post('/:id/reject', createLimiter, validateId, checkDocumentPermission(DocumentAction.REJECT), rejectDocument);
+
+// Request changes for document - requires REQUEST_CHANGES permission
+router.post('/:id/request-changes', createLimiter, validateId, checkDocumentPermission(DocumentAction.REQUEST_CHANGES), requestChangesDocument);
 
 // Delete document - requires DELETE permission (ADMIN only)
 router.delete('/:id', validateId, checkDocumentPermission(DocumentAction.DELETE), deleteDocument);
