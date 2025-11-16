@@ -94,3 +94,87 @@ export enum RiskLevel {
   HIGH = 'high',
   CRITICAL = 'critical',
 }
+
+export enum CalibrationResult {
+  PENDING = 'pending',
+  PASSED = 'passed',
+  FAILED = 'failed',
+  CONDITIONAL = 'conditional',
+}
+
+export enum CalibrationStatus {
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  OVERDUE = 'overdue',
+  CANCELLED = 'cancelled',
+}
+
+export enum InspectionResult {
+  PENDING = 'pending',
+  PASSED = 'passed',
+  PASSED_WITH_OBSERVATIONS = 'passed_with_observations',
+  FAILED = 'failed',
+  CONDITIONAL = 'conditional',
+}
+
+export enum InspectionStatus {
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  OVERDUE = 'overdue',
+  CANCELLED = 'cancelled',
+}
+
+export enum InspectionSeverity {
+  NONE = 'none',
+  MINOR = 'minor',
+  MODERATE = 'moderate',
+  MAJOR = 'major',
+  CRITICAL = 'critical',
+}
+
+export enum ServiceType {
+  PREVENTIVE = 'preventive',
+  CORRECTIVE = 'corrective',
+  PREDICTIVE = 'predictive',
+  EMERGENCY = 'emergency',
+  BREAKDOWN = 'breakdown',
+  ROUTINE = 'routine',
+  UPGRADE = 'upgrade',
+  INSTALLATION = 'installation',
+  DECOMMISSION = 'decommission',
+}
+
+export enum ServicePriority {
+  LOW = 'low',
+  NORMAL = 'normal',
+  HIGH = 'high',
+  URGENT = 'urgent',
+  EMERGENCY = 'emergency',
+}
+
+export enum ServiceOutcome {
+  COMPLETED = 'completed',
+  PARTIALLY_COMPLETED = 'partially_completed',
+  FAILED = 'failed',
+  DEFERRED = 'deferred',
+  CANCELLED = 'cancelled',
+}
+
+export enum EquipmentCondition {
+  EXCELLENT = 'excellent',
+  GOOD = 'good',
+  FAIR = 'fair',
+  POOR = 'poor',
+  FAILED = 'failed',
+}
+
+export enum ServiceStatus {
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  OVERDUE = 'overdue',
+  CANCELLED = 'cancelled',
+  ON_HOLD = 'on_hold',
+}
