@@ -556,6 +556,18 @@ export const validateNCRUpdate = [
     .withMessage('Corrective action must not exceed 2000 characters'),
 ];
 
+export const validateNCRStatus = [
+  body('status')
+    .isIn(['open', 'in_progress', 'resolved', 'closed', 'rejected'])
+    .withMessage('Invalid status. Must be one of: open, in_progress, resolved, closed, rejected'),
+];
+
+export const validateNCRAssignment = [
+  body('assignedTo')
+    .isInt({ min: 1 })
+    .withMessage('Assigned user ID is required and must be a valid user ID'),
+];
+
 // CAPA validators
 export const validateCAPA = [
   body('capaNumber')
