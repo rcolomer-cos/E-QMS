@@ -44,6 +44,22 @@ export interface Document {
   updatedAt?: string;
 }
 
+export interface PendingDocument extends Document {
+  creatorFirstName?: string;
+  creatorLastName?: string;
+  creatorEmail?: string;
+  ownerFirstName?: string;
+  ownerLastName?: string;
+  ownerEmail?: string;
+  latestRevisionNumber?: number;
+  latestChangeDescription?: string;
+  latestChangeType?: string;
+  latestRevisionDate?: string;
+  latestRevisionAuthorId?: number;
+  latestRevisionAuthorFirstName?: string;
+  latestRevisionAuthorLastName?: string;
+}
+
 export interface Audit {
   id: number;
   auditNumber: string;

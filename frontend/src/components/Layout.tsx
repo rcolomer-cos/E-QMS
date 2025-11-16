@@ -20,6 +20,7 @@ function Layout() {
         <ul className="navbar-menu">
           <li><Link to="/">Dashboard</Link></li>
           <li><Link to="/documents">Documents</Link></li>
+          <li><Link to="/pending-changes">Pending Changes</Link></li>
           <li><Link to="/audits">Audits</Link></li>
           <li><Link to="/ncr">NCR</Link></li>
           <li><Link to="/capa">CAPA</Link></li>
