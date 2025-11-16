@@ -27,6 +27,7 @@ function CAPADashboard() {
 
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capas, statusFilter, priorityFilter, typeFilter]);
 
   const loadDashboardData = async () => {
