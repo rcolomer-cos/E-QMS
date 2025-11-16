@@ -135,3 +135,220 @@ export const deleteCAPA = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({ error: 'Failed to delete CAPA' });
   }
 };
+
+// Workflow-specific endpoints
+
+export const assignCAPA = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { actionOwner, targetDate } = req.body;
+
+    const capa = await CAPAModel.findById(parseInt(id, 10));
+    if (!capa) {
+      res.status(404).json({ error: 'CAPA not found' });
+      return;
+    }
+
+    // Update the CAPA with new assignment
+    await CAPAModel.update(parseInt(id, 10), {
+      actionOwner,
+      targetDate: targetDate ? new Date(targetDate) : undefined,
+      status: CAPAStatus.OPEN,
+    });
+
+    res.json({ message: 'CAPA assigned successfully' });
+  } catch (error) {
+    console.error('Assign CAPA error:', error);
+    res.status(500).json({ error: 'Failed to assign CAPA' });
+  }
+};
+
+export const updateCAPAStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const capa = await CAPAModel.findById(parseInt(id, 10));
+    if (!capa) {
+      res.status(404).json({ error: 'CAPA not found' });
+      return;
+    }
+
+    // Workflow validation
+    const validTransitions: Record<CAPAStatus, CAPAStatus[]> = {
+      [CAPAStatus.OPEN]: [CAPAStatus.IN_PROGRESS, CAPAStatus.CLOSED],
+      [CAPAStatus.IN_PROGRESS]: [CAPAStatus.COMPLETED, CAPAStatus.OPEN],
+      [CAPAStatus.COMPLETED]: [CAPAStatus.VERIFIED, CAPAStatus.IN_PROGRESS],
+      [CAPAStatus.VERIFIED]: [CAPAStatus.CLOSED, CAPAStatus.IN_PROGRESS],
+      [CAPAStatus.CLOSED]: [],
+    };
+
+    const currentStatus = capa.status as CAPAStatus;
+    const allowedStatuses = validTransitions[currentStatus];
+
+    if (!allowedStatuses.includes(status as CAPAStatus)) {
+      res.status(400).json({
+        error: `Invalid status transition from ${currentStatus} to ${status}`,
+        allowedStatuses,
+      });
+      return;
+    }
+
+    const updates: Partial<CAPA> = { status };
+    
+    // Set closedDate when transitioning to closed
+    if (status === CAPAStatus.CLOSED) {
+      updates.closedDate = new Date();
+    }
+
+    await CAPAModel.update(parseInt(id, 10), updates);
+
+    res.json({ message: 'CAPA status updated successfully' });
+  } catch (error) {
+    console.error('Update CAPA status error:', error);
+    res.status(500).json({ error: 'Failed to update CAPA status' });
+  }
+};
+
+export const completeCAPA = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { rootCause, proposedAction } = req.body;
+
+    const capa = await CAPAModel.findById(parseInt(id, 10));
+    if (!capa) {
+      res.status(404).json({ error: 'CAPA not found' });
+      return;
+    }
+
+    if (capa.status !== CAPAStatus.IN_PROGRESS) {
+      res.status(400).json({ error: 'CAPA must be in progress to be completed' });
+      return;
+    }
+
+    // Verify that the user completing is the action owner
+    if (capa.actionOwner !== req.user.id) {
+      res.status(403).json({ error: 'Only the action owner can complete this CAPA' });
+      return;
+    }
+
+    await CAPAModel.update(parseInt(id, 10), {
+      rootCause,
+      proposedAction,
+      status: CAPAStatus.COMPLETED,
+      completedDate: new Date(),
+    });
+
+    res.json({ message: 'CAPA completed successfully' });
+  } catch (error) {
+    console.error('Complete CAPA error:', error);
+    res.status(500).json({ error: 'Failed to complete CAPA' });
+  }
+};
+
+export const verifyCAPA = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { effectiveness } = req.body;
+
+    const capa = await CAPAModel.findById(parseInt(id, 10));
+    if (!capa) {
+      res.status(404).json({ error: 'CAPA not found' });
+      return;
+    }
+
+    if (capa.status !== CAPAStatus.COMPLETED) {
+      res.status(400).json({ error: 'CAPA must be completed before verification' });
+      return;
+    }
+
+    // Verify that the verifier is not the action owner (separation of duties)
+    if (capa.actionOwner === req.user.id) {
+      res.status(403).json({ error: 'Action owner cannot verify their own CAPA' });
+      return;
+    }
+
+    await CAPAModel.update(parseInt(id, 10), {
+      effectiveness,
+      verifiedBy: req.user.id,
+      verifiedDate: new Date(),
+      status: CAPAStatus.VERIFIED,
+    });
+
+    res.json({ message: 'CAPA verified successfully' });
+  } catch (error) {
+    console.error('Verify CAPA error:', error);
+    res.status(500).json({ error: 'Failed to verify CAPA' });
+  }
+};
+
+export const getCAPAsAssignedToMe = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const capas = await CAPAModel.findByActionOwner(req.user.id);
+
+    res.json({ data: capas });
+  } catch (error) {
+    console.error('Get assigned CAPAs error:', error);
+    res.status(500).json({ error: 'Failed to get assigned CAPAs' });
+  }
+};
+
+export const getOverdueCAPAs = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const capas = await CAPAModel.findOverdue();
+
+    res.json({ data: capas });
+  } catch (error) {
+    console.error('Get overdue CAPAs error:', error);
+    res.status(500).json({ error: 'Failed to get overdue CAPAs' });
+  }
+};

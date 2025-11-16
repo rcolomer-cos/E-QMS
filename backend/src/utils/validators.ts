@@ -935,3 +935,45 @@ export const validateAttachmentUpdate = [
     .withMessage('isPublic must be a boolean'),
 ];
 
+// CAPA workflow validators
+export const validateCAPAAssignment = [
+  body('actionOwner')
+    .isInt({ min: 1 })
+    .withMessage('Action owner ID is required and must be a valid user ID'),
+  body('targetDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Target date must be a valid date'),
+];
+
+export const validateCAPAStatusUpdate = [
+  body('status')
+    .isIn(['open', 'in_progress', 'completed', 'verified', 'closed'])
+    .withMessage('Invalid status'),
+  body('notes')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Notes must not exceed 2000 characters'),
+];
+
+export const validateCAPACompletion = [
+  body('rootCause')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Root cause must not exceed 2000 characters'),
+  body('proposedAction')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Proposed action must not exceed 2000 characters'),
+];
+
+export const validateCAPAVerification = [
+  body('effectiveness')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Effectiveness verification is required and must not exceed 2000 characters'),
+];
+
