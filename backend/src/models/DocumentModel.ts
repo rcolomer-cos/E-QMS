@@ -8,12 +8,15 @@ export interface Document {
   documentType: string;
   category: string;
   version: string;
+  parentDocumentId?: number; // Reference to previous version for version history
   status: DocumentStatus;
+  ownerId?: number; // Primary document owner
   filePath?: string;
   fileName?: string;
   fileSize?: number;
   createdBy: number;
   approvedBy?: number;
+  approvedAt?: Date;
   effectiveDate?: Date;
   reviewDate?: Date;
   expiryDate?: Date;
@@ -32,15 +35,22 @@ export class DocumentModel {
       .input('documentType', sql.NVarChar, document.documentType)
       .input('category', sql.NVarChar, document.category)
       .input('version', sql.NVarChar, document.version)
+      .input('parentDocumentId', sql.Int, document.parentDocumentId)
       .input('status', sql.NVarChar, document.status)
+      .input('ownerId', sql.Int, document.ownerId)
       .input('filePath', sql.NVarChar, document.filePath)
       .input('fileName', sql.NVarChar, document.fileName)
       .input('fileSize', sql.Int, document.fileSize)
       .input('createdBy', sql.Int, document.createdBy)
+      .input('approvedBy', sql.Int, document.approvedBy)
+      .input('approvedAt', sql.DateTime2, document.approvedAt)
+      .input('effectiveDate', sql.DateTime2, document.effectiveDate)
+      .input('reviewDate', sql.DateTime2, document.reviewDate)
+      .input('expiryDate', sql.DateTime2, document.expiryDate)
       .query(`
-        INSERT INTO Documents (title, description, documentType, category, version, status, filePath, fileName, fileSize, createdBy)
+        INSERT INTO Documents (title, description, documentType, category, version, parentDocumentId, status, ownerId, filePath, fileName, fileSize, createdBy, approvedBy, approvedAt, effectiveDate, reviewDate, expiryDate)
         OUTPUT INSERTED.id
-        VALUES (@title, @description, @documentType, @category, @version, @status, @filePath, @fileName, @fileSize, @createdBy)
+        VALUES (@title, @description, @documentType, @category, @version, @parentDocumentId, @status, @ownerId, @filePath, @fileName, @fileSize, @createdBy, @approvedBy, @approvedAt, @effectiveDate, @reviewDate, @expiryDate)
       `);
 
     return result.recordset[0].id;
@@ -120,11 +130,39 @@ export class DocumentModel {
     const newDoc: Document = {
       ...original,
       version: newVersion,
+      parentDocumentId: documentId, // Link to parent version for version history
       status: DocumentStatus.DRAFT,
       createdBy: userId,
+      approvedBy: undefined, // Reset approval for new version
+      approvedAt: undefined,
     };
 
     delete newDoc.id;
+    delete newDoc.createdAt;
+    delete newDoc.updatedAt;
     return this.create(newDoc);
+  }
+
+  static async getVersionHistory(documentId: number): Promise<Document[]> {
+    const pool = await getConnection();
+    
+    // Get all versions in the document's version chain
+    const result = await pool
+      .request()
+      .input('documentId', sql.Int, documentId)
+      .query(`
+        WITH DocumentVersions AS (
+          -- Start with the requested document
+          SELECT * FROM Documents WHERE id = @documentId
+          UNION ALL
+          -- Recursively get parent versions
+          SELECT d.* FROM Documents d
+          INNER JOIN DocumentVersions dv ON d.id = dv.parentDocumentId
+        )
+        SELECT * FROM DocumentVersions
+        ORDER BY version DESC, createdAt DESC
+      `);
+
+    return result.recordset;
   }
 }

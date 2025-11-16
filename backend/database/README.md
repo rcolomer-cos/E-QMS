@@ -12,6 +12,10 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 2. **Roles** - System roles for access control
 3. **Users** - User accounts (email-based authentication)
 4. **UserRoles** - Many-to-many relationship between Users and Roles
+5. **Departments** - Organization departments
+6. **Processes** - Business processes (ISO 9001)
+7. **ProcessOwners** - Process ownership assignments
+8. **Documents** - Document management with metadata and version control
 
 ## Initial Setup
 
@@ -40,6 +44,10 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    02_create_roles_table.sql
    03_create_users_table.sql
    04_create_user_roles_table.sql
+   05_create_departments_table.sql
+   06_create_processes_table.sql
+   07_create_process_owners_table.sql
+   08_create_documents_table.sql
    ```
 
 3. **Verify Installation**:
@@ -86,6 +94,18 @@ Default system roles (ordered by permission level):
 - **Temporal Roles**: Optional `expiresAt` field for temporary role assignments
 - **Audit Trail**: Tracks who assigned roles and when
 - **Soft Delete**: `active` flag for role assignment deactivation
+
+### Documents Table
+
+- **Metadata**: Stores title, description, documentType, and category for organization
+- **Versioning**: Supports version history with `version` field and `parentDocumentId` linking to previous versions
+- **Status Lifecycle**: Tracks document status (draft, review, approved, obsolete)
+- **Ownership**: Links to document owner (`ownerId`), creator (`createdBy`), and approver (`approvedBy`)
+- **File Management**: Stores file path, name, and size for physical document files
+- **Date Tracking**: Manages effective dates, review schedules, and expiration dates
+- **Audit Trail**: Complete tracking of creation, updates, and approval timestamps
+- **Performance Indexes**: Optimized for queries by status, type, category, owner, and version
+- **ISO 9001 Compliance**: Supports document control requirements with traceability and version history
 
 ## Role-Based Access Control (RBAC)
 
@@ -209,6 +229,62 @@ VALUES (@UserId, @RoleId, @AssignedBy, 1);
 UPDATE UserRoles 
 SET active = 0, updatedAt = GETDATE()
 WHERE userId = @UserId AND roleId = @RoleId;
+```
+
+### View Document Version History
+
+```sql
+-- Get all versions of a document using recursive CTE
+WITH DocumentVersions AS (
+  -- Start with a specific document
+  SELECT * FROM Documents WHERE id = 123
+  UNION ALL
+  -- Recursively get parent versions
+  SELECT d.* FROM Documents d
+  INNER JOIN DocumentVersions dv ON d.id = dv.parentDocumentId
+)
+SELECT 
+    id,
+    title,
+    version,
+    status,
+    createdAt,
+    createdBy
+FROM DocumentVersions
+ORDER BY version DESC, createdAt DESC;
+```
+
+### Find Documents Due for Review
+
+```sql
+-- Documents approaching or past their review date
+SELECT 
+    d.id,
+    d.title,
+    d.documentType,
+    d.category,
+    d.version,
+    d.reviewDate,
+    u.firstName + ' ' + u.lastName AS owner
+FROM Documents d
+LEFT JOIN Users u ON d.ownerId = u.id
+WHERE d.status = 'approved'
+    AND d.reviewDate <= DATEADD(day, 30, GETDATE())
+ORDER BY d.reviewDate ASC;
+```
+
+### List Approved Documents by Category
+
+```sql
+-- Active approved documents grouped by category
+SELECT 
+    d.category,
+    COUNT(*) AS documentCount,
+    STRING_AGG(d.title, ', ') AS documents
+FROM Documents d
+WHERE d.status = 'approved'
+GROUP BY d.category
+ORDER BY d.category;
 ```
 
 ## Migration from Old Schema
