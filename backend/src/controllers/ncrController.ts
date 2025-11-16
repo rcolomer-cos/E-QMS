@@ -3,6 +3,7 @@ import { NCRModel, NCR } from '../models/NCRModel';
 import { AuthRequest, NCRStatus } from '../types';
 import { validationResult } from 'express-validator';
 import { addImpactScores } from '../services/ncrService';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 export const createNCR = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -21,6 +22,16 @@ export const createNCR = async (req: AuthRequest, res: Response): Promise<void> 
     const ncr: NCR = req.body;
 
     const ncrId = await NCRModel.create(ncr);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.NCR,
+      entityType: 'NCR',
+      entityId: ncrId,
+      entityIdentifier: ncr.ncrNumber,
+      newValues: ncr,
+    });
 
     res.status(201).json({
       message: 'NCR created successfully',
@@ -117,6 +128,17 @@ export const updateNCR = async (req: AuthRequest, res: Response): Promise<void> 
 
     await NCRModel.update(parseInt(id, 10), updates);
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.NCR,
+      entityType: 'NCR',
+      entityId: parseInt(id, 10),
+      entityIdentifier: ncr.ncrNumber,
+      oldValues: ncr,
+      newValues: updates,
+    });
+
     res.json({ message: 'NCR updated successfully' });
   } catch (error) {
     console.error('Update NCR error:', error);
@@ -161,6 +183,18 @@ export const updateNCRStatus = async (req: AuthRequest, res: Response): Promise<
 
     await NCRModel.update(parseInt(id, 10), { status });
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.NCR,
+      entityType: 'NCR',
+      entityId: parseInt(id, 10),
+      entityIdentifier: ncr.ncrNumber,
+      oldValues: { status: ncr.status },
+      newValues: { status },
+      actionDescription: `NCR status changed from ${ncr.status} to ${status}`,
+    });
+
     res.json({ 
       message: 'NCR status updated successfully',
       status 
@@ -197,6 +231,18 @@ export const assignNCR = async (req: AuthRequest, res: Response): Promise<void> 
 
     await NCRModel.update(parseInt(id, 10), { assignedTo });
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.NCR,
+      entityType: 'NCR',
+      entityId: parseInt(id, 10),
+      entityIdentifier: ncr.ncrNumber,
+      oldValues: { assignedTo: ncr.assignedTo },
+      newValues: { assignedTo },
+      actionDescription: `NCR assigned to user ${assignedTo}`,
+    });
+
     res.json({ 
       message: 'NCR assigned successfully',
       assignedTo 
@@ -219,6 +265,16 @@ export const deleteNCR = async (req: AuthRequest, res: Response): Promise<void> 
     }
 
     await NCRModel.delete(parseInt(id, 10));
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.NCR,
+      entityType: 'NCR',
+      entityId: parseInt(id, 10),
+      entityIdentifier: ncr.ncrNumber,
+      oldValues: ncr,
+    });
 
     res.json({ message: 'NCR deleted successfully' });
   } catch (error) {
