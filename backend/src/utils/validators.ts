@@ -340,3 +340,141 @@ export const validateProcessOwner = [
     .isLength({ max: 500 })
     .withMessage('Notes must not exceed 500 characters'),
 ];
+
+export const validateEquipment = [
+  body('equipmentNumber')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Equipment number is required and must not exceed 100 characters'),
+  body('name')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Equipment name is required and must not exceed 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('manufacturer')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Manufacturer must not exceed 200 characters'),
+  body('model')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Model must not exceed 200 characters'),
+  body('serialNumber')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Serial number must not exceed 200 characters'),
+  body('location')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Location is required and must not exceed 200 characters'),
+  body('department')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Department must not exceed 100 characters'),
+  body('status')
+    .isIn(['operational', 'maintenance', 'out_of_service', 'calibration_due'])
+    .withMessage('Invalid status. Must be one of: operational, maintenance, out_of_service, calibration_due'),
+  body('purchaseDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Purchase date must be a valid date'),
+  body('calibrationInterval')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Calibration interval must be a positive integer'),
+  body('maintenanceInterval')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Maintenance interval must be a positive integer'),
+  body('responsiblePerson')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid responsible person ID'),
+];
+
+export const validateEquipmentUpdate = [
+  body('equipmentNumber')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Equipment number must not exceed 100 characters'),
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Equipment name must not exceed 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('manufacturer')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Manufacturer must not exceed 200 characters'),
+  body('model')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Model must not exceed 200 characters'),
+  body('serialNumber')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Serial number must not exceed 200 characters'),
+  body('location')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Location must not exceed 200 characters'),
+  body('department')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Department must not exceed 100 characters'),
+  body('status')
+    .optional()
+    .isIn(['operational', 'maintenance', 'out_of_service', 'calibration_due'])
+    .withMessage('Invalid status. Must be one of: operational, maintenance, out_of_service, calibration_due'),
+  body('purchaseDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Purchase date must be a valid date'),
+  body('lastCalibrationDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Last calibration date must be a valid date'),
+  body('nextCalibrationDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Next calibration date must be a valid date'),
+  body('calibrationInterval')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Calibration interval must be a positive integer'),
+  body('lastMaintenanceDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Last maintenance date must be a valid date'),
+  body('nextMaintenanceDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Next maintenance date must be a valid date'),
+  body('maintenanceInterval')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Maintenance interval must be a positive integer'),
+  body('responsiblePerson')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid responsible person ID'),
+];

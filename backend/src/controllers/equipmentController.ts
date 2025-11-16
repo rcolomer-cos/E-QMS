@@ -1,16 +1,33 @@
 import { Response } from 'express';
 import { EquipmentModel, Equipment } from '../models/EquipmentModel';
-import { AuthRequest } from '../types';
+import { AuthRequest, EquipmentStatus } from '../types';
 import QRCode from 'qrcode';
+import { validationResult } from 'express-validator';
 
 export const createEquipment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
     if (!req.user) {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
     const equipment: Equipment = req.body;
+
+    // Validate required fields
+    if (!equipment.equipmentNumber || !equipment.name || !equipment.location || !equipment.status) {
+      res.status(400).json({ 
+        error: 'Missing required fields', 
+        required: ['equipmentNumber', 'name', 'location', 'status'] 
+      });
+      return;
+    }
 
     // Generate QR code
     const qrData = `EQMS-${equipment.equipmentNumber}`;
@@ -30,13 +47,13 @@ export const createEquipment = async (req: AuthRequest, res: Response): Promise<
   }
 };
 
-export const getEquipment = async (req: AuthRequest, res: Response) => {
+export const getEquipment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { status, department } = req.query;
 
     const equipment = await EquipmentModel.findAll({
-      status: status as any,
-      department: department as string,
+      status: status as EquipmentStatus | undefined,
+      department: department as string | undefined,
     });
 
     res.json(equipment);
@@ -80,10 +97,24 @@ export const getEquipmentByQR = async (req: AuthRequest, res: Response): Promise
   }
 };
 
-export const updateEquipment = async (req: AuthRequest, res: Response) => {
+export const updateEquipment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
     const { id } = req.params;
     const updates = req.body;
+
+    // Check if equipment exists
+    const equipment = await EquipmentModel.findById(parseInt(id, 10));
+    if (!equipment) {
+      res.status(404).json({ error: 'Equipment not found' });
+      return;
+    }
 
     await EquipmentModel.update(parseInt(id, 10), updates);
 
@@ -94,9 +125,16 @@ export const updateEquipment = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const deleteEquipment = async (req: AuthRequest, res: Response) => {
+export const deleteEquipment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+
+    // Check if equipment exists
+    const equipment = await EquipmentModel.findById(parseInt(id, 10));
+    if (!equipment) {
+      res.status(404).json({ error: 'Equipment not found' });
+      return;
+    }
 
     await EquipmentModel.delete(parseInt(id, 10));
 
@@ -107,7 +145,7 @@ export const deleteEquipment = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getCalibrationDue = async (req: AuthRequest, res: Response) => {
+export const getCalibrationDue = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
 
