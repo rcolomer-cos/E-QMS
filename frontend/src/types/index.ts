@@ -134,10 +134,27 @@ export interface CAPA {
   id: number;
   capaNumber: string;
   title: string;
-  type: string;
-  status: string;
-  priority: string;
+  description: string;
+  type: 'corrective' | 'preventive';
+  source: string;
+  status: 'open' | 'in_progress' | 'completed' | 'verified' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  ncrId?: number;
+  auditId?: number;
+  rootCause?: string;
+  proposedAction: string;
+  actionOwner: number;
+  actionOwnerName?: string;
   targetDate: string;
+  completedDate?: string;
+  effectiveness?: string;
+  verifiedBy?: number;
+  verifiedByName?: string;
+  verifiedDate?: string;
+  closedDate?: string;
+  createdBy: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Equipment {
