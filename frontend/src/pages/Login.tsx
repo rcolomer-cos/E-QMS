@@ -28,14 +28,21 @@ function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Login form submitted', { email, passwordLength: password.length });
     setError('');
     setLoading(true);
 
     try {
-      await login({ email, password });
+      console.log('Calling login API...');
+      const result = await login({ email, password });
+      console.log('Login successful:', result);
       navigate('/');
-    } catch (err) {
-      setError('Invalid credentials. Please try again.');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
+      const errorMessage = err.response?.data?.error || err.message || 'Invalid credentials. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
