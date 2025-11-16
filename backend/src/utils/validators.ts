@@ -107,3 +107,49 @@ export const validatePasswordChange = [
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
 ];
+
+export const validateDepartment = [
+  body('name')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Department name is required and must not exceed 100 characters'),
+  body('code')
+    .trim()
+    .isLength({ min: 1, max: 20 })
+    .withMessage('Department code is required and must not exceed 20 characters')
+    .matches(/^[A-Z0-9_-]+$/)
+    .withMessage('Department code must contain only uppercase letters, numbers, hyphens, and underscores'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Description must not exceed 500 characters'),
+  body('managerId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid manager ID'),
+];
+
+export const validateDepartmentUpdate = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Department name must not exceed 100 characters'),
+  body('code')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 20 })
+    .withMessage('Department code must not exceed 20 characters')
+    .matches(/^[A-Z0-9_-]+$/)
+    .withMessage('Department code must contain only uppercase letters, numbers, hyphens, and underscores'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Description must not exceed 500 characters'),
+  body('managerId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid manager ID'),
+];

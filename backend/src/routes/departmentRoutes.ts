@@ -1,0 +1,27 @@
+import { Router } from 'express';
+import {
+  getAllDepartments,
+  getDepartmentById,
+  getDepartmentByCode,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
+} from '../controllers/departmentController';
+import { validateDepartment, validateDepartmentUpdate, validateId } from '../utils/validators';
+import { authenticateToken, authorizeRoles } from '../middleware/auth';
+import { UserRole } from '../types';
+
+const router = Router();
+
+// All routes require authentication
+router.use(authenticateToken);
+
+// Department CRUD operations
+router.get('/', getAllDepartments); // All authenticated users can view departments
+router.get('/:id', validateId, getDepartmentById); // All authenticated users can view departments
+router.get('/code/:code', getDepartmentByCode); // All authenticated users can view departments by code
+router.post('/', authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), validateDepartment, createDepartment); // Admin/superuser only
+router.put('/:id', authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), validateId, validateDepartmentUpdate, updateDepartment); // Admin/superuser only
+router.delete('/:id', authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), validateId, deleteDepartment); // Admin/superuser only
+
+export default router;
