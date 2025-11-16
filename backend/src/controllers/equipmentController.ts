@@ -20,15 +20,6 @@ export const createEquipment = async (req: AuthRequest, res: Response): Promise<
 
     const equipment: Equipment = req.body;
 
-    // Validate required fields
-    if (!equipment.equipmentNumber || !equipment.name || !equipment.location || !equipment.status) {
-      res.status(400).json({ 
-        error: 'Missing required fields', 
-        required: ['equipmentNumber', 'name', 'location', 'status'] 
-      });
-      return;
-    }
-
     // Generate QR code
     const qrData = `EQMS-${equipment.equipmentNumber}`;
     const qrCode = await QRCode.toDataURL(qrData);

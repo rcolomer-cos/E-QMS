@@ -74,7 +74,12 @@ describe('Equipment Controller', () => {
 
     it('should return 400 if required fields are missing', async () => {
       (validationResult as unknown as jest.Mock).mockReturnValue({
-        isEmpty: () => true,
+        isEmpty: () => false,
+        array: () => [
+          { msg: 'Equipment number is required and must not exceed 100 characters' },
+          { msg: 'Location is required and must not exceed 200 characters' },
+          { msg: 'Invalid status. Must be one of: operational, maintenance, out_of_service, calibration_due' }
+        ],
       });
       mockAuthRequest.body = {
         name: 'Test Equipment',
@@ -85,8 +90,11 @@ describe('Equipment Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({ 
-        error: 'Missing required fields',
-        required: ['equipmentNumber', 'name', 'location', 'status']
+        errors: [
+          { msg: 'Equipment number is required and must not exceed 100 characters' },
+          { msg: 'Location is required and must not exceed 200 characters' },
+          { msg: 'Invalid status. Must be one of: operational, maintenance, out_of_service, calibration_due' }
+        ]
       });
     });
 

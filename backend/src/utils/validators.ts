@@ -434,8 +434,8 @@ export const validateEquipmentUpdate = [
   body('location')
     .optional()
     .trim()
-    .isLength({ max: 200 })
-    .withMessage('Location must not exceed 200 characters'),
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Location must not be empty and must not exceed 200 characters'),
   body('department')
     .optional()
     .trim()
