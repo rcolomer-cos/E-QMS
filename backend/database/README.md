@@ -16,6 +16,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 6. **Processes** - Business processes (ISO 9001)
 7. **ProcessOwners** - Process ownership assignments
 8. **Documents** - Document management with metadata and version control
+9. **DocumentRevisions** - Detailed revision history and audit trail for documents
 
 ## Initial Setup
 
@@ -48,6 +49,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    06_create_processes_table.sql
    07_create_process_owners_table.sql
    08_create_documents_table.sql
+   09_create_document_revisions_table.sql
    ```
 
 3. **Verify Installation**:
@@ -285,6 +287,64 @@ FROM Documents d
 WHERE d.status = 'approved'
 GROUP BY d.category
 ORDER BY d.category;
+```
+
+### View Document Revision History
+
+```sql
+-- Get complete revision history for a document
+SELECT 
+    dr.id,
+    dr.version,
+    dr.revisionNumber,
+    dr.changeType,
+    dr.changeDescription,
+    dr.changeReason,
+    dr.statusBefore,
+    dr.statusAfter,
+    dr.revisionDate,
+    u.firstName + ' ' + u.lastName AS authorName,
+    u.email AS authorEmail
+FROM DocumentRevisions dr
+LEFT JOIN Users u ON dr.authorId = u.id
+WHERE dr.documentId = 1 -- Replace with actual document ID
+ORDER BY dr.revisionDate DESC, dr.revisionNumber DESC;
+```
+
+### View Recent Changes by User
+
+```sql
+-- View all changes made by a specific user
+SELECT 
+    dr.documentId,
+    d.title,
+    dr.version,
+    dr.changeType,
+    dr.changeDescription,
+    dr.revisionDate
+FROM DocumentRevisions dr
+INNER JOIN Documents d ON dr.documentId = d.id
+WHERE dr.authorId = 1 -- Replace with actual user ID
+ORDER BY dr.revisionDate DESC;
+```
+
+### Audit Trail - Changes in Date Range
+
+```sql
+-- View all document changes within a date range
+SELECT 
+    d.title,
+    dr.version,
+    dr.changeType,
+    dr.changeDescription,
+    dr.statusBefore + ' → ' + dr.statusAfter AS statusChange,
+    u.firstName + ' ' + u.lastName AS author,
+    dr.revisionDate
+FROM DocumentRevisions dr
+INNER JOIN Documents d ON dr.documentId = d.id
+LEFT JOIN Users u ON dr.authorId = u.id
+WHERE dr.revisionDate BETWEEN '2024-01-01' AND '2024-12-31'
+ORDER BY dr.revisionDate DESC;
 ```
 
 ## Migration from Old Schema
