@@ -22,6 +22,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 12. **CalibrationRecords** - Calibration records for equipment with results and compliance tracking
 13. **InspectionRecords** - Inspection records for equipment with findings and compliance tracking
 14. **ServiceMaintenanceRecords** - Service and maintenance records for equipment with cost and downtime tracking
+15. **NCRs** - Non-conformity reports with tracking for category, severity, root cause, and resolution
 
 ## Initial Setup
 
@@ -60,6 +61,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    14_create_calibration_records_table.sql
    15_create_inspection_records_table.sql
    16_create_service_maintenance_records_table.sql
+   17_create_ncr_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -220,6 +222,20 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation, updates, and responsible personnel
 - **Performance Indexes**: Optimized for queries by equipment, dates, status, service type, priority, and costs
 - **ISO 9001 Compliance**: Supports maintenance management and equipment reliability requirements
+
+### NCRs Table
+
+- **NCR Identification**: Stores unique NCR number, title, and detailed description of non-conformity
+- **Classification**: Tracks source of NCR (internal audit, customer complaint, inspection, etc.), category (process, product, documentation, etc.), and severity (minor, major, critical)
+- **Status Management**: Monitors NCR status (open, in_progress, resolved, closed, rejected) throughout its lifecycle
+- **Timeline Tracking**: Records detected date, closed date, and verification date
+- **Personnel Tracking**: Links to users who reported, are assigned to, and verified the NCR
+- **Analysis and Resolution**: Documents root cause analysis findings, containment actions, and corrective actions
+- **Status Lifecycle**: Tracks NCR from detection through resolution and closure
+- **Severity Levels**: Classifies non-conformities by severity (minor, major, critical) for prioritization
+- **Audit Trail**: Complete tracking of creation and update timestamps
+- **Performance Indexes**: Optimized for queries by NCR number, status, severity, dates, personnel, source, and category
+- **ISO 9001 Compliance**: Supports non-conformance management and corrective action requirements with full traceability
 
 ## Role-Based Access Control (RBAC)
 
