@@ -5,6 +5,7 @@ import { RoleModel } from '../models/RoleModel';
 import { config } from '../config';
 import { validationResult } from 'express-validator';
 import { AuthRequest } from '../types';
+import { logAudit, AuditActionCategory, AuditAction } from '../services/auditLogService';
 
 /**
  * Register a new user (admin/superuser function)
@@ -80,6 +81,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Verify password
     const isValidPassword = await UserModel.verifyPassword(user, password);
     if (!isValidPassword) {
+      // Log failed login attempt
+      await logAudit({
+        req,
+        action: AuditAction.LOGIN,
+        actionCategory: AuditActionCategory.AUTHENTICATION,
+        actionDescription: `Failed login attempt for ${email}`,
+        entityType: 'User',
+        entityIdentifier: email,
+        success: false,
+        errorMessage: 'Invalid credentials',
+        statusCode: 401,
+      });
+
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
@@ -100,6 +114,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn } as jwt.SignOptions
     );
+
+    // Log successful login
+    await logAudit({
+      req,
+      action: AuditAction.LOGIN,
+      actionCategory: AuditActionCategory.AUTHENTICATION,
+      actionDescription: `User logged in successfully`,
+      entityType: 'User',
+      entityId: user.id,
+      entityIdentifier: email,
+      success: true,
+      statusCode: 200,
+    });
 
     res.json({
       token,

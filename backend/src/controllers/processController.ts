@@ -3,6 +3,7 @@ import { ProcessModel, CreateProcessData } from '../models/ProcessModel';
 import { ProcessOwnerModel, CreateProcessOwnerData } from '../models/ProcessOwnerModel';
 import { AuthRequest } from '../types';
 import { validationResult } from 'express-validator';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 /**
  * Get all processes
@@ -103,6 +104,16 @@ export const createProcess = async (req: AuthRequest, res: Response): Promise<vo
 
     const processId = await ProcessModel.create(processData);
 
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.PROCESS,
+      entityType: 'Process',
+      entityId: processId,
+      entityIdentifier: `${code} - ${name}`,
+      newValues: processData,
+    });
+
     res.status(201).json({
       message: 'Process created successfully',
       processId,
@@ -152,7 +163,7 @@ export const updateProcess = async (req: AuthRequest, res: Response): Promise<vo
       }
     }
 
-    await ProcessModel.update(processId, {
+    const updates = {
       name,
       code,
       description,
@@ -160,6 +171,19 @@ export const updateProcess = async (req: AuthRequest, res: Response): Promise<vo
       processCategory,
       objective,
       scope,
+    };
+
+    await ProcessModel.update(processId, updates);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.PROCESS,
+      entityType: 'Process',
+      entityId: processId,
+      entityIdentifier: `${process.code} - ${process.name}`,
+      oldValues: process,
+      newValues: updates,
     });
 
     res.json({ message: 'Process updated successfully' });
@@ -189,6 +213,16 @@ export const deleteProcess = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     await ProcessModel.delete(processId);
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.PROCESS,
+      entityType: 'Process',
+      entityId: processId,
+      entityIdentifier: `${process.code} - ${process.name}`,
+      oldValues: process,
+    });
 
     res.json({ message: 'Process deleted successfully' });
   } catch (error) {

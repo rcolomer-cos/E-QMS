@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { TrainingModel, Training } from '../models/TrainingModel';
 import { AuthRequest, TrainingStatus } from '../types';
 import { validationResult } from 'express-validator';
+import { logCreate, logUpdate, AuditActionCategory } from '../services/auditLogService';
 
 export const createTraining = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -20,6 +21,16 @@ export const createTraining = async (req: AuthRequest, res: Response): Promise<v
     const training: Training = req.body;
 
     const trainingId = await TrainingModel.create(training);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.TRAINING,
+      entityType: 'Training',
+      entityId: trainingId,
+      entityIdentifier: training.title,
+      newValues: training,
+    });
 
     res.status(201).json({
       message: 'Training created successfully',
@@ -108,6 +119,17 @@ export const updateTraining = async (req: AuthRequest, res: Response): Promise<v
     }
 
     await TrainingModel.update(parseInt(id, 10), updates);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.TRAINING,
+      entityType: 'Training',
+      entityId: parseInt(id, 10),
+      entityIdentifier: training.title,
+      oldValues: training,
+      newValues: updates,
+    });
 
     res.json({ message: 'Training updated successfully' });
   } catch (error) {

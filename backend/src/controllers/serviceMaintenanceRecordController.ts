@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { ServiceMaintenanceRecordModel, ServiceMaintenanceRecord, ServiceStatus, ServiceType } from '../models/ServiceMaintenanceRecordModel';
 import { AuthRequest } from '../types';
 import { validationResult } from 'express-validator';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 export const createServiceMaintenanceRecord = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -20,6 +21,16 @@ export const createServiceMaintenanceRecord = async (req: AuthRequest, res: Resp
     const record: ServiceMaintenanceRecord = req.body;
 
     const recordId = await ServiceMaintenanceRecordModel.create(record);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.SERVICE_MAINTENANCE,
+      entityType: 'ServiceMaintenanceRecord',
+      entityId: recordId,
+      entityIdentifier: `Equipment ${record.equipmentId} - ${record.serviceType}`,
+      newValues: record,
+    });
 
     res.status(201).json({
       message: 'Service/Maintenance record created successfully',
@@ -110,6 +121,17 @@ export const updateServiceMaintenanceRecord = async (req: AuthRequest, res: Resp
 
     await ServiceMaintenanceRecordModel.update(parseInt(id, 10), updates);
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.SERVICE_MAINTENANCE,
+      entityType: 'ServiceMaintenanceRecord',
+      entityId: parseInt(id, 10),
+      entityIdentifier: `Equipment ${record.equipmentId} - ${record.serviceType}`,
+      oldValues: record,
+      newValues: updates,
+    });
+
     res.json({ message: 'Service/Maintenance record updated successfully' });
   } catch (error) {
     console.error('Update service/maintenance record error:', error);
@@ -129,6 +151,16 @@ export const deleteServiceMaintenanceRecord = async (req: AuthRequest, res: Resp
     }
 
     await ServiceMaintenanceRecordModel.delete(parseInt(id, 10));
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.SERVICE_MAINTENANCE,
+      entityType: 'ServiceMaintenanceRecord',
+      entityId: parseInt(id, 10),
+      entityIdentifier: `Equipment ${record.equipmentId} - ${record.serviceType}`,
+      oldValues: record,
+    });
 
     res.json({ message: 'Service/Maintenance record deleted successfully' });
   } catch (error) {
