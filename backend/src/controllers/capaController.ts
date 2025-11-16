@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { CAPAModel, CAPA } from '../models/CAPAModel';
 import { AuthRequest, CAPAStatus } from '../types';
 import { validationResult } from 'express-validator';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 export const createCAPA = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -20,6 +21,16 @@ export const createCAPA = async (req: AuthRequest, res: Response): Promise<void>
     const capa: CAPA = req.body;
 
     const capaId = await CAPAModel.create(capa);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.CAPA,
+      entityType: 'CAPA',
+      entityId: capaId,
+      entityIdentifier: capa.capaNumber,
+      newValues: capa,
+    });
 
     res.status(201).json({
       message: 'CAPA created successfully',
@@ -109,6 +120,17 @@ export const updateCAPA = async (req: AuthRequest, res: Response): Promise<void>
 
     await CAPAModel.update(parseInt(id, 10), updates);
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.CAPA,
+      entityType: 'CAPA',
+      entityId: parseInt(id, 10),
+      entityIdentifier: capa.capaNumber,
+      oldValues: capa,
+      newValues: updates,
+    });
+
     res.json({ message: 'CAPA updated successfully' });
   } catch (error) {
     console.error('Update CAPA error:', error);
@@ -128,6 +150,16 @@ export const deleteCAPA = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     await CAPAModel.delete(parseInt(id, 10));
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.CAPA,
+      entityType: 'CAPA',
+      entityId: parseInt(id, 10),
+      entityIdentifier: capa.capaNumber,
+      oldValues: capa,
+    });
 
     res.json({ message: 'CAPA deleted successfully' });
   } catch (error) {
@@ -161,10 +193,23 @@ export const assignCAPA = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Update the CAPA with new assignment
-    await CAPAModel.update(parseInt(id, 10), {
+    const updates = {
       actionOwner,
       targetDate: targetDate ? new Date(targetDate) : undefined,
       status: CAPAStatus.OPEN,
+    };
+    await CAPAModel.update(parseInt(id, 10), updates);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.CAPA,
+      entityType: 'CAPA',
+      entityId: parseInt(id, 10),
+      entityIdentifier: capa.capaNumber,
+      oldValues: { actionOwner: capa.actionOwner, targetDate: capa.targetDate },
+      newValues: updates,
+      actionDescription: `CAPA assigned to user ${actionOwner}`,
     });
 
     res.json({ message: 'CAPA assigned successfully' });
@@ -225,6 +270,18 @@ export const updateCAPAStatus = async (req: AuthRequest, res: Response): Promise
 
     await CAPAModel.update(parseInt(id, 10), updates);
 
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.CAPA,
+      entityType: 'CAPA',
+      entityId: parseInt(id, 10),
+      entityIdentifier: capa.capaNumber,
+      oldValues: { status: currentStatus },
+      newValues: { status },
+      actionDescription: `CAPA status changed from ${currentStatus} to ${status}`,
+    });
+
     res.json({ message: 'CAPA status updated successfully' });
   } catch (error) {
     console.error('Update CAPA status error:', error);
@@ -265,11 +322,24 @@ export const completeCAPA = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    await CAPAModel.update(parseInt(id, 10), {
+    const updates = {
       rootCause,
       proposedAction,
       status: CAPAStatus.COMPLETED,
       completedDate: new Date(),
+    };
+    await CAPAModel.update(parseInt(id, 10), updates);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.CAPA,
+      entityType: 'CAPA',
+      entityId: parseInt(id, 10),
+      entityIdentifier: capa.capaNumber,
+      oldValues: { status: capa.status },
+      newValues: updates,
+      actionDescription: `CAPA completed by ${req.user?.firstName} ${req.user?.lastName}`,
     });
 
     res.json({ message: 'CAPA completed successfully' });
@@ -312,11 +382,24 @@ export const verifyCAPA = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    await CAPAModel.update(parseInt(id, 10), {
+    const updates = {
       effectiveness,
       verifiedBy: req.user.id,
       verifiedDate: new Date(),
       status: CAPAStatus.VERIFIED,
+    };
+    await CAPAModel.update(parseInt(id, 10), updates);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.CAPA,
+      entityType: 'CAPA',
+      entityId: parseInt(id, 10),
+      entityIdentifier: capa.capaNumber,
+      oldValues: { status: capa.status },
+      newValues: updates,
+      actionDescription: `CAPA verified by ${req.user.firstName} ${req.user.lastName}`,
     });
 
     res.json({ message: 'CAPA verified successfully' });

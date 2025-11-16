@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { DepartmentModel, CreateDepartmentData } from '../models/DepartmentModel';
 import { AuthRequest } from '../types';
 import { validationResult } from 'express-validator';
+import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
 /**
  * Get all departments
@@ -99,6 +100,16 @@ export const createDepartment = async (req: AuthRequest, res: Response): Promise
 
     const departmentId = await DepartmentModel.create(departmentData);
 
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.DEPARTMENT,
+      entityType: 'Department',
+      entityId: departmentId,
+      entityIdentifier: code,
+      newValues: departmentData,
+    });
+
     res.status(201).json({
       message: 'Department created successfully',
       departmentId,
@@ -148,11 +159,23 @@ export const updateDepartment = async (req: AuthRequest, res: Response): Promise
       }
     }
 
-    await DepartmentModel.update(departmentId, {
+    const updates = {
       name,
       code,
       description,
       managerId,
+    };
+    await DepartmentModel.update(departmentId, updates);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DEPARTMENT,
+      entityType: 'Department',
+      entityId: departmentId,
+      entityIdentifier: department.code,
+      oldValues: department,
+      newValues: updates,
     });
 
     res.json({ message: 'Department updated successfully' });
@@ -182,6 +205,16 @@ export const deleteDepartment = async (req: AuthRequest, res: Response): Promise
     }
 
     await DepartmentModel.delete(departmentId);
+
+    // Log audit entry
+    await logDelete({
+      req,
+      actionCategory: AuditActionCategory.DEPARTMENT,
+      entityType: 'Department',
+      entityId: departmentId,
+      entityIdentifier: department.code,
+      oldValues: department,
+    });
 
     res.json({ message: 'Department deleted successfully' });
   } catch (error) {
