@@ -56,7 +56,24 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    11_create_equipment_table.sql
    ```
 
-3. **Verify Installation**:
+3. **Optional: Load Sample Data** (for development/testing):
+   
+   After creating all tables and users, you can optionally load sample data:
+   
+   ```
+   12_seed_example_data.sql
+   ```
+   
+   **Important Notes:**
+   - This script populates all tables **except Users** with example data
+   - Requires users to be created first (assumes user IDs 1-5 exist)
+   - Includes 8 departments, 15 processes, 12 documents, 10 equipment items, and more
+   - All sample data follows ISO 9001 QMS structure and best practices
+   - Safe to run multiple times (checks for existing data before inserting)
+   - Ideal for development, testing, and demonstration purposes
+   - **Do not use in production** without reviewing and customizing the data
+
+4. **Verify Installation**:
    ```sql
    -- Check database version
    SELECT * FROM DatabaseVersion ORDER BY appliedDate DESC;
@@ -169,6 +186,79 @@ When creating new schema update scripts:
    ```
 3. Use idempotent scripts (check if changes already exist)
 4. Document breaking changes in the `notes` field
+
+## Sample Data (Development & Testing)
+
+### Overview
+
+The `12_seed_example_data.sql` script provides comprehensive sample data for development and testing purposes. This script populates all tables (except Users) with realistic ISO 9001-compliant data.
+
+### What's Included
+
+| Table | Sample Data Count | Description |
+|-------|-------------------|-------------|
+| Departments | 8 | QA, Production, R&D, IT, HR, Engineering, Maintenance, Supply Chain |
+| Processes | 15 | Management (3), Core (4), and Support (8) processes |
+| ProcessOwners | 15 | Process ownership assignments |
+| Documents | 12 | Policies, procedures, work instructions, and forms |
+| DocumentRevisions | 13 | Complete revision history with audit trails |
+| Notifications | 4 | Sample document approval/rejection notifications |
+| Equipment | 10 | Measuring and testing equipment with calibration schedules |
+| UserRoles | 7 | Role assignments across different access levels |
+
+### Prerequisites
+
+Before running the seed data script:
+
+1. All database tables must be created (run scripts 01-11)
+2. At least 5 users must exist in the Users table (IDs 1-5)
+3. Database name should be `EQMS` (or modify the `USE EQMS;` statement)
+
+### Features
+
+- **Idempotent**: Safe to run multiple times without creating duplicates
+- **Foreign Key Compliance**: Respects all table dependencies and relationships
+- **ISO 9001 Aligned**: Data follows quality management system best practices
+- **Realistic Data**: Includes equipment with calibration due dates, documents in various approval states, complete audit trails
+- **Well Documented**: Extensive comments explaining data structure and dependencies
+
+### Usage Example
+
+```sql
+-- Ensure you're using the correct database
+USE EQMS;
+GO
+
+-- Run the seed data script
+-- Execute 12_seed_example_data.sql in SSMS or Azure Data Studio
+
+-- Verify sample data was inserted
+SELECT 'Departments' AS TableName, COUNT(*) AS RecordCount FROM Departments
+UNION ALL
+SELECT 'Processes', COUNT(*) FROM Processes
+UNION ALL
+SELECT 'Documents', COUNT(*) FROM Documents
+UNION ALL
+SELECT 'Equipment', COUNT(*) FROM Equipment;
+```
+
+### Customization
+
+To adapt the sample data for your environment:
+
+1. **User IDs**: Modify the user ID references (currently assumes IDs 1-5)
+2. **Department Codes**: Adjust department codes to match your organization
+3. **Process Categories**: Customize process names and categories as needed
+4. **Document Types**: Add or modify document types and categories
+5. **Equipment**: Update equipment list to reflect your actual equipment
+
+### Important Notes
+
+- ⚠️ **Development Use Only**: This data is for development and testing purposes
+- ⚠️ **User Dependencies**: Many tables reference user IDs - ensure users exist first
+- ⚠️ **Database Name**: Script assumes database name is `EQMS`
+- ✅ **Safe Execution**: Checks for existing data before inserting
+- ✅ **Complete Structure**: Maintains referential integrity across all tables
 
 ## Security Considerations
 
