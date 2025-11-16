@@ -26,6 +26,7 @@ import trainingRoutes from './routes/trainingRoutes';
 import calibrationRecordRoutes from './routes/calibrationRecordRoutes';
 import inspectionRecordRoutes from './routes/inspectionRecordRoutes';
 import serviceMaintenanceRecordRoutes from './routes/serviceMaintenanceRecordRoutes';
+import attachmentRoutes from './routes/attachmentRoutes';
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use('/api/trainings', trainingRoutes);
 app.use('/api/calibration-records', calibrationRecordRoutes);
 app.use('/api/inspection-records', inspectionRecordRoutes);
 app.use('/api/service-maintenance-records', serviceMaintenanceRecordRoutes);
+app.use('/api/attachments', attachmentRoutes);
 
 // 404 handler
 app.use((_req, res) => {

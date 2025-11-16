@@ -852,3 +852,58 @@ export const validateServiceMaintenanceRecordUpdate = [
     .withMessage('Work performed must not exceed 2000 characters'),
 ];
 
+// Attachment validators
+export const validateAttachmentUpload = [
+  body('entityType')
+    .trim()
+    .isIn(['equipment', 'document', 'calibration', 'inspection', 'service_maintenance', 'training', 'ncr', 'capa', 'audit'])
+    .withMessage('Invalid entity type'),
+  body('entityId')
+    .trim()
+    .notEmpty()
+    .withMessage('Entity ID is required')
+    .isInt({ min: 1 })
+    .withMessage('Entity ID must be a positive integer'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Description must not exceed 500 characters'),
+  body('category')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Category must not exceed 100 characters'),
+  body('version')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Version must not exceed 50 characters'),
+  body('isPublic')
+    .optional()
+    .isBoolean()
+    .withMessage('isPublic must be a boolean'),
+];
+
+export const validateAttachmentUpdate = [
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Description must not exceed 500 characters'),
+  body('category')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Category must not exceed 100 characters'),
+  body('version')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Version must not exceed 50 characters'),
+  body('isPublic')
+    .optional()
+    .isBoolean()
+    .withMessage('isPublic must be a boolean'),
+];
+
