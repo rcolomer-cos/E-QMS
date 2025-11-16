@@ -1,5 +1,5 @@
 import api from './api';
-import { Document, PendingDocument } from '../types';
+import { Document, PendingDocument, DocumentRevision } from '../types';
 
 export interface DocumentFilters {
   status?: string;
@@ -89,4 +89,23 @@ export const rejectDocument = async (id: number, reason: string): Promise<void> 
 
 export const requestChanges = async (id: number, changes: string): Promise<void> => {
   await api.post(`/documents/${id}/request-changes`, { changes });
+};
+
+export const getDocumentRevisionHistory = async (id: number): Promise<DocumentRevision[]> => {
+  const response = await api.get(`/documents/${id}/revisions`);
+  return response.data;
+};
+
+export const createDocumentRevision = async (
+  id: number,
+  revision: {
+    changeType: string;
+    changeDescription?: string;
+    changeReason?: string;
+    statusBefore?: string;
+    statusAfter?: string;
+  }
+): Promise<{ revisionId: number }> => {
+  const response = await api.post(`/documents/${id}/revisions`, revision);
+  return response.data;
 };
