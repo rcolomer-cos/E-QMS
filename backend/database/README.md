@@ -29,6 +29,10 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 19. **TrainingAttendees** - Training attendance records linking users to training sessions with completion status and certificates
 20. **TrainingCertificates** - Detailed certificate metadata for both internal and external certifications with renewal tracking
 21. **Attachments** - File attachment storage with polymorphic relationships to various entities including training certificates
+22. **Competencies** - Competency definitions and requirements for ISO 9001 competence management
+23. **UserCompetencies** - User competency assessments and certifications with expiry tracking
+24. **RoleTrainingRequirements** - Required training associations for specific roles
+25. **Audits** - Planned audits including scope, dates, auditors, related processes, and audit criteria for ISO 9001 audit planning
 
 ## Initial Setup
 
@@ -74,6 +78,10 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    21_create_trainings_table.sql
    22_create_training_attendees_table.sql
    23_create_training_certificates_table.sql
+   24_create_competencies_table.sql
+   25_create_user_competencies_table.sql
+   26_create_role_training_requirements_table.sql
+   27_create_audits_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -261,6 +269,21 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation, updates, and responsible personnel
 - **Performance Indexes**: Optimized for queries by CAPA number, status, priority, dates, personnel, and related records
 - **ISO 9001 Compliance**: Supports CAPA management with relations to NCRs, full audit trail, and effectiveness verification
+
+### Audits Table
+
+- **Audit Identification**: Stores unique audit number, title, and detailed audit description
+- **Audit Classification**: Tracks audit type (Internal, External, Process, Compliance, Product, System, Supplier, Certification, Management Review)
+- **Scope and Criteria**: Documents audit scope definition and audit criteria/standards being applied (e.g., ISO 9001:2015 clauses)
+- **Process Tracking**: Links audits to related processes being audited for traceability
+- **Status Management**: Monitors audit status (planned, in_progress, completed, closed) throughout audit lifecycle
+- **Timeline Tracking**: Records scheduled dates and actual completion dates
+- **Personnel Assignment**: Links to lead auditor and tracks audit creator
+- **Department Association**: Associates audits with specific departments or areas being audited
+- **Findings and Conclusions**: Captures audit findings, observations, and conclusions
+- **Audit Trail**: Complete tracking of creation and update timestamps
+- **Performance Indexes**: Optimized for queries by audit number, status, dates, audit type, lead auditor, department, and related processes
+- **ISO 9001 Compliance**: Supports audit planning and execution requirements with comprehensive tracking of scope, criteria, and findings
 
 ### AuditLog Table
 
