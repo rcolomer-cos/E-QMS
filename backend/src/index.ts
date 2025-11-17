@@ -33,6 +33,7 @@ import attachmentRoutes from './routes/attachmentRoutes';
 import auditLogRoutes from './routes/auditLogRoutes';
 import checklistRoutes from './routes/checklistRoutes';
 import evidencePackRoutes from './routes/evidencePackRoutes';
+import auditorAccessTokenRoutes from './routes/auditorAccessTokenRoutes';
 
 dotenv.config();
 
@@ -91,6 +92,7 @@ app.use('/api/attachments', attachmentRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/checklists', checklistRoutes);
 app.use('/api/evidence-pack', evidencePackRoutes);
+app.use('/api/auditor-access-tokens', auditorAccessTokenRoutes);
 
 // 404 handler
 app.use((_req, res) => {
