@@ -239,7 +239,8 @@ function AuditExecution() {
       setSaving(true);
       setError('');
 
-      // Prepare response data for API
+      // Prepare response data for API (remove the question object)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { question, ...responseData } = response;
 
       if (response.id) {
@@ -285,34 +286,30 @@ function AuditExecution() {
     const response = responses.get(selectedQuestionForUpload);
     const question = questions.find((q) => q.id === selectedQuestionForUpload);
 
-    try {
-      await uploadAttachment(
-        file,
-        'audit',
-        parseInt(id, 10),
-        `Evidence for question ${question?.questionNumber}: ${question?.questionText}`,
-        'audit_evidence'
+    await uploadAttachment(
+      file,
+      'audit',
+      parseInt(id, 10),
+      `Evidence for question ${question?.questionNumber}: ${question?.questionText}`,
+      'audit_evidence'
+    );
+
+    // Reload attachments
+    const attachmentsData = await getAttachmentsByEntity('audit', parseInt(id, 10));
+    setAttachments(attachmentsData.data);
+
+    // Update response evidence field
+    if (response) {
+      const evidenceNote = `Evidence uploaded: ${file.name}`;
+      handleResponseChange(
+        selectedQuestionForUpload,
+        'evidence',
+        response.evidence ? `${response.evidence}; ${evidenceNote}` : evidenceNote
       );
-
-      // Reload attachments
-      const attachmentsData = await getAttachmentsByEntity('audit', parseInt(id, 10));
-      setAttachments(attachmentsData.data);
-
-      // Update response evidence field
-      if (response) {
-        const evidenceNote = `Evidence uploaded: ${file.name}`;
-        handleResponseChange(
-          selectedQuestionForUpload,
-          'evidence',
-          response.evidence ? `${response.evidence}; ${evidenceNote}` : evidenceNote
-        );
-      }
-
-      setShowUploadModal(false);
-      setSelectedQuestionForUpload(null);
-    } catch (err) {
-      throw err;
     }
+
+    setShowUploadModal(false);
+    setSelectedQuestionForUpload(null);
   };
 
   const getCompletionStats = () => {
