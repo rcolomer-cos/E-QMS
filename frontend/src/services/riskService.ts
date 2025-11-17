@@ -1,0 +1,178 @@
+import api from './api';
+import { Risk, RiskStatistics } from '../types';
+
+export interface CreateRiskData {
+  riskNumber: string;
+  title: string;
+  description: string;
+  category: string;
+  source?: string;
+  likelihood: number;
+  impact: number;
+  mitigationStrategy?: string;
+  mitigationActions?: string;
+  contingencyPlan?: string;
+  riskOwner: number;
+  department?: string;
+  process?: string;
+  status: 'identified' | 'assessed' | 'mitigating' | 'monitoring' | 'closed' | 'accepted';
+  identifiedDate: string;
+  reviewFrequency?: number;
+  affectedStakeholders?: string;
+  regulatoryImplications?: string;
+}
+
+export interface UpdateRiskData {
+  title?: string;
+  description?: string;
+  category?: string;
+  source?: string;
+  likelihood?: number;
+  impact?: number;
+  mitigationStrategy?: string;
+  mitigationActions?: string;
+  contingencyPlan?: string;
+  riskOwner?: number;
+  department?: string;
+  process?: string;
+  status?: 'identified' | 'assessed' | 'mitigating' | 'monitoring' | 'closed' | 'accepted';
+  reviewDate?: string;
+  nextReviewDate?: string;
+  reviewFrequency?: number;
+  residualLikelihood?: number;
+  residualImpact?: number;
+  affectedStakeholders?: string;
+  regulatoryImplications?: string;
+  lastReviewedBy?: number;
+}
+
+export interface RiskListResponse {
+  data: Risk[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface RiskFilters {
+  page?: number;
+  limit?: number;
+  status?: string;
+  category?: string;
+  riskLevel?: string;
+  department?: string;
+  riskOwner?: number;
+  minRiskScore?: number;
+  maxRiskScore?: number;
+  sortBy?: 'riskScore' | 'residualRiskScore' | 'identifiedDate' | 'nextReviewDate' | 'title';
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+/**
+ * Calculate risk score from likelihood and impact
+ */
+export const calculateRiskScore = (likelihood: number, impact: number): number => {
+  return likelihood * impact;
+};
+
+/**
+ * Calculate risk level from risk score
+ */
+export const calculateRiskLevel = (riskScore: number): 'low' | 'medium' | 'high' | 'critical' => {
+  if (riskScore >= 20) return 'critical';
+  if (riskScore >= 12) return 'high';
+  if (riskScore >= 6) return 'medium';
+  return 'low';
+};
+
+/**
+ * Get risk level color for UI display
+ */
+export const getRiskLevelColor = (riskLevel?: string): string => {
+  switch (riskLevel) {
+    case 'critical':
+      return '#d32f2f'; // Red
+    case 'high':
+      return '#f57c00'; // Orange
+    case 'medium':
+      return '#fbc02d'; // Yellow
+    case 'low':
+      return '#388e3c'; // Green
+    default:
+      return '#757575'; // Grey
+  }
+};
+
+/**
+ * Get all risks with optional filtering
+ */
+export const getRisks = async (filters?: RiskFilters): Promise<RiskListResponse> => {
+  const params = new URLSearchParams();
+  if (filters?.page) params.append('page', filters.page.toString());
+  if (filters?.limit) params.append('limit', filters.limit.toString());
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.category) params.append('category', filters.category);
+  if (filters?.riskLevel) params.append('riskLevel', filters.riskLevel);
+  if (filters?.department) params.append('department', filters.department);
+  if (filters?.riskOwner) params.append('riskOwner', filters.riskOwner.toString());
+  if (filters?.minRiskScore !== undefined) params.append('minRiskScore', filters.minRiskScore.toString());
+  if (filters?.maxRiskScore !== undefined) params.append('maxRiskScore', filters.maxRiskScore.toString());
+  if (filters?.sortBy) params.append('sortBy', filters.sortBy);
+  if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
+
+  const response = await api.get(`/risks?${params.toString()}`);
+  return response.data;
+};
+
+/**
+ * Get a single risk by ID
+ */
+export const getRiskById = async (id: number): Promise<Risk> => {
+  const response = await api.get(`/risks/${id}`);
+  return response.data;
+};
+
+/**
+ * Create a new risk
+ */
+export const createRisk = async (data: CreateRiskData): Promise<{ message: string; id: number }> => {
+  const response = await api.post('/risks', data);
+  return response.data;
+};
+
+/**
+ * Update an existing risk
+ */
+export const updateRisk = async (id: number, data: UpdateRiskData): Promise<{ message: string }> => {
+  const response = await api.put(`/risks/${id}`, data);
+  return response.data;
+};
+
+/**
+ * Update risk status
+ */
+export const updateRiskStatus = async (
+  id: number,
+  status: 'identified' | 'assessed' | 'mitigating' | 'monitoring' | 'closed' | 'accepted'
+): Promise<{ message: string; status: string }> => {
+  const response = await api.put(`/risks/${id}/status`, { status });
+  return response.data;
+};
+
+/**
+ * Delete a risk
+ */
+export const deleteRisk = async (id: number): Promise<{ message: string }> => {
+  const response = await api.delete(`/risks/${id}`);
+  return response.data;
+};
+
+/**
+ * Get risk statistics
+ */
+export const getRiskStatistics = async (): Promise<RiskStatistics> => {
+  const response = await api.get('/risks/statistics');
+  return response.data;
+};
