@@ -98,6 +98,15 @@ export enum RiskLevel {
   CRITICAL = 'critical',
 }
 
+export enum RiskStatus {
+  IDENTIFIED = 'identified',
+  ASSESSED = 'assessed',
+  MITIGATING = 'mitigating',
+  MONITORING = 'monitoring',
+  CLOSED = 'closed',
+  ACCEPTED = 'accepted',
+}
+
 export enum CalibrationResult {
   PENDING = 'pending',
   PASSED = 'passed',
