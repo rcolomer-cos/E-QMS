@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { Audit } from '../types';
 
 function Audits() {
   const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadAudits();
@@ -19,6 +21,10 @@ function Audits() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExecuteAudit = (auditId: number) => {
+    navigate(`/audits/${auditId}/execute`);
   };
 
   if (loading) {
@@ -63,6 +69,14 @@ function Audits() {
                 <td>
                   <button className="btn-small">View</button>
                   <button className="btn-small">Edit</button>
+                  {(audit.status === 'planned' || audit.status === 'in_progress') && (
+                    <button 
+                      className="btn-small btn-primary"
+                      onClick={() => handleExecuteAudit(audit.id)}
+                    >
+                      Execute
+                    </button>
+                  )}
                 </td>
               </tr>
             ))
