@@ -1075,3 +1075,84 @@ export const validateUserCompetencyUpdate = [
     .withMessage('Assessment score must be between 0 and 100'),
 ];
 
+export const validateRoleTrainingRequirement = [
+  body('roleId')
+    .isInt({ min: 1 })
+    .withMessage('Valid role ID is required'),
+  body('competencyId')
+    .isInt({ min: 1 })
+    .withMessage('Valid competency ID is required'),
+  body('isMandatory')
+    .isBoolean()
+    .withMessage('isMandatory must be a boolean'),
+  body('isRegulatory')
+    .isBoolean()
+    .withMessage('isRegulatory must be a boolean'),
+  body('priority')
+    .isIn(['critical', 'high', 'normal', 'low'])
+    .withMessage('Invalid priority level'),
+  body('status')
+    .optional()
+    .isIn(['active', 'inactive', 'deprecated'])
+    .withMessage('Invalid status'),
+  body('gracePeriodDays')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Grace period days must be a non-negative integer'),
+  body('refreshFrequencyMonths')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Refresh frequency must be a positive integer'),
+  body('complianceDeadline')
+    .optional()
+    .isISO8601()
+    .withMessage('Compliance deadline must be a valid date'),
+  body('effectiveDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Effective date must be a valid date'),
+  body('endDate')
+    .optional()
+    .isISO8601()
+    .withMessage('End date must be a valid date'),
+];
+
+export const validateRoleTrainingRequirementUpdate = [
+  body('isMandatory')
+    .optional()
+    .isBoolean()
+    .withMessage('isMandatory must be a boolean'),
+  body('isRegulatory')
+    .optional()
+    .isBoolean()
+    .withMessage('isRegulatory must be a boolean'),
+  body('priority')
+    .optional()
+    .isIn(['critical', 'high', 'normal', 'low'])
+    .withMessage('Invalid priority level'),
+  body('status')
+    .optional()
+    .isIn(['active', 'inactive', 'deprecated'])
+    .withMessage('Invalid status'),
+  body('gracePeriodDays')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Grace period days must be a non-negative integer'),
+  body('refreshFrequencyMonths')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Refresh frequency must be a positive integer'),
+  body('complianceDeadline')
+    .optional()
+    .isISO8601()
+    .withMessage('Compliance deadline must be a valid date'),
+  body('effectiveDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Effective date must be a valid date'),
+  body('endDate')
+    .optional()
+    .isISO8601()
+    .withMessage('End date must be a valid date'),
+];
+
