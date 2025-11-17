@@ -13,6 +13,8 @@ export interface Audit {
   completedDate?: Date;
   leadAuditorId: number;
   department?: string;
+  auditCriteria?: string;
+  relatedProcesses?: string;
   findings?: string;
   conclusions?: string;
   createdBy: number;
@@ -35,11 +37,13 @@ export class AuditModel {
       .input('scheduledDate', sql.DateTime, audit.scheduledDate)
       .input('leadAuditorId', sql.Int, audit.leadAuditorId)
       .input('department', sql.NVarChar, audit.department)
+      .input('auditCriteria', sql.NVarChar, audit.auditCriteria)
+      .input('relatedProcesses', sql.NVarChar, audit.relatedProcesses)
       .input('createdBy', sql.Int, audit.createdBy)
       .query(`
-        INSERT INTO Audits (auditNumber, title, description, auditType, scope, status, scheduledDate, leadAuditorId, department, createdBy)
+        INSERT INTO Audits (auditNumber, title, description, auditType, scope, status, scheduledDate, leadAuditorId, department, auditCriteria, relatedProcesses, createdBy)
         OUTPUT INSERTED.id
-        VALUES (@auditNumber, @title, @description, @auditType, @scope, @status, @scheduledDate, @leadAuditorId, @department, @createdBy)
+        VALUES (@auditNumber, @title, @description, @auditType, @scope, @status, @scheduledDate, @leadAuditorId, @department, @auditCriteria, @relatedProcesses, @createdBy)
       `);
 
     return result.recordset[0].id;
