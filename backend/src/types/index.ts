@@ -193,3 +193,10 @@ export enum UserCompetencyStatus {
   REVOKED = 'revoked',
   PENDING = 'pending',
 }
+
+export enum ChecklistTemplateStatus {
+  DRAFT = 'draft',
+  ACTIVE = 'active',
+  ARCHIVED = 'archived',
+  OBSOLETE = 'obsolete',
+}

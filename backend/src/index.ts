@@ -30,6 +30,7 @@ import inspectionRecordRoutes from './routes/inspectionRecordRoutes';
 import serviceMaintenanceRecordRoutes from './routes/serviceMaintenanceRecordRoutes';
 import attachmentRoutes from './routes/attachmentRoutes';
 import auditLogRoutes from './routes/auditLogRoutes';
+import checklistRoutes from './routes/checklistRoutes';
 
 dotenv.config();
 
@@ -85,6 +86,7 @@ app.use('/api/inspection-records', inspectionRecordRoutes);
 app.use('/api/service-maintenance-records', serviceMaintenanceRecordRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/checklists', checklistRoutes);
 
 // 404 handler
 app.use((_req, res) => {
