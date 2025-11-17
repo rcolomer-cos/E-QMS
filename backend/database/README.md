@@ -34,6 +34,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 24. **RoleTrainingRequirements** - Required training associations for specific roles
 25. **Audits** - Planned audits including scope, dates, auditors, related processes, and audit criteria for ISO 9001 audit planning
 26. **Risks** - Risk register items with assessment, mitigation actions, ownership, and review tracking for ISO 9001 risk management
+27. **Suppliers** - Supplier details with contact info, categories, approval status, quality metrics, evaluation tracking, and audit scheduling for ISO 9001 supplier management
 
 ## Initial Setup
 
@@ -90,6 +91,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    32_add_audit_approval_workflow.sql
    33_create_auditor_access_tokens_table.sql
    34_create_risks_table.sql
+   35_create_suppliers_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -309,6 +311,32 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation, updates, and review history with responsible personnel
 - **Performance Indexes**: Optimized for queries by risk number, status, risk level, risk scores, dates, personnel, and classification
 - **ISO 9001 Compliance**: Supports risk-based thinking and risk management requirements with comprehensive assessment and mitigation tracking
+
+### Suppliers Table
+
+- **Supplier Identification**: Stores unique supplier number, company name, and detailed description
+- **Contact Information**: Captures contact person, email, phone numbers, fax, and website
+- **Address Information**: Complete address details including street, city, state/province, postal code, and country
+- **Supplier Classification**: Tracks category (Raw Materials, Components, Services, Equipment), type (Manufacturer, Distributor, Service Provider), and industry sector
+- **Products and Services**: Documents the products and services provided by the supplier
+- **Approval Management**: Manages approval status (pending, under_review, approved, conditional_approval, rejected, suspended, deactivated) with approval dates and responsible personnel
+- **Suspension Tracking**: Records suspension dates and reasons when suppliers are temporarily suspended
+- **Quality Metrics**: Captures rating (1-5 scale), performance score (0-100), quality grade (A-F), and compliance status
+- **Certifications**: Documents supplier certifications (ISO 9001, ISO 14001, etc.) with expiry tracking
+- **Evaluation Tracking**: Manages last evaluation date, next evaluation date, and evaluation frequency for supplier assessments
+- **Audit Scheduling**: Tracks last audit date, next audit date, and audit frequency for supplier audits
+- **Risk Assessment**: Classifies suppliers by risk level (Low, Medium, High, Critical) and flags critical suppliers
+- **Backup Suppliers**: Supports linking to backup suppliers for business continuity planning
+- **Business Information**: Stores registration numbers, DUNS number, establishment year, employee count, and annual revenue
+- **Payment Terms**: Documents payment terms, credit limits, and banking information
+- **Relationship Management**: Assigns supplier manager, tracks relationship start date, and contract expiry dates
+- **Preferred Suppliers**: Flags preferred suppliers for prioritization
+- **Performance Metrics**: Tracks on-time delivery rate, quality reject rate, responsiveness rating, and total purchase value
+- **ISO 9001 Certification**: Dedicated fields for ISO 9001 certification tracking with certificate numbers and expiry dates
+- **Soft Delete**: Active flag supports soft deletion with deactivation tracking
+- **Audit Trail**: Complete tracking of creation, updates, deactivation timestamps, and responsible users
+- **Performance Indexes**: Extensively indexed for queries by supplier number, name, status, category, quality metrics, evaluation dates, audit dates, and personnel
+- **ISO 9001 Compliance**: Supports supplier quality management requirements with comprehensive evaluation, audit scheduling, certification tracking, and performance monitoring
 
 ### AuditLog Table
 
