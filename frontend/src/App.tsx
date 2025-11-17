@@ -36,6 +36,7 @@ import RiskBoard from './pages/RiskBoard';
 import SupplierPerformanceDashboard from './pages/SupplierPerformanceDashboard';
 import ApprovedSupplierList from './pages/ApprovedSupplierList';
 import InspectionSchedule from './pages/InspectionSchedule';
+import InspectionPlanning from './pages/InspectionPlanning';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -79,6 +80,7 @@ function App() {
         <Route path="inspection-records" element={<InspectionRecords />} />
         <Route path="inspection-records/:id" element={<InspectionRecordDetail />} />
         <Route path="inspection-schedule" element={<InspectionSchedule />} />
+        <Route path="inspection-planning" element={<InspectionPlanning />} />
         <Route path="service-records" element={<ServiceRecords />} />
         <Route path="service-records/:id" element={<ServiceRecordDetail />} />
         <Route path="audit-logs" element={<AuditLogs />} />
