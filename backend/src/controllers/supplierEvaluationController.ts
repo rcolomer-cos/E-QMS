@@ -311,3 +311,17 @@ export const getSupplierEvaluationStatistics = async (req: AuthRequest, res: Res
     res.status(500).json({ error: 'Failed to retrieve supplier evaluation statistics' });
   }
 };
+
+/**
+ * Get supplier performance dashboard data
+ */
+export const getSupplierPerformanceDashboard = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const dashboardData = await SupplierEvaluationModel.getDashboardData();
+
+    res.json(dashboardData);
+  } catch (error) {
+    console.error('Get supplier performance dashboard error:', error);
+    res.status(500).json({ error: 'Failed to retrieve supplier performance dashboard data' });
+  }
+};

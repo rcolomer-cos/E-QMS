@@ -33,6 +33,7 @@ import ExternalAuditSupport from './pages/ExternalAuditSupport';
 import Risks from './pages/Risks';
 import RiskDetail from './pages/RiskDetail';
 import RiskBoard from './pages/RiskBoard';
+import SupplierPerformanceDashboard from './pages/SupplierPerformanceDashboard';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -82,6 +83,7 @@ function App() {
         <Route path="risks" element={<Risks />} />
         <Route path="risks/board" element={<RiskBoard />} />
         <Route path="risks/:id" element={<RiskDetail />} />
+        <Route path="supplier-performance" element={<SupplierPerformanceDashboard />} />
       </Route>
     </Routes>
   );
