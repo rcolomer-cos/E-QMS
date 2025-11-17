@@ -414,4 +414,87 @@ export class CompetencyModel {
 
     return result.recordset;
   }
+
+  /**
+   * Get training matrix data - users vs competencies with status
+   */
+  static async getTrainingMatrix(filters?: {
+    roleId?: number;
+    departmentId?: number;
+    competencyCategory?: string;
+  }): Promise<any> {
+    const pool = await getConnection();
+    
+    let whereClause = 'WHERE u.active = 1 AND c.status = \'active\'';
+    
+    if (filters?.roleId) {
+      whereClause += ` AND u.role = (SELECT name FROM Roles WHERE id = @roleId)`;
+    }
+    
+    if (filters?.departmentId) {
+      whereClause += ` AND u.departmentId = @departmentId`;
+    }
+    
+    if (filters?.competencyCategory) {
+      whereClause += ` AND c.category = @competencyCategory`;
+    }
+
+    const request = pool.request();
+    
+    if (filters?.roleId) {
+      request.input('roleId', sql.Int, filters.roleId);
+    }
+    if (filters?.departmentId) {
+      request.input('departmentId', sql.Int, filters.departmentId);
+    }
+    if (filters?.competencyCategory) {
+      request.input('competencyCategory', sql.NVarChar, filters.competencyCategory);
+    }
+
+    const result = await request.query(`
+      SELECT 
+        u.id AS userId,
+        u.firstName + ' ' + u.lastName AS userName,
+        u.email AS userEmail,
+        u.role AS userRole,
+        u.department AS userDepartment,
+        c.id AS competencyId,
+        c.competencyCode,
+        c.name AS competencyName,
+        c.category AS competencyCategory,
+        c.hasExpiry,
+        c.defaultValidityMonths,
+        uc.id AS userCompetencyId,
+        uc.status AS competencyStatus,
+        uc.effectiveDate,
+        uc.expiryDate,
+        uc.isExpired,
+        uc.proficiencyLevel,
+        uc.assessmentScore,
+        CASE 
+          WHEN uc.id IS NULL THEN 'missing'
+          WHEN uc.isExpired = 1 THEN 'expired'
+          WHEN uc.expiryDate IS NOT NULL AND DATEDIFF(day, GETDATE(), uc.expiryDate) <= 30 THEN 'expiring_soon'
+          WHEN uc.status = 'active' THEN 'active'
+          ELSE uc.status
+        END AS displayStatus,
+        CASE 
+          WHEN uc.expiryDate IS NOT NULL THEN DATEDIFF(day, GETDATE(), uc.expiryDate)
+          ELSE NULL
+        END AS daysUntilExpiry,
+        rtr.isMandatory,
+        rtr.isRegulatory,
+        rtr.priority
+      FROM Users u
+      CROSS JOIN Competencies c
+      LEFT JOIN UserCompetencies uc ON u.id = uc.userId AND c.id = uc.competencyId AND uc.status = 'active'
+      LEFT JOIN RoleTrainingRequirements rtr ON rtr.competencyId = c.id 
+        AND rtr.roleId = (SELECT id FROM Roles WHERE name = u.role)
+        AND rtr.status = 'active'
+      ${whereClause}
+      ORDER BY u.lastName, u.firstName, c.category, c.name
+    `);
+
+    return result.recordset;
+  }
 }

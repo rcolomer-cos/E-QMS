@@ -9,6 +9,7 @@ import {
   getUsersByCompetency,
   updateUserCompetency,
   getExpiringCompetencies,
+  getTrainingMatrix,
 } from '../controllers/competencyController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { 
@@ -39,6 +40,9 @@ router.post(
 
 // Get all Competencies - Accessible to all authenticated users
 router.get('/', getCompetencies);
+
+// Get Training Matrix - Accessible to all authenticated users
+router.get('/training-matrix', getTrainingMatrix);
 
 // Get Competency by ID - Accessible to all authenticated users
 router.get('/:id', validateId, getCompetencyById);

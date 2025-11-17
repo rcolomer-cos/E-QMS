@@ -376,3 +376,25 @@ export const getExpiringCompetencies = async (req: AuthRequest, res: Response): 
     res.status(500).json({ error: 'Failed to get expiring competencies' });
   }
 };
+
+export const getTrainingMatrix = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { roleId, departmentId, competencyCategory } = req.query;
+
+    const filters = {
+      roleId: roleId ? parseInt(roleId as string, 10) : undefined,
+      departmentId: departmentId ? parseInt(departmentId as string, 10) : undefined,
+      competencyCategory: competencyCategory as string | undefined,
+    };
+
+    const matrixData = await CompetencyModel.getTrainingMatrix(filters);
+
+    res.json({
+      data: matrixData,
+      total: matrixData.length,
+    });
+  } catch (error) {
+    console.error('Get Training Matrix error:', error);
+    res.status(500).json({ error: 'Failed to get training matrix' });
+  }
+};
