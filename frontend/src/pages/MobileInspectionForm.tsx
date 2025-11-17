@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getEquipment, Equipment } from '../services/equipmentService';
 import { createInspectionRecord, updateInspectionRecord, getInspectionRecordById, InspectionRecord } from '../services/inspectionRecordService';
+import { uploadAttachment } from '../services/attachmentService';
 import { useAuth } from '../services/authService';
+import ImageUpload from '../components/ImageUpload';
 import '../styles/MobileInspectionForm.css';
 
 interface ChecklistItem {
@@ -67,6 +69,10 @@ function MobileInspectionForm() {
   // Signature
   const [signature, setSignature] = useState<SignatureData | null>(null);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
+
+  // Images
+  const [inspectionImages, setInspectionImages] = useState<File[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   // Load equipment on mount
   useEffect(() => {
@@ -319,6 +325,33 @@ function MobileInspectionForm() {
     return errors.length === 0;
   };
 
+  const handleImagesSelect = (images: File[]) => {
+    setInspectionImages(images);
+  };
+
+  const uploadImages = async (inspectionRecordId: number): Promise<void> => {
+    if (inspectionImages.length === 0) return;
+
+    setUploadingImages(true);
+    try {
+      // Upload each image
+      for (const image of inspectionImages) {
+        await uploadAttachment(
+          image,
+          'inspection',
+          inspectionRecordId,
+          `Inspection photo - ${new Date().toISOString()}`,
+          'inspection_photo'
+        );
+      }
+    } catch (err) {
+      console.error('Error uploading images:', err);
+      throw err;
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -346,11 +379,27 @@ function MobileInspectionForm() {
         attachments: signature ? JSON.stringify({ signature: signature.signature }) : undefined,
       };
 
+      let recordId: number;
+
       if (id) {
         await updateInspectionRecord(parseInt(id), recordData);
+        recordId = parseInt(id);
+        
+        // Upload images if any
+        if (inspectionImages.length > 0) {
+          await uploadImages(recordId);
+        }
+        
         setSuccess('Inspection record updated successfully');
       } else {
-        await createInspectionRecord(recordData as any);
+        const response = await createInspectionRecord(recordData as any);
+        recordId = response.id;
+        
+        // Upload images if any
+        if (inspectionImages.length > 0) {
+          await uploadImages(recordId);
+        }
+        
         setSuccess('Inspection record created successfully');
         clearDraft();
       }
@@ -705,6 +754,25 @@ function MobileInspectionForm() {
               placeholder="Any additional notes or comments..."
             />
           </div>
+        </section>
+
+        {/* Inspection Photos */}
+        <section className="form-section">
+          <h2>Inspection Photos</h2>
+          <p className="section-description">
+            Take photos or upload images to document inspection findings. Images will be automatically compressed.
+          </p>
+          <ImageUpload
+            onImagesSelect={handleImagesSelect}
+            maxImages={5}
+            maxSizeMB={2}
+            disabled={loading || uploadingImages}
+          />
+          {uploadingImages && (
+            <div className="upload-status">
+              <p>📤 Uploading images...</p>
+            </div>
+          )}
         </section>
 
         {/* Signature */}
