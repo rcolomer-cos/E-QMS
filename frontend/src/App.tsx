@@ -35,6 +35,7 @@ import RiskDetail from './pages/RiskDetail';
 import RiskBoard from './pages/RiskBoard';
 import SupplierPerformanceDashboard from './pages/SupplierPerformanceDashboard';
 import ApprovedSupplierList from './pages/ApprovedSupplierList';
+import InspectionSchedule from './pages/InspectionSchedule';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -77,6 +78,7 @@ function App() {
         <Route path="calibration-records/:id" element={<CalibrationRecordDetail />} />
         <Route path="inspection-records" element={<InspectionRecords />} />
         <Route path="inspection-records/:id" element={<InspectionRecordDetail />} />
+        <Route path="inspection-schedule" element={<InspectionSchedule />} />
         <Route path="service-records" element={<ServiceRecords />} />
         <Route path="service-records/:id" element={<ServiceRecordDetail />} />
         <Route path="audit-logs" element={<AuditLogs />} />
