@@ -20,6 +20,7 @@ export enum AuditActionCategory {
   TRAINING = 'training',
   ATTACHMENT = 'attachment',
   SYSTEM = 'system',
+  RISK = 'risk',
 }
 
 /**

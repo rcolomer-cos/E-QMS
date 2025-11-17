@@ -1309,3 +1309,212 @@ export const validateAuditFindingUpdate = [
     .withMessage('Verified date must be a valid date'),
 ];
 
+// Risk validators
+export const validateRisk = [
+  body('riskNumber')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Risk number is required and must not exceed 100 characters'),
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title is required and must not exceed 500 characters'),
+  body('description')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Description is required and must not exceed 2000 characters'),
+  body('category')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Category is required and must not exceed 200 characters'),
+  body('source')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Source must not exceed 200 characters'),
+  body('likelihood')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Likelihood must be an integer between 1 and 5'),
+  body('impact')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Impact must be an integer between 1 and 5'),
+  body('mitigationStrategy')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Mitigation strategy must not exceed 2000 characters'),
+  body('mitigationActions')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Mitigation actions must not exceed 2000 characters'),
+  body('contingencyPlan')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Contingency plan must not exceed 2000 characters'),
+  body('riskOwner')
+    .isInt({ min: 1 })
+    .withMessage('Risk owner is required and must be a valid user ID'),
+  body('department')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Department must not exceed 100 characters'),
+  body('process')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Process must not exceed 200 characters'),
+  body('status')
+    .isIn(['identified', 'assessed', 'mitigating', 'monitoring', 'closed', 'accepted'])
+    .withMessage('Invalid status. Must be one of: identified, assessed, mitigating, monitoring, closed, accepted'),
+  body('identifiedDate')
+    .isISO8601()
+    .withMessage('Identified date must be a valid date'),
+  body('reviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Review date must be a valid date'),
+  body('nextReviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Next review date must be a valid date'),
+  body('reviewFrequency')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Review frequency must be a positive integer'),
+  body('residualLikelihood')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Residual likelihood must be an integer between 1 and 5'),
+  body('residualImpact')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Residual impact must be an integer between 1 and 5'),
+  body('affectedStakeholders')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Affected stakeholders must not exceed 1000 characters'),
+  body('regulatoryImplications')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Regulatory implications must not exceed 1000 characters'),
+  body('relatedRisks')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Related risks must not exceed 500 characters'),
+];
+
+export const validateRiskUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must not exceed 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('category')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Category must not exceed 200 characters'),
+  body('source')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Source must not exceed 200 characters'),
+  body('likelihood')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Likelihood must be an integer between 1 and 5'),
+  body('impact')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Impact must be an integer between 1 and 5'),
+  body('mitigationStrategy')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Mitigation strategy must not exceed 2000 characters'),
+  body('mitigationActions')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Mitigation actions must not exceed 2000 characters'),
+  body('contingencyPlan')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Contingency plan must not exceed 2000 characters'),
+  body('riskOwner')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Risk owner must be a valid user ID'),
+  body('department')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Department must not exceed 100 characters'),
+  body('process')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Process must not exceed 200 characters'),
+  body('status')
+    .optional()
+    .isIn(['identified', 'assessed', 'mitigating', 'monitoring', 'closed', 'accepted'])
+    .withMessage('Invalid status. Must be one of: identified, assessed, mitigating, monitoring, closed, accepted'),
+  body('reviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Review date must be a valid date'),
+  body('nextReviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Next review date must be a valid date'),
+  body('reviewFrequency')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Review frequency must be a positive integer'),
+  body('residualLikelihood')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Residual likelihood must be an integer between 1 and 5'),
+  body('residualImpact')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Residual impact must be an integer between 1 and 5'),
+  body('affectedStakeholders')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Affected stakeholders must not exceed 1000 characters'),
+  body('regulatoryImplications')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Regulatory implications must not exceed 1000 characters'),
+  body('relatedRisks')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Related risks must not exceed 500 characters'),
+  body('lastReviewedBy')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Last reviewed by must be a valid user ID'),
+];
+
+export const validateRiskStatus = [
+  body('status')
+    .isIn(['identified', 'assessed', 'mitigating', 'monitoring', 'closed', 'accepted'])
+    .withMessage('Invalid status. Must be one of: identified, assessed, mitigating, monitoring, closed, accepted'),
+];
+
