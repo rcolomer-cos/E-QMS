@@ -550,4 +550,159 @@ export class SupplierEvaluationModel {
 
     return result.recordset[0];
   }
+
+  /**
+   * Get dashboard data with supplier performance summary
+   * Includes supplier details, latest evaluations, and risk levels
+   */
+  static async getDashboardData(): Promise<any> {
+    const pool = await getConnection();
+
+    // Get suppliers with their latest evaluation and performance metrics
+    const suppliersResult = await pool.request().query(`
+      SELECT 
+        s.id,
+        s.name,
+        s.supplierNumber,
+        s.category,
+        s.riskLevel,
+        s.performanceScore,
+        s.qualityGrade,
+        s.rating,
+        s.approvalStatus,
+        s.lastEvaluationDate,
+        s.onTimeDeliveryRate,
+        s.qualityRejectRate,
+        s.criticalSupplier,
+        s.preferredSupplier,
+        -- Get latest evaluation details
+        (
+          SELECT TOP 1 se.id
+          FROM SupplierEvaluations se
+          WHERE se.supplierId = s.id
+          ORDER BY se.evaluationDate DESC
+        ) as latestEvaluationId,
+        (
+          SELECT TOP 1 se.overallScore
+          FROM SupplierEvaluations se
+          WHERE se.supplierId = s.id
+          ORDER BY se.evaluationDate DESC
+        ) as latestOverallScore,
+        (
+          SELECT TOP 1 se.overallRating
+          FROM SupplierEvaluations se
+          WHERE se.supplierId = s.id
+          ORDER BY se.evaluationDate DESC
+        ) as latestOverallRating,
+        (
+          SELECT TOP 1 se.evaluationDate
+          FROM SupplierEvaluations se
+          WHERE se.supplierId = s.id
+          ORDER BY se.evaluationDate DESC
+        ) as latestEvaluationDate,
+        (
+          SELECT TOP 1 se.complianceStatus
+          FROM SupplierEvaluations se
+          WHERE se.supplierId = s.id
+          ORDER BY se.evaluationDate DESC
+        ) as latestComplianceStatus,
+        -- Count total evaluations
+        (
+          SELECT COUNT(*)
+          FROM SupplierEvaluations se
+          WHERE se.supplierId = s.id
+        ) as totalEvaluations,
+        -- Count non-compliant evaluations
+        (
+          SELECT COUNT(*)
+          FROM SupplierEvaluations se
+          WHERE se.supplierId = s.id
+          AND se.complianceStatus = 'Non-Compliant'
+        ) as nonCompliantEvaluations
+      FROM Suppliers s
+      WHERE s.active = 1 AND s.approvalStatus = 'approved'
+      ORDER BY s.performanceScore DESC
+    `);
+
+    // Get recent evaluations across all suppliers
+    const recentEvaluationsResult = await pool.request().query(`
+      SELECT TOP 10
+        se.id,
+        se.evaluationNumber,
+        se.supplierId,
+        s.name as supplierName,
+        s.supplierNumber,
+        se.evaluationDate,
+        se.evaluationType,
+        se.overallScore,
+        se.overallRating,
+        se.qualityRating,
+        se.onTimeDeliveryRate,
+        se.complianceStatus,
+        se.evaluationStatus
+      FROM SupplierEvaluations se
+      JOIN Suppliers s ON se.supplierId = s.id
+      ORDER BY se.evaluationDate DESC
+    `);
+
+    // Get overall statistics
+    const statisticsResult = await pool.request().query(`
+      SELECT 
+        COUNT(DISTINCT s.id) as totalSuppliers,
+        COUNT(se.id) as totalEvaluations,
+        AVG(CAST(se.qualityRating as FLOAT)) as avgQualityRating,
+        AVG(se.onTimeDeliveryRate) as avgOnTimeDeliveryRate,
+        AVG(se.overallScore) as avgOverallScore,
+        SUM(CASE WHEN se.complianceStatus = 'Compliant' THEN 1 ELSE 0 END) as compliantCount,
+        SUM(CASE WHEN se.complianceStatus = 'Non-Compliant' THEN 1 ELSE 0 END) as nonCompliantCount,
+        SUM(CASE WHEN s.riskLevel = 'Critical' THEN 1 ELSE 0 END) as criticalRiskCount,
+        SUM(CASE WHEN s.riskLevel = 'High' THEN 1 ELSE 0 END) as highRiskCount,
+        SUM(CASE WHEN s.riskLevel = 'Medium' THEN 1 ELSE 0 END) as mediumRiskCount,
+        SUM(CASE WHEN s.riskLevel = 'Low' THEN 1 ELSE 0 END) as lowRiskCount,
+        SUM(CASE WHEN s.criticalSupplier = 1 THEN 1 ELSE 0 END) as criticalSuppliersCount,
+        SUM(CASE WHEN s.preferredSupplier = 1 THEN 1 ELSE 0 END) as preferredSuppliersCount
+      FROM Suppliers s
+      LEFT JOIN SupplierEvaluations se ON s.id = se.supplierId
+      WHERE s.active = 1 AND s.approvalStatus = 'approved'
+    `);
+
+    // Get risk level breakdown
+    const riskBreakdownResult = await pool.request().query(`
+      SELECT 
+        riskLevel,
+        COUNT(*) as count
+      FROM Suppliers
+      WHERE active = 1 AND approvalStatus = 'approved' AND riskLevel IS NOT NULL
+      GROUP BY riskLevel
+      ORDER BY 
+        CASE riskLevel
+          WHEN 'Critical' THEN 1
+          WHEN 'High' THEN 2
+          WHEN 'Medium' THEN 3
+          WHEN 'Low' THEN 4
+          ELSE 5
+        END
+    `);
+
+    // Get compliance trend (last 6 months)
+    const complianceTrendResult = await pool.request().query(`
+      SELECT 
+        FORMAT(evaluationDate, 'yyyy-MM') as month,
+        COUNT(*) as totalEvaluations,
+        SUM(CASE WHEN complianceStatus = 'Compliant' THEN 1 ELSE 0 END) as compliant,
+        SUM(CASE WHEN complianceStatus = 'Non-Compliant' THEN 1 ELSE 0 END) as nonCompliant
+      FROM SupplierEvaluations
+      WHERE evaluationDate >= DATEADD(MONTH, -6, GETDATE())
+      GROUP BY FORMAT(evaluationDate, 'yyyy-MM')
+      ORDER BY month DESC
+    `);
+
+    return {
+      suppliers: suppliersResult.recordset,
+      recentEvaluations: recentEvaluationsResult.recordset,
+      statistics: statisticsResult.recordset[0],
+      riskBreakdown: riskBreakdownResult.recordset,
+      complianceTrend: complianceTrendResult.recordset,
+    };
+  }
 }

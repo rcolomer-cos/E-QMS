@@ -8,6 +8,7 @@ import {
   updateSupplierEvaluationStatus,
   deleteSupplierEvaluation,
   getSupplierEvaluationStatistics,
+  getSupplierPerformanceDashboard,
 } from '../controllers/supplierEvaluationController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import {
@@ -23,6 +24,9 @@ const router = Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Get supplier performance dashboard - Accessible to all authenticated users
+router.get('/dashboard', getSupplierPerformanceDashboard);
 
 // Get supplier evaluation statistics - Accessible to all authenticated users
 router.get('/statistics', getSupplierEvaluationStatistics);
