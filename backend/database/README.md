@@ -25,6 +25,10 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 15. **NCRs** - Non-conformity reports with tracking for category, severity, root cause, and resolution
 16. **CAPAs** - Corrective and preventive actions with root causes, actions, deadlines, and verification data
 17. **AuditLog** - Comprehensive audit trail capturing all user actions, timestamps, affected entities, and old/new values
+18. **Trainings** - Training events and sessions with scheduling, instructor, and certification requirements
+19. **TrainingAttendees** - Training attendance records linking users to training sessions with completion status and certificates
+20. **TrainingCertificates** - Detailed certificate metadata for both internal and external certifications with renewal tracking
+21. **Attachments** - File attachment storage with polymorphic relationships to various entities including training certificates
 
 ## Initial Setup
 
@@ -66,6 +70,10 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    17_create_ncr_table.sql
    18_create_capa_table.sql
    19_create_audit_log_table.sql
+   20_create_attachments_table.sql
+   21_create_trainings_table.sql
+   22_create_training_attendees_table.sql
+   23_create_training_certificates_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -267,6 +275,66 @@ Default system roles (ordered by permission level):
 - **Cached User Data**: Maintains user information even if user accounts are deleted
 - **Performance Indexes**: Extensively indexed for high read volume including timestamp, user, action, entity, and security monitoring queries
 - **ISO 9001 Compliance**: Provides comprehensive audit trail for all system activities with full traceability and change tracking
+
+### Trainings Table
+
+- **Training Identification**: Stores unique training number, title, and detailed description
+- **Classification**: Tracks training category (Safety, Quality, Technical, Compliance) and type (Internal, External, Online, On-the-job)
+- **Training Details**: Captures duration, instructor information, instructor organization, and location
+- **Scheduling**: Manages scheduled date and actual completion date
+- **Status Management**: Tracks training status (scheduled, completed, cancelled, expired) throughout lifecycle
+- **Certification Requirements**: Indicates whether certification is required and certificate validity period in months
+- **Capacity and Prerequisites**: Optional maximum attendees and prerequisite training requirements
+- **Content Management**: Stores learning objectives and training materials references
+- **Audit Trail**: Complete tracking of creation and update timestamps with creator information
+- **Performance Indexes**: Optimized for queries by training number, category, type, status, dates, and instructor
+- **ISO 9001 Compliance**: Supports competence management and training requirements with full traceability
+
+### TrainingAttendees Table
+
+- **Junction Table**: Links users to training events with many-to-many relationship
+- **Attendance Tracking**: Records attendance status and actual attendance date
+- **Performance Assessment**: Captures score/grade (0-100 scale), pass/fail status, and assessment notes
+- **Certificate Management**: Tracks certificate issuance, certificate number, issue date, and expiry date
+- **Certificate Files**: Links to certificate files via Attachments table or direct certificateFileId reference
+- **Status Tracking**: Monitors attendee status (registered, attended, completed, failed, expired, cancelled)
+- **Timeline Management**: Tracks registration date and completion date
+- **Verification**: Records who verified attendance/completion and when
+- **Unique Constraint**: Ensures a user can only be registered once per training event
+- **Audit Trail**: Complete tracking of registration and updates
+- **Performance Indexes**: Optimized for queries by training, user, status, attendance, certificate tracking, and expiry dates
+- **ISO 9001 Compliance**: Supports training records and competence verification with full traceability
+
+### TrainingCertificates Table
+
+- **Certificate Identification**: Stores unique certificate number and certificate name
+- **Ownership and Association**: Links to user and optionally to training attendee record and training event
+- **Issuing Authority**: Captures issuer name, contact information, and accreditation body
+- **Certificate Classification**: Tracks certificate type (Internal, External, Professional, Regulatory, Safety, Technical, Compliance)
+- **Competency Tracking**: Documents competency area covered and proficiency level
+- **Date Management**: Manages issue date, effective date, and expiry date
+- **Renewal Management**: Tracks renewal requirements, intervals, last renewal date, and next renewal due date
+- **Status Lifecycle**: Monitors certificate status (active, expired, suspended, revoked, renewed) with revocation tracking
+- **Certificate Files**: Links to certificate files via Attachments table
+- **Verification**: Records verification status, method, responsible person, and verification notes
+- **Compliance Requirements**: Indicates regulatory requirements and roles for which certificate is mandatory
+- **External Certificates**: Supports both internally issued and externally obtained certifications
+- **Audit Trail**: Complete tracking of creation, updates, and responsible personnel
+- **Performance Indexes**: Optimized for queries by certificate number, user, status, type, dates, verification, and compliance flags
+- **ISO 9001 Compliance**: Supports comprehensive certificate lifecycle management and competence tracking with renewal and verification
+
+### Attachments Table
+
+- **File Information**: Stores original filename, stored filename, file path, file size, MIME type, and file extension
+- **Polymorphic Relationships**: Links attachments to various entity types (equipment, document, calibration, inspection, training, training_certificate, ncr, capa, audit)
+- **Entity Association**: Uses entityType and entityId for flexible attachment of files to any record type
+- **Attachment Metadata**: Captures description, category (certificate, report, photo, invoice), and version information
+- **Security and Access Control**: Tracks uploaded by user and public/private access flag
+- **Soft Delete**: Supports soft deletion with active flag and deletion tracking
+- **Audit Trail**: Complete tracking of creation, updates, deletion timestamps, and responsible users
+- **File Size Limit**: Enforces maximum file size of 10MB at database level
+- **Performance Indexes**: Optimized for queries by entity type/ID, user tracking, file lookups, category, and status
+- **ISO 9001 Compliance**: Supports secure document and certificate file storage with full traceability and audit trail
 
 ## Role-Based Access Control (RBAC)
 
@@ -1016,6 +1084,260 @@ WHERE al.entityType IN ('Document', 'NCR', 'CAPA', 'Equipment')
     AND al.action IN ('create', 'update', 'delete')
     AND al.timestamp >= DATEADD(day, -7, GETDATE())
 ORDER BY al.timestamp DESC;
+```
+
+### List All Training Events
+
+```sql
+-- View all training events with filtering options
+SELECT 
+    t.id,
+    t.trainingNumber,
+    t.title,
+    t.category,
+    t.trainingType,
+    t.status,
+    t.scheduledDate,
+    t.completedDate,
+    t.duration,
+    t.instructor,
+    t.requiresCertification,
+    t.expiryMonths,
+    u.firstName + ' ' + u.lastName AS createdByName
+FROM Trainings t
+LEFT JOIN Users u ON t.createdBy = u.id
+WHERE t.status IN ('scheduled', 'completed')
+ORDER BY t.scheduledDate DESC;
+```
+
+### Find Upcoming Training Events
+
+```sql
+-- Training events scheduled in the next 30 days
+SELECT 
+    t.trainingNumber,
+    t.title,
+    t.category,
+    t.scheduledDate,
+    t.duration,
+    t.instructor,
+    t.location,
+    COUNT(ta.id) AS registeredAttendees,
+    t.maxAttendees
+FROM Trainings t
+LEFT JOIN TrainingAttendees ta ON t.id = ta.trainingId AND ta.status IN ('registered', 'attended')
+WHERE t.status = 'scheduled'
+    AND t.scheduledDate BETWEEN GETDATE() AND DATEADD(day, 30, GETDATE())
+GROUP BY t.id, t.trainingNumber, t.title, t.category, t.scheduledDate, 
+         t.duration, t.instructor, t.location, t.maxAttendees
+ORDER BY t.scheduledDate ASC;
+```
+
+### View Training Attendance for a Specific Training
+
+```sql
+-- Get all attendees for a training event
+SELECT 
+    u.firstName + ' ' + u.lastName AS attendeeName,
+    u.email,
+    ta.status,
+    ta.attended,
+    ta.attendanceDate,
+    ta.score,
+    ta.passed,
+    ta.certificateIssued,
+    ta.certificateNumber,
+    ta.certificateDate,
+    ta.expiryDate,
+    verifier.firstName + ' ' + verifier.lastName AS verifiedBy
+FROM TrainingAttendees ta
+INNER JOIN Users u ON ta.userId = u.id
+LEFT JOIN Users verifier ON ta.verifiedBy = verifier.id
+WHERE ta.trainingId = 1 -- Replace with actual training ID
+ORDER BY u.lastName, u.firstName;
+```
+
+### Find Users with Expiring Certificates
+
+```sql
+-- Certificates expiring in the next 60 days
+SELECT 
+    u.firstName + ' ' + u.lastName AS userName,
+    u.email,
+    u.department,
+    t.title AS trainingTitle,
+    ta.certificateNumber,
+    ta.certificateDate,
+    ta.expiryDate,
+    DATEDIFF(day, GETDATE(), ta.expiryDate) AS daysUntilExpiry
+FROM TrainingAttendees ta
+INNER JOIN Users u ON ta.userId = u.id
+INNER JOIN Trainings t ON ta.trainingId = t.id
+WHERE ta.certificateIssued = 1
+    AND ta.expiryDate IS NOT NULL
+    AND ta.expiryDate BETWEEN GETDATE() AND DATEADD(day, 60, GETDATE())
+    AND ta.status != 'expired'
+ORDER BY ta.expiryDate ASC;
+```
+
+### View Training History for a User
+
+```sql
+-- Get complete training history for a specific user
+SELECT 
+    t.trainingNumber,
+    t.title,
+    t.category,
+    t.scheduledDate,
+    ta.attendanceDate,
+    ta.status,
+    ta.attended,
+    ta.score,
+    ta.passed,
+    ta.certificateIssued,
+    ta.certificateNumber,
+    ta.expiryDate,
+    CASE 
+        WHEN ta.expiryDate IS NULL THEN 'No Expiry'
+        WHEN ta.expiryDate < GETDATE() THEN 'Expired'
+        WHEN ta.expiryDate < DATEADD(day, 30, GETDATE()) THEN 'Expiring Soon'
+        ELSE 'Valid'
+    END AS certificateStatus
+FROM TrainingAttendees ta
+INNER JOIN Trainings t ON ta.trainingId = t.id
+WHERE ta.userId = 1 -- Replace with actual user ID
+ORDER BY t.scheduledDate DESC;
+```
+
+### View User Competencies Dashboard
+
+```sql
+-- Comprehensive view of user's training and certificates
+SELECT 
+    u.id AS userId,
+    u.firstName + ' ' + u.lastName AS userName,
+    u.email,
+    u.department,
+    COUNT(DISTINCT ta.trainingId) AS totalTrainings,
+    COUNT(DISTINCT CASE WHEN ta.attended = 1 THEN ta.trainingId END) AS attendedTrainings,
+    COUNT(DISTINCT CASE WHEN ta.certificateIssued = 1 THEN ta.id END) AS certificatesIssued,
+    COUNT(DISTINCT CASE WHEN ta.certificateIssued = 1 AND ta.expiryDate < GETDATE() THEN ta.id END) AS expiredCertificates,
+    COUNT(DISTINCT CASE WHEN ta.certificateIssued = 1 AND ta.expiryDate BETWEEN GETDATE() AND DATEADD(day, 60, GETDATE()) THEN ta.id END) AS expiringCertificates
+FROM Users u
+LEFT JOIN TrainingAttendees ta ON u.id = ta.userId
+WHERE u.active = 1
+GROUP BY u.id, u.firstName, u.lastName, u.email, u.department
+ORDER BY u.lastName, u.firstName;
+```
+
+### View Training Certificates by User
+
+```sql
+-- Get all training certificates for a specific user
+SELECT 
+    tc.certificateNumber,
+    tc.certificateName,
+    tc.certificateType,
+    tc.competencyArea,
+    tc.level,
+    tc.issuerName,
+    tc.issueDate,
+    tc.expiryDate,
+    tc.status,
+    tc.requiresRenewal,
+    tc.nextRenewalDate,
+    tc.verified,
+    tc.regulatoryRequirement,
+    t.title AS trainingTitle
+FROM TrainingCertificates tc
+LEFT JOIN Trainings t ON tc.trainingId = t.id
+WHERE tc.userId = 1 -- Replace with actual user ID
+ORDER BY tc.issueDate DESC;
+```
+
+### Find Certificates Requiring Renewal
+
+```sql
+-- Certificates requiring renewal in the next 90 days
+SELECT 
+    u.firstName + ' ' + u.lastName AS userName,
+    u.email,
+    tc.certificateNumber,
+    tc.certificateName,
+    tc.competencyArea,
+    tc.nextRenewalDate,
+    DATEDIFF(day, GETDATE(), tc.nextRenewalDate) AS daysUntilRenewal,
+    tc.issuerName,
+    tc.regulatoryRequirement
+FROM TrainingCertificates tc
+INNER JOIN Users u ON tc.userId = u.id
+WHERE tc.requiresRenewal = 1
+    AND tc.status = 'active'
+    AND tc.nextRenewalDate IS NOT NULL
+    AND tc.nextRenewalDate <= DATEADD(day, 90, GETDATE())
+ORDER BY tc.nextRenewalDate ASC;
+```
+
+### View Training Completion Statistics by Category
+
+```sql
+-- Training completion statistics grouped by category
+SELECT 
+    t.category,
+    COUNT(DISTINCT t.id) AS totalTrainings,
+    COUNT(DISTINCT ta.userId) AS totalAttendees,
+    COUNT(DISTINCT CASE WHEN ta.attended = 1 THEN ta.id END) AS attendedCount,
+    COUNT(DISTINCT CASE WHEN ta.certificateIssued = 1 THEN ta.id END) AS certificatesIssued,
+    AVG(CASE WHEN ta.score IS NOT NULL THEN ta.score END) AS averageScore,
+    COUNT(DISTINCT CASE WHEN ta.passed = 1 THEN ta.id END) AS passedCount,
+    COUNT(DISTINCT CASE WHEN ta.passed = 0 THEN ta.id END) AS failedCount
+FROM Trainings t
+LEFT JOIN TrainingAttendees ta ON t.id = ta.trainingId
+WHERE t.status = 'completed'
+    AND t.completedDate >= DATEADD(year, -1, GETDATE())
+GROUP BY t.category
+ORDER BY totalTrainings DESC;
+```
+
+### Find Users Missing Required Training
+
+```sql
+-- Example: Find users in a department who haven't completed required training
+-- Modify the training categories and department as needed
+SELECT 
+    u.id,
+    u.firstName + ' ' + u.lastName AS userName,
+    u.email,
+    u.department,
+    t.title AS missingTraining,
+    t.category
+FROM Users u
+CROSS JOIN Trainings t
+LEFT JOIN TrainingAttendees ta ON u.id = ta.userId AND t.id = ta.trainingId AND ta.attended = 1
+WHERE u.active = 1
+    AND u.department = 'Quality Assurance' -- Replace with target department
+    AND t.category IN ('Safety', 'Quality', 'Compliance') -- Required categories
+    AND t.status = 'completed'
+    AND ta.id IS NULL -- User has not attended this training
+ORDER BY u.lastName, u.firstName, t.category;
+```
+
+### View External Certificates by Type
+
+```sql
+-- View all external certifications by type
+SELECT 
+    tc.certificateType,
+    tc.competencyArea,
+    COUNT(*) AS totalCertificates,
+    COUNT(DISTINCT tc.userId) AS uniqueUsers,
+    COUNT(CASE WHEN tc.status = 'active' THEN 1 END) AS activeCertificates,
+    COUNT(CASE WHEN tc.status = 'expired' THEN 1 END) AS expiredCertificates,
+    AVG(DATEDIFF(month, tc.issueDate, tc.expiryDate)) AS avgValidityMonths
+FROM TrainingCertificates tc
+WHERE tc.certificateType IN ('External', 'Professional', 'Regulatory')
+GROUP BY tc.certificateType, tc.competencyArea
+ORDER BY tc.certificateType, totalCertificates DESC;
 ```
 
 ## Migration from Old Schema
