@@ -16,6 +16,7 @@ import Equipment from './pages/Equipment';
 import EquipmentReadOnly from './pages/EquipmentReadOnly';
 import Training from './pages/Training';
 import TrainingMatrix from './pages/TrainingMatrix';
+import RoleTrainingRequirements from './pages/RoleTrainingRequirements';
 import Users from './pages/Users';
 import Departments from './pages/Departments';
 import Processes from './pages/Processes';
@@ -58,6 +59,7 @@ function App() {
         <Route path="equipment" element={<Equipment />} />
         <Route path="training" element={<Training />} />
         <Route path="training-matrix" element={<TrainingMatrix />} />
+        <Route path="role-training-requirements" element={<RoleTrainingRequirements />} />
         <Route path="users" element={<Users />} />
         <Route path="departments" element={<Departments />} />
         <Route path="processes" element={<Processes />} />
