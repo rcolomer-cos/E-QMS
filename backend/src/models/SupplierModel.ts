@@ -355,7 +355,7 @@ export class SupplierModel {
     // Build dynamic SET clause
     Object.keys(supplier).forEach((key) => {
       if (key !== 'id' && key !== 'createdBy' && key !== 'createdAt') {
-        const value = (supplier as any)[key];
+        const value = (supplier as Record<string, unknown>)[key];
         setClauses.push(`${key} = @${key}`);
 
         // Determine SQL type based on key
@@ -476,7 +476,7 @@ export class SupplierModel {
       ORDER BY category
     `);
 
-    return result.recordset.map((row: any) => row.category);
+    return result.recordset.map((row: { category: string }) => row.category);
   }
 
   /**
@@ -492,7 +492,7 @@ export class SupplierModel {
       ORDER BY supplierType
     `);
 
-    return result.recordset.map((row: any) => row.supplierType);
+    return result.recordset.map((row: { supplierType: string }) => row.supplierType);
   }
 
   /**
@@ -508,6 +508,6 @@ export class SupplierModel {
       ORDER BY industry
     `);
 
-    return result.recordset.map((row: any) => row.industry);
+    return result.recordset.map((row: { industry: string }) => row.industry);
   }
 }

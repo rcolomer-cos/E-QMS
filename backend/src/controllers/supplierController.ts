@@ -125,7 +125,7 @@ export const getSuppliers = async (req: AuthRequest, res: Response): Promise<voi
 
     // Sort options
     const sortOptions: SupplierSortOptions = {
-      sortBy: sortBy as any,
+      sortBy: sortBy as 'name' | 'supplierNumber' | 'performanceScore' | 'rating' | 'lastEvaluationDate' | 'approvedDate',
       sortOrder: sortOrder as 'ASC' | 'DESC',
     };
 
