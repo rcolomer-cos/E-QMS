@@ -30,6 +30,9 @@ function Layout() {
           {(user?.role === 'admin' || user?.role === 'manager') && (
             <li><Link to="/role-training-requirements">Role Requirements</Link></li>
           )}
+          {(user?.role === 'admin' || user?.role === 'manager' || user?.role === 'auditor') && (
+            <li><Link to="/external-audit-support">External Audit</Link></li>
+          )}
           {user?.role === 'admin' && (
             <>
               <li><Link to="/departments">Departments</Link></li>
