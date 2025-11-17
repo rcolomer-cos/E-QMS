@@ -186,6 +186,16 @@ E-QMS/
 - `PUT /api/equipment/:id` - Update equipment
 - `DELETE /api/equipment/:id` - Delete equipment (admin only)
 
+### Role Training Requirements
+- `POST /api/role-training-requirements` - Create requirement (admin/manager)
+- `GET /api/role-training-requirements` - List all requirements
+- `GET /api/role-training-requirements/:id` - Get requirement by ID
+- `GET /api/role-training-requirements/roles/:roleId/competencies` - Get required competencies for role
+- `GET /api/role-training-requirements/users/:userId/missing` - Get missing/outdated competencies for user
+- `GET /api/role-training-requirements/compliance/gaps` - Get users with missing competencies (admin/manager)
+- `PUT /api/role-training-requirements/:id` - Update requirement (admin/manager)
+- `DELETE /api/role-training-requirements/:id` - Delete requirement (admin)
+
 ## User Roles
 
 - **Admin**: Full system access, user management
@@ -205,6 +215,9 @@ The system uses the following main tables:
 - **Equipment**: Equipment tracking and calibration
 - **Trainings**: Training sessions
 - **TrainingAttendees**: Training attendance records
+- **Competencies**: Competency definitions and requirements
+- **UserCompetencies**: User competency assignments and tracking
+- **RoleTrainingRequirements**: Required competencies per role
 
 ## Development
 
