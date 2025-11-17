@@ -21,6 +21,7 @@ export enum AuditActionCategory {
   ATTACHMENT = 'attachment',
   SYSTEM = 'system',
   RISK = 'risk',
+  SUPPLIER = 'supplier',
 }
 
 /**
