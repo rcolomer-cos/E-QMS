@@ -7,6 +7,7 @@ import Documents from './pages/Documents';
 import DocumentView from './pages/DocumentView';
 import PendingChanges from './pages/PendingChanges';
 import Audits from './pages/Audits';
+import AuditExecution from './pages/AuditExecution';
 import NCR from './pages/NCR';
 import NCRDetail from './pages/NCRDetail';
 import CAPA from './pages/CAPA';
@@ -51,6 +52,7 @@ function App() {
         <Route path="documents/:id" element={<DocumentView />} />
         <Route path="pending-changes" element={<PendingChanges />} />
         <Route path="audits" element={<Audits />} />
+        <Route path="audits/:id/execute" element={<AuditExecution />} />
         <Route path="ncr" element={<NCR />} />
         <Route path="ncr/:id" element={<NCRDetail />} />
         <Route path="capa" element={<CAPA />} />
