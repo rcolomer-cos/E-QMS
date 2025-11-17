@@ -1,5 +1,38 @@
 import api from './api';
 
+export interface Training {
+  id?: number;
+  trainingNumber: string;
+  title: string;
+  description?: string;
+  category: string;
+  duration?: number;
+  instructor?: string;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'expired';
+  scheduledDate: string | Date;
+  completedDate?: string | Date;
+  expiryMonths?: number;
+  createdBy: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TrainingAttendee {
+  id?: number;
+  trainingId: number;
+  userId: number;
+  attended: boolean;
+  score?: number;
+  certificateIssued?: boolean;
+  certificateDate?: string | Date;
+  expiryDate?: string | Date;
+  notes?: string;
+  // User info (from JOIN)
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
 export interface ExpiringCertificate {
   id: number;
   certificateNumber: string;
@@ -47,6 +80,50 @@ export interface ExpiringAttendeeRecordsResponse {
   threshold: number;
   includeExpired: boolean;
 }
+
+/**
+ * Get all trainings
+ */
+export const getTrainings = async (params?: {
+  status?: string;
+  category?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ data: Training[]; pagination: { page: number; limit: number; total: number; pages: number } }> => {
+  const response = await api.get('/training', { params });
+  return response.data;
+};
+
+/**
+ * Get training by ID
+ */
+export const getTrainingById = async (id: number): Promise<Training> => {
+  const response = await api.get(`/training/${id}`);
+  return response.data;
+};
+
+/**
+ * Create a new training
+ */
+export const createTraining = async (training: Omit<Training, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ id: number }> => {
+  const response = await api.post('/training', training);
+  return response.data;
+};
+
+/**
+ * Update training
+ */
+export const updateTraining = async (id: number, updates: Partial<Training>): Promise<void> => {
+  await api.put(`/training/${id}`, updates);
+};
+
+/**
+ * Get training attendees
+ */
+export const getTrainingAttendees = async (trainingId: number): Promise<TrainingAttendee[]> => {
+  const response = await api.get(`/training/${trainingId}/attendees`);
+  return response.data;
+};
 
 /**
  * Get expiring training certificates
