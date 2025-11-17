@@ -155,13 +155,13 @@ END
 GO
 
 -- Record schema version
-IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.22' AND scriptName = '22_create_training_certificates_table.sql')
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.23' AND scriptName = '23_create_training_certificates_table.sql')
 BEGIN
     INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
     VALUES (
-        '1.0.22',
+        '1.0.23',
         'Create TrainingCertificates table for certificate lifecycle management',
-        '22_create_training_certificates_table.sql',
+        '23_create_training_certificates_table.sql',
         'SUCCESS',
         'TrainingCertificates table supports detailed certificate tracking including external certifications, renewals, and compliance requirements'
     );

@@ -28,6 +28,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 18. **Trainings** - Training events and sessions with scheduling, instructor, and certification requirements
 19. **TrainingAttendees** - Training attendance records linking users to training sessions with completion status and certificates
 20. **TrainingCertificates** - Detailed certificate metadata for both internal and external certifications with renewal tracking
+21. **Attachments** - File attachment storage with polymorphic relationships to various entities including training certificates
 
 ## Initial Setup
 
@@ -69,9 +70,10 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    17_create_ncr_table.sql
    18_create_capa_table.sql
    19_create_audit_log_table.sql
-   20_create_trainings_table.sql
-   21_create_training_attendees_table.sql
-   22_create_training_certificates_table.sql
+   20_create_attachments_table.sql
+   21_create_trainings_table.sql
+   22_create_training_attendees_table.sql
+   23_create_training_certificates_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -320,6 +322,19 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation, updates, and responsible personnel
 - **Performance Indexes**: Optimized for queries by certificate number, user, status, type, dates, verification, and compliance flags
 - **ISO 9001 Compliance**: Supports comprehensive certificate lifecycle management and competence tracking with renewal and verification
+
+### Attachments Table
+
+- **File Information**: Stores original filename, stored filename, file path, file size, MIME type, and file extension
+- **Polymorphic Relationships**: Links attachments to various entity types (equipment, document, calibration, inspection, training, training_certificate, ncr, capa, audit)
+- **Entity Association**: Uses entityType and entityId for flexible attachment of files to any record type
+- **Attachment Metadata**: Captures description, category (certificate, report, photo, invoice), and version information
+- **Security and Access Control**: Tracks uploaded by user and public/private access flag
+- **Soft Delete**: Supports soft deletion with active flag and deletion tracking
+- **Audit Trail**: Complete tracking of creation, updates, deletion timestamps, and responsible users
+- **File Size Limit**: Enforces maximum file size of 10MB at database level
+- **Performance Indexes**: Optimized for queries by entity type/ID, user tracking, file lookups, category, and status
+- **ISO 9001 Compliance**: Supports secure document and certificate file storage with full traceability and audit trail
 
 ## Role-Based Access Control (RBAC)
 

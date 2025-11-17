@@ -115,13 +115,13 @@ END
 GO
 
 -- Record schema version
-IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.21' AND scriptName = '21_create_training_attendees_table.sql')
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.22' AND scriptName = '22_create_training_attendees_table.sql')
 BEGIN
     INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
     VALUES (
-        '1.0.21',
+        '1.0.22',
         'Create TrainingAttendees table for training records and certificates',
-        '21_create_training_attendees_table.sql',
+        '22_create_training_attendees_table.sql',
         'SUCCESS',
         'TrainingAttendees table supports ISO 9001 training records with attendance tracking, assessment, and certificate management'
     );
