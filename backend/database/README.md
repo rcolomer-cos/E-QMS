@@ -33,6 +33,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 23. **UserCompetencies** - User competency assessments and certifications with expiry tracking
 24. **RoleTrainingRequirements** - Required training associations for specific roles
 25. **Audits** - Planned audits including scope, dates, auditors, related processes, and audit criteria for ISO 9001 audit planning
+26. **Risks** - Risk register items with assessment, mitigation actions, ownership, and review tracking for ISO 9001 risk management
 
 ## Initial Setup
 
@@ -82,6 +83,13 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    25_create_user_competencies_table.sql
    26_create_role_training_requirements_table.sql
    27_create_audits_table.sql
+   28_create_checklist_templates_table.sql
+   29_create_checklist_questions_table.sql
+   30_create_checklist_responses_table.sql
+   31_create_audit_findings_table.sql
+   32_add_audit_approval_workflow.sql
+   33_create_auditor_access_tokens_table.sql
+   34_create_risks_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -284,6 +292,23 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation and update timestamps
 - **Performance Indexes**: Optimized for queries by audit number, status, dates, audit type, lead auditor, department, and related processes
 - **ISO 9001 Compliance**: Supports audit planning and execution requirements with comprehensive tracking of scope, criteria, and findings
+
+### Risks Table
+
+- **Risk Identification**: Stores unique risk number, title, and detailed risk description
+- **Risk Classification**: Tracks risk category (operational, financial, compliance, strategic, etc.) and source of identification
+- **Risk Assessment**: Captures likelihood and impact scores (1-5 scale) with calculated risk score (likelihood × impact)
+- **Risk Level**: Automatic or manual classification of risk level (low, medium, high, critical) based on risk score
+- **Mitigation Planning**: Documents mitigation strategy, specific actions, and contingency plans
+- **Ownership**: Assigns risk owner with department and process associations for accountability
+- **Status Management**: Monitors risk status (identified, assessed, mitigating, monitoring, closed, accepted) throughout lifecycle
+- **Review Tracking**: Manages review dates, next review dates, and review frequency for ongoing monitoring
+- **Residual Risk**: Captures post-mitigation likelihood and impact with calculated residual risk score
+- **Stakeholder Impact**: Documents affected stakeholders and regulatory implications
+- **Related Risks**: Supports linking to related risks for comprehensive risk management
+- **Audit Trail**: Complete tracking of creation, updates, and review history with responsible personnel
+- **Performance Indexes**: Optimized for queries by risk number, status, risk level, risk scores, dates, personnel, and classification
+- **ISO 9001 Compliance**: Supports risk-based thinking and risk management requirements with comprehensive assessment and mitigation tracking
 
 ### AuditLog Table
 
