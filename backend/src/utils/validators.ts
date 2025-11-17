@@ -1156,3 +1156,156 @@ export const validateRoleTrainingRequirementUpdate = [
     .withMessage('End date must be a valid date'),
 ];
 
+export const validateAuditFinding = [
+  body('findingNumber')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Finding number is required and must not exceed 100 characters'),
+  body('auditId')
+    .isInt({ min: 1 })
+    .withMessage('Audit ID is required and must be a valid integer'),
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title is required and must not exceed 500 characters'),
+  body('description')
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Description is required'),
+  body('category')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Category is required and must not exceed 200 characters'),
+  body('severity')
+    .isIn(['observation', 'minor', 'major', 'critical'])
+    .withMessage('Invalid severity. Must be one of: observation, minor, major, critical'),
+  body('evidence')
+    .optional()
+    .trim(),
+  body('rootCause')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Root cause must not exceed 2000 characters'),
+  body('auditCriteria')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Audit criteria must not exceed 1000 characters'),
+  body('clauseReference')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Clause reference must not exceed 200 characters'),
+  body('recommendations')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Recommendations must not exceed 2000 characters'),
+  body('requiresNCR')
+    .optional()
+    .isBoolean()
+    .withMessage('requiresNCR must be a boolean'),
+  body('ncrId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('NCR ID must be a valid integer'),
+  body('status')
+    .optional()
+    .isIn(['open', 'under_review', 'action_planned', 'resolved', 'closed'])
+    .withMessage('Invalid status'),
+  body('identifiedDate')
+    .isISO8601()
+    .withMessage('Identified date is required and must be a valid date'),
+  body('targetCloseDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Target close date must be a valid date'),
+  body('identifiedBy')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Identified by must be a valid user ID'),
+  body('assignedTo')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Assigned to must be a valid user ID'),
+  body('department')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Department must not exceed 100 characters'),
+  body('processId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Process ID must be a valid integer'),
+  body('affectedArea')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Affected area must not exceed 500 characters'),
+];
+
+export const validateAuditFindingUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must not exceed 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Description cannot be empty'),
+  body('category')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Category must not exceed 200 characters'),
+  body('severity')
+    .optional()
+    .isIn(['observation', 'minor', 'major', 'critical'])
+    .withMessage('Invalid severity'),
+  body('rootCause')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Root cause must not exceed 2000 characters'),
+  body('recommendations')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Recommendations must not exceed 2000 characters'),
+  body('requiresNCR')
+    .optional()
+    .isBoolean()
+    .withMessage('requiresNCR must be a boolean'),
+  body('ncrId')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('NCR ID must be a valid integer'),
+  body('status')
+    .optional()
+    .isIn(['open', 'under_review', 'action_planned', 'resolved', 'closed'])
+    .withMessage('Invalid status'),
+  body('targetCloseDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Target close date must be a valid date'),
+  body('closedDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Closed date must be a valid date'),
+  body('assignedTo')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Assigned to must be a valid user ID'),
+  body('verifiedBy')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Verified by must be a valid user ID'),
+  body('verifiedDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Verified date must be a valid date'),
+];
+

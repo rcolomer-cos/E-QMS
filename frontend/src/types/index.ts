@@ -279,3 +279,40 @@ export interface AuditLogResponse {
     total: number;
   };
 }
+
+export interface AuditFinding {
+  id?: number;
+  findingNumber: string;
+  auditId: number;
+  title: string;
+  description: string;
+  category: string;
+  severity: 'observation' | 'minor' | 'major' | 'critical';
+  evidence?: string;
+  rootCause?: string;
+  auditCriteria?: string;
+  clauseReference?: string;
+  recommendations?: string;
+  requiresNCR: boolean;
+  ncrId?: number;
+  status: 'open' | 'under_review' | 'action_planned' | 'resolved' | 'closed';
+  identifiedDate: string;
+  targetCloseDate?: string;
+  closedDate?: string;
+  identifiedBy: number;
+  assignedTo?: number;
+  verifiedBy?: number;
+  verifiedDate?: string;
+  department?: string;
+  processId?: number;
+  affectedArea?: string;
+  createdBy: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AuditFindingStats {
+  total: number;
+  bySeverity: Record<string, number>;
+  byStatus: Record<string, number>;
+}
