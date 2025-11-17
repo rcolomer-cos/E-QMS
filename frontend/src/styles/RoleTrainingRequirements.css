@@ -1,0 +1,236 @@
+.role-training-requirements-page {
+  padding: 20px;
+}
+
+.role-training-requirements-page h1 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.tab {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: #333;
+}
+
+.tab.active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+  font-weight: 600;
+}
+
+.filters {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.filters select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background-color: white;
+  cursor: pointer;
+}
+
+.filters select:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.requirements-list,
+.compliance-gaps {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.requirements-list h2,
+.compliance-gaps h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.empty-message.success {
+  color: #2e7d32;
+  background-color: #e8f5e9;
+  border-radius: 8px;
+}
+
+.requirements-table,
+.compliance-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.requirements-table th,
+.compliance-table th {
+  background-color: #f5f5f5;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.requirements-table td,
+.compliance-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #555;
+}
+
+.requirements-table tr:hover,
+.compliance-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.competency-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.competency-info strong {
+  color: #333;
+}
+
+.competency-info .code {
+  font-size: 0.85rem;
+  color: #666;
+  font-family: monospace;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-info strong {
+  color: #333;
+}
+
+.user-info .email {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.badge-critical {
+  background-color: #d32f2f;
+  color: #ffffff;
+}
+
+.badge-high {
+  background-color: #ff9800;
+  color: #ffffff;
+}
+
+.badge-normal {
+  background-color: #4caf50;
+  color: #ffffff;
+}
+
+.badge-low {
+  background-color: #9e9e9e;
+  color: #ffffff;
+}
+
+.badge-danger {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.badge-error {
+  background-color: #fce4ec;
+  color: #ad1457;
+}
+
+.badge-warning {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.badge-success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.loading {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .requirements-table,
+  .compliance-table {
+    font-size: 0.9rem;
+  }
+
+  .requirements-table th,
+  .requirements-table td,
+  .compliance-table th,
+  .compliance-table td {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .requirements-table,
+  .compliance-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

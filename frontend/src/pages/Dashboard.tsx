@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { getCurrentUser } from '../services/authService';
+import MissingCompetencies from '../components/MissingCompetencies';
 import '../styles/Dashboard.css';
 
 interface Stats {
@@ -21,6 +23,7 @@ function Dashboard() {
     upcomingTrainings: 0,
   });
   const [loading, setLoading] = useState(true);
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
     loadDashboardData();
@@ -97,6 +100,11 @@ function Dashboard() {
       </div>
 
       <div className="dashboard-sections">
+        <div className="dashboard-section">
+          <h2>My Training Compliance</h2>
+          {currentUser && <MissingCompetencies userId={currentUser.id} daysThreshold={30} />}
+        </div>
+
         <div className="dashboard-section">
           <h2>Recent Activity</h2>
           <p>No recent activity</p>
