@@ -9,6 +9,7 @@ import {
   getUsersByCompetency,
   updateUserCompetency,
   getExpiringCompetencies,
+  getTrainingMatrix,
 } from '../../controllers/competencyController';
 import { CompetencyModel } from '../../models/CompetencyModel';
 import { AuthRequest, CompetencyStatus } from '../../types';
@@ -399,6 +400,112 @@ describe('Competency Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(403);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Forbidden: Cannot view other users competencies' });
+    });
+  });
+
+  describe('getTrainingMatrix', () => {
+    it('should get training matrix data successfully', async () => {
+      const mockMatrixData = [
+        {
+          userId: 1,
+          userName: 'John Doe',
+          userEmail: 'john@example.com',
+          userRole: 'Engineer',
+          userDepartment: 'Quality',
+          competencyId: 1,
+          competencyCode: 'COMP-001',
+          competencyName: 'ISO 9001 Lead Auditor',
+          competencyCategory: 'Quality',
+          hasExpiry: true,
+          defaultValidityMonths: 36,
+          userCompetencyId: 1,
+          competencyStatus: 'active',
+          effectiveDate: '2024-01-01',
+          expiryDate: '2027-01-01',
+          isExpired: false,
+          proficiencyLevel: 'Advanced',
+          assessmentScore: 95,
+          displayStatus: 'active',
+          daysUntilExpiry: 800,
+          isMandatory: true,
+          isRegulatory: true,
+          priority: 'high',
+        },
+      ];
+
+      (CompetencyModel.getTrainingMatrix as jest.Mock).mockResolvedValue(mockMatrixData);
+
+      await getTrainingMatrix(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockJson).toHaveBeenCalledWith({
+        data: mockMatrixData,
+        total: mockMatrixData.length,
+      });
+      expect(CompetencyModel.getTrainingMatrix).toHaveBeenCalledWith({
+        roleId: undefined,
+        departmentId: undefined,
+        competencyCategory: undefined,
+      });
+    });
+
+    it('should get training matrix data with filters', async () => {
+      mockAuthRequest.query = {
+        roleId: '2',
+        competencyCategory: 'Safety',
+      };
+
+      const mockMatrixData = [
+        {
+          userId: 2,
+          userName: 'Jane Smith',
+          userEmail: 'jane@example.com',
+          userRole: 'Manager',
+          userDepartment: 'Safety',
+          competencyId: 2,
+          competencyCode: 'COMP-002',
+          competencyName: 'Safety Training',
+          competencyCategory: 'Safety',
+          hasExpiry: true,
+          defaultValidityMonths: 12,
+          userCompetencyId: null,
+          competencyStatus: null,
+          effectiveDate: null,
+          expiryDate: null,
+          isExpired: null,
+          proficiencyLevel: null,
+          assessmentScore: null,
+          displayStatus: 'missing',
+          daysUntilExpiry: null,
+          isMandatory: true,
+          isRegulatory: false,
+          priority: 'critical',
+        },
+      ];
+
+      (CompetencyModel.getTrainingMatrix as jest.Mock).mockResolvedValue(mockMatrixData);
+
+      await getTrainingMatrix(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockJson).toHaveBeenCalledWith({
+        data: mockMatrixData,
+        total: mockMatrixData.length,
+      });
+      expect(CompetencyModel.getTrainingMatrix).toHaveBeenCalledWith({
+        roleId: 2,
+        departmentId: undefined,
+        competencyCategory: 'Safety',
+      });
+    });
+
+    it('should handle errors when getting training matrix', async () => {
+      (CompetencyModel.getTrainingMatrix as jest.Mock).mockRejectedValue(
+        new Error('Database error')
+      );
+
+      await getTrainingMatrix(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get training matrix' });
     });
   });
 });
