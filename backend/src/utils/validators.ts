@@ -1518,3 +1518,175 @@ export const validateRiskStatus = [
     .withMessage('Invalid status. Must be one of: identified, assessed, mitigating, monitoring, closed, accepted'),
 ];
 
+export const validateSupplierEvaluation = [
+  body('supplierId')
+    .isInt({ min: 1 })
+    .withMessage('Supplier ID is required and must be a valid integer'),
+  body('evaluationNumber')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Evaluation number is required and must not exceed 100 characters'),
+  body('evaluationDate')
+    .isISO8601()
+    .withMessage('Evaluation date must be a valid date'),
+  body('evaluationType')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Evaluation type is required and must not exceed 100 characters'),
+  body('qualityRating')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Quality rating is required and must be between 1 and 5'),
+  body('onTimeDeliveryRate')
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('On-time delivery rate is required and must be between 0 and 100'),
+  body('complianceStatus')
+    .isIn(['Compliant', 'Non-Compliant', 'Under Review', 'Not Assessed'])
+    .withMessage('Invalid compliance status. Must be one of: Compliant, Non-Compliant, Under Review, Not Assessed'),
+  body('evaluationStatus')
+    .isIn(['draft', 'completed', 'under_review', 'approved', 'rejected'])
+    .withMessage('Invalid evaluation status. Must be one of: draft, completed, under_review, approved, rejected'),
+  body('evaluationPeriodStart')
+    .optional()
+    .isISO8601()
+    .withMessage('Evaluation period start must be a valid date'),
+  body('evaluationPeriodEnd')
+    .optional()
+    .isISO8601()
+    .withMessage('Evaluation period end must be a valid date'),
+  body('qualityScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Quality score must be between 0 and 100'),
+  body('deliveryScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Delivery score must be between 0 and 100'),
+  body('communicationScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Communication score must be between 0 and 100'),
+  body('technicalCapabilityScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Technical capability score must be between 0 and 100'),
+  body('priceCompetitivenessScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Price competitiveness score must be between 0 and 100'),
+  body('overallScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Overall score must be between 0 and 100'),
+  body('overallRating')
+    .optional()
+    .isIn(['Excellent', 'Good', 'Satisfactory', 'Needs Improvement', 'Unacceptable'])
+    .withMessage('Invalid overall rating. Must be one of: Excellent, Good, Satisfactory, Needs Improvement, Unacceptable'),
+  body('decision')
+    .optional()
+    .isIn(['Continue', 'Conditional Continue', 'Suspend', 'Terminate', 'Probation'])
+    .withMessage('Invalid decision. Must be one of: Continue, Conditional Continue, Suspend, Terminate, Probation'),
+  body('defectRate')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Defect rate must be between 0 and 100'),
+  body('returnRate')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Return rate must be between 0 and 100'),
+  body('leadTimeAdherence')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Lead time adherence must be between 0 and 100'),
+  body('documentationAccuracy')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Documentation accuracy must be between 0 and 100'),
+  body('followUpDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Follow-up date must be a valid date'),
+  body('nextEvaluationDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Next evaluation date must be a valid date'),
+  body('reviewedDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Reviewed date must be a valid date'),
+  body('approvedDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Approved date must be a valid date'),
+];
+
+export const validateSupplierEvaluationUpdate = [
+  body('evaluationNumber')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Evaluation number must not exceed 100 characters'),
+  body('evaluationDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Evaluation date must be a valid date'),
+  body('evaluationType')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Evaluation type must not exceed 100 characters'),
+  body('qualityRating')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Quality rating must be between 1 and 5'),
+  body('onTimeDeliveryRate')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('On-time delivery rate must be between 0 and 100'),
+  body('complianceStatus')
+    .optional()
+    .isIn(['Compliant', 'Non-Compliant', 'Under Review', 'Not Assessed'])
+    .withMessage('Invalid compliance status. Must be one of: Compliant, Non-Compliant, Under Review, Not Assessed'),
+  body('evaluationStatus')
+    .optional()
+    .isIn(['draft', 'completed', 'under_review', 'approved', 'rejected'])
+    .withMessage('Invalid evaluation status. Must be one of: draft, completed, under_review, approved, rejected'),
+  body('qualityScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Quality score must be between 0 and 100'),
+  body('deliveryScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Delivery score must be between 0 and 100'),
+  body('communicationScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Communication score must be between 0 and 100'),
+  body('technicalCapabilityScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Technical capability score must be between 0 and 100'),
+  body('priceCompetitivenessScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Price competitiveness score must be between 0 and 100'),
+  body('overallScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Overall score must be between 0 and 100'),
+  body('overallRating')
+    .optional()
+    .isIn(['Excellent', 'Good', 'Satisfactory', 'Needs Improvement', 'Unacceptable'])
+    .withMessage('Invalid overall rating. Must be one of: Excellent, Good, Satisfactory, Needs Improvement, Unacceptable'),
+  body('decision')
+    .optional()
+    .isIn(['Continue', 'Conditional Continue', 'Suspend', 'Terminate', 'Probation'])
+    .withMessage('Invalid decision. Must be one of: Continue, Conditional Continue, Suspend, Terminate, Probation'),
+];
+
+export const validateSupplierEvaluationStatus = [
+  body('status')
+    .isIn(['draft', 'completed', 'under_review', 'approved', 'rejected'])
+    .withMessage('Invalid status. Must be one of: draft, completed, under_review, approved, rejected'),
+];
+

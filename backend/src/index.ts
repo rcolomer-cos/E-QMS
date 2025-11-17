@@ -35,6 +35,7 @@ import checklistRoutes from './routes/checklistRoutes';
 import evidencePackRoutes from './routes/evidencePackRoutes';
 import auditorAccessTokenRoutes from './routes/auditorAccessTokenRoutes';
 import riskRoutes from './routes/riskRoutes';
+import supplierEvaluationRoutes from './routes/supplierEvaluationRoutes';
 
 dotenv.config();
 
@@ -95,6 +96,7 @@ app.use('/api/checklists', checklistRoutes);
 app.use('/api/evidence-pack', evidencePackRoutes);
 app.use('/api/auditor-access-tokens', auditorAccessTokenRoutes);
 app.use('/api/risks', riskRoutes);
+app.use('/api/supplier-evaluations', supplierEvaluationRoutes);
 
 // 404 handler
 app.use((_req, res) => {
