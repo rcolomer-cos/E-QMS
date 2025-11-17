@@ -200,11 +200,16 @@ function Risks() {
     <div className="risks-container">
       <div className="risks-header">
         <h1>Risk Management</h1>
-        {canModify && (
-          <button onClick={handleOpenModal} className="btn-primary">
-            Create New Risk
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={() => navigate('/risks/board')} className="btn-secondary">
+            View Risk Board
           </button>
-        )}
+          {canModify && (
+            <button onClick={handleOpenModal} className="btn-primary">
+              Create New Risk
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
