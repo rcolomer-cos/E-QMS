@@ -1,5 +1,5 @@
 import sql from 'mssql';
-import pool from '../config/database';
+import { getConnection } from '../config/database';
 
 export interface InspectionPlan {
   id?: number;
@@ -59,7 +59,7 @@ export interface InspectionPlanFilters {
 
 export class InspectionPlanModel {
   static async create(plan: InspectionPlan): Promise<number> {
-    const connection = await pool;
+    const connection = await getConnection();
     const result = await connection.request()
       .input('planNumber', sql.NVarChar, plan.planNumber)
       .input('planName', sql.NVarChar, plan.planName)
@@ -118,7 +118,7 @@ export class InspectionPlanModel {
   }
 
   static async findAll(filters?: InspectionPlanFilters): Promise<InspectionPlan[]> {
-    const connection = await pool;
+    const connection = await getConnection();
     let query = `
       SELECT 
         ip.*,
@@ -184,7 +184,7 @@ export class InspectionPlanModel {
   }
 
   static async findById(id: number): Promise<InspectionPlan | null> {
-    const connection = await pool;
+    const connection = await getConnection();
     const result = await connection.request()
       .input('id', sql.Int, id)
       .query(`
@@ -207,7 +207,7 @@ export class InspectionPlanModel {
   }
 
   static async findByPlanNumber(planNumber: string): Promise<InspectionPlan | null> {
-    const connection = await pool;
+    const connection = await getConnection();
     const result = await connection.request()
       .input('planNumber', sql.NVarChar, planNumber)
       .query(`
@@ -226,7 +226,7 @@ export class InspectionPlanModel {
   }
 
   static async update(id: number, plan: Partial<InspectionPlan>): Promise<void> {
-    const connection = await pool;
+    const connection = await getConnection();
     const fields: string[] = [];
     const request = connection.request();
 
@@ -369,14 +369,14 @@ export class InspectionPlanModel {
   }
 
   static async delete(id: number): Promise<void> {
-    const connection = await pool;
+    const connection = await getConnection();
     await connection.request()
       .input('id', sql.Int, id)
       .query('DELETE FROM InspectionPlans WHERE id = @id');
   }
 
   static async getUpcomingInspections(daysAhead: number = 30): Promise<InspectionPlan[]> {
-    const connection = await pool;
+    const connection = await getConnection();
     const result = await connection.request()
       .input('daysAhead', sql.Int, daysAhead)
       .query(`
@@ -398,7 +398,7 @@ export class InspectionPlanModel {
   }
 
   static async getOverdueInspections(): Promise<InspectionPlan[]> {
-    const connection = await pool;
+    const connection = await getConnection();
     const result = await connection.request()
       .query(`
         SELECT 
@@ -419,7 +419,7 @@ export class InspectionPlanModel {
   }
 
   static async getInspectionsByInspector(inspectorId: number): Promise<InspectionPlan[]> {
-    const connection = await pool;
+    const connection = await getConnection();
     const result = await connection.request()
       .input('inspectorId', sql.Int, inspectorId)
       .query(`
@@ -438,7 +438,7 @@ export class InspectionPlanModel {
   }
 
   static async getInspectionTypes(): Promise<string[]> {
-    const connection = await pool;
+    const connection = await getConnection();
     const result = await connection.request()
       .query(`
         SELECT DISTINCT inspectionType
@@ -446,6 +446,6 @@ export class InspectionPlanModel {
         WHERE inspectionType IS NOT NULL
         ORDER BY inspectionType
       `);
-    return result.recordset.map((row) => row.inspectionType);
+    return result.recordset.map((row: any) => row.inspectionType);
   }
 }

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   getInspectionPlans,
   getUpcomingInspections,
@@ -8,13 +7,13 @@ import {
   InspectionPlan,
   InspectionPlanFilters,
 } from '../services/inspectionPlanService';
-import { getUsers, User } from '../services/userService';
+import { getUsers } from '../services/userService';
+import { User } from '../types';
 import '../styles/InspectionSchedule.css';
 
 type ViewMode = 'list' | 'calendar';
 
 function InspectionSchedule() {
-  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

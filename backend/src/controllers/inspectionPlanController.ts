@@ -226,7 +226,7 @@ export const getUpcomingInspections = async (req: AuthRequest, res: Response): P
   }
 };
 
-export const getOverdueInspections = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getOverdueInspections = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const plans = await InspectionPlanModel.getOverdueInspections();
     res.json(plans);
@@ -249,7 +249,7 @@ export const getInspectionsByInspector = async (req: AuthRequest, res: Response)
   }
 };
 
-export const getInspectionTypes = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getInspectionTypes = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const types = await InspectionPlanModel.getInspectionTypes();
     res.json(types);

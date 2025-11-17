@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { authenticate } from '../middleware/auth';
-import { authorize } from '../middleware/authorize';
+import { authenticateToken, authorizeRoles } from '../middleware/auth';
+import { UserRole } from '../types';
 import {
   createInspectionPlan,
   getInspectionPlans,
@@ -44,43 +44,43 @@ const updateValidation = [
 // Create inspection plan (Admin, Manager)
 router.post(
   '/',
-  authenticate,
-  authorize(['Admin', 'Manager']),
+  authenticateToken,
+  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER),
   createValidation,
   createInspectionPlan
 );
 
 // Get all inspection plans with filters
-router.get('/', authenticate, getInspectionPlans);
+router.get('/', authenticateToken, getInspectionPlans);
 
 // Get inspection types
-router.get('/types', authenticate, getInspectionTypes);
+router.get('/types', authenticateToken, getInspectionTypes);
 
 // Get upcoming inspections
-router.get('/upcoming', authenticate, getUpcomingInspections);
+router.get('/upcoming', authenticateToken, getUpcomingInspections);
 
 // Get overdue inspections
-router.get('/overdue', authenticate, getOverdueInspections);
+router.get('/overdue', authenticateToken, getOverdueInspections);
 
 // Get inspections by inspector
-router.get('/inspector/:inspectorId', authenticate, getInspectionsByInspector);
+router.get('/inspector/:inspectorId', authenticateToken, getInspectionsByInspector);
 
 // Get inspection plan by plan number
-router.get('/plan-number/:planNumber', authenticate, getInspectionPlanByPlanNumber);
+router.get('/plan-number/:planNumber', authenticateToken, getInspectionPlanByPlanNumber);
 
 // Get inspection plan by ID
-router.get('/:id', authenticate, getInspectionPlanById);
+router.get('/:id', authenticateToken, getInspectionPlanById);
 
 // Update inspection plan (Admin, Manager)
 router.put(
   '/:id',
-  authenticate,
-  authorize(['Admin', 'Manager']),
+  authenticateToken,
+  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER),
   updateValidation,
   updateInspectionPlan
 );
 
 // Delete inspection plan (Admin only)
-router.delete('/:id', authenticate, authorize(['Admin']), deleteInspectionPlan);
+router.delete('/:id', authenticateToken, authorizeRoles(UserRole.ADMIN), deleteInspectionPlan);
 
 export default router;
