@@ -37,6 +37,7 @@ import SupplierPerformanceDashboard from './pages/SupplierPerformanceDashboard';
 import ApprovedSupplierList from './pages/ApprovedSupplierList';
 import InspectionSchedule from './pages/InspectionSchedule';
 import InspectionPlanning from './pages/InspectionPlanning';
+import MobileInspectionForm from './pages/MobileInspectionForm';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -79,6 +80,8 @@ function App() {
         <Route path="calibration-records/:id" element={<CalibrationRecordDetail />} />
         <Route path="inspection-records" element={<InspectionRecords />} />
         <Route path="inspection-records/:id" element={<InspectionRecordDetail />} />
+        <Route path="inspection-mobile" element={<MobileInspectionForm />} />
+        <Route path="inspection-mobile/:id" element={<MobileInspectionForm />} />
         <Route path="inspection-schedule" element={<InspectionSchedule />} />
         <Route path="inspection-planning" element={<InspectionPlanning />} />
         <Route path="service-records" element={<ServiceRecords />} />
