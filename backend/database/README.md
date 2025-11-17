@@ -35,6 +35,7 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
 25. **Audits** - Planned audits including scope, dates, auditors, related processes, and audit criteria for ISO 9001 audit planning
 26. **Risks** - Risk register items with assessment, mitigation actions, ownership, and review tracking for ISO 9001 risk management
 27. **Suppliers** - Supplier details with contact info, categories, approval status, quality metrics, evaluation tracking, and audit scheduling for ISO 9001 supplier management
+28. **InspectionPlans** - Inspection plan scheduling with both recurring and one-time plans, frequency configuration, responsible inspector assignment, and due date management for ISO 9001 inspection planning
 
 ## Initial Setup
 
@@ -92,6 +93,8 @@ The E-QMS system uses a role-based access control (RBAC) model with support for 
    33_create_auditor_access_tokens_table.sql
    34_create_risks_table.sql
    35_create_suppliers_table.sql
+   36_create_supplier_evaluations_table.sql
+   37_create_inspection_plans_table.sql
    ```
 
 3. **Create Initial Admin User** (required for first-time setup):
@@ -337,6 +340,27 @@ Default system roles (ordered by permission level):
 - **Audit Trail**: Complete tracking of creation, updates, deactivation timestamps, and responsible users
 - **Performance Indexes**: Extensively indexed for queries by supplier number, name, status, category, quality metrics, evaluation dates, audit dates, and personnel
 - **ISO 9001 Compliance**: Supports supplier quality management requirements with comprehensive evaluation, audit scheduling, certification tracking, and performance monitoring
+
+### InspectionPlans Table
+
+- **Plan Identification**: Stores unique plan number, descriptive plan name, and detailed inspection description
+- **Asset Management**: Links to Equipment table for comprehensive asset inspection planning
+- **Inspection Classification**: Tracks inspection type (routine, safety, pre-use, quality) and priority level (low, normal, high, critical)
+- **Plan Types**: Supports both recurring and one-time inspection plans with configurable scheduling
+- **Frequency Configuration**: Manages recurring plans with frequency options (daily, weekly, monthly, quarterly, semi-annual, annual) and interval days
+- **Date Management**: Tracks start date, optional end date, next due date, and last inspection date
+- **Personnel Assignment**: Assigns primary responsible inspector and optional backup inspector for continuity
+- **Due Date Tracking**: Calculates and maintains next due date with configurable reminder days before due
+- **Checklist Integration**: References inspection checklists, procedures, and standards with required competencies
+- **Resource Planning**: Captures estimated duration, required tools, and equipment needs
+- **Status Management**: Tracks plan status (active, inactive, on_hold, completed, cancelled) throughout lifecycle
+- **Compliance and Regulatory**: Flags regulatory requirements with compliance references (e.g., ISO 9001:2015 clauses)
+- **Automation Features**: Supports auto-scheduling of inspections and configurable notifications for overdue inspections
+- **Escalation Management**: Defines escalation days for overdue inspections with notification settings
+- **Criticality Assessment**: Classifies plans by criticality level and quality impact with safety-related flags
+- **Audit Trail**: Complete tracking of creation, updates, and responsible personnel with timestamps
+- **Performance Indexes**: Extensively indexed for queries by equipment, due dates, status, personnel, and compliance requirements
+- **ISO 9001 Compliance**: Supports inspection planning and monitoring requirements with comprehensive scheduling, frequency management, and full traceability
 
 ### AuditLog Table
 
