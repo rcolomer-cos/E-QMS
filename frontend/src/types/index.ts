@@ -322,3 +322,46 @@ export interface AuditFindingStats {
   bySeverity: Record<string, number>;
   byStatus: Record<string, number>;
 }
+
+export interface Risk {
+  id: number;
+  riskNumber: string;
+  title: string;
+  description: string;
+  category: string;
+  source?: string;
+  likelihood: number;
+  impact: number;
+  riskScore?: number;
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  mitigationStrategy?: string;
+  mitigationActions?: string;
+  contingencyPlan?: string;
+  riskOwner: number;
+  riskOwnerName?: string;
+  department?: string;
+  process?: string;
+  status: 'identified' | 'assessed' | 'mitigating' | 'monitoring' | 'closed' | 'accepted';
+  identifiedDate: string;
+  reviewDate?: string;
+  nextReviewDate?: string;
+  reviewFrequency?: number;
+  closedDate?: string;
+  residualLikelihood?: number;
+  residualImpact?: number;
+  residualRiskScore?: number;
+  affectedStakeholders?: string;
+  regulatoryImplications?: string;
+  relatedRisks?: string;
+  createdBy: number;
+  createdAt?: string;
+  updatedAt?: string;
+  lastReviewedBy?: number;
+}
+
+export interface RiskStatistics {
+  totalRisks: number;
+  byStatus: Record<string, number>;
+  byLevel: Record<string, number>;
+  byCategory: Record<string, number>;
+}

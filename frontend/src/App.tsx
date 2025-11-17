@@ -30,6 +30,8 @@ import ServiceRecords from './pages/ServiceRecords';
 import ServiceRecordDetail from './pages/ServiceRecordDetail';
 import AuditLogs from './pages/AuditLogs';
 import ExternalAuditSupport from './pages/ExternalAuditSupport';
+import Risks from './pages/Risks';
+import RiskDetail from './pages/RiskDetail';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -76,6 +78,8 @@ function App() {
         <Route path="service-records/:id" element={<ServiceRecordDetail />} />
         <Route path="audit-logs" element={<AuditLogs />} />
         <Route path="external-audit-support" element={<ExternalAuditSupport />} />
+        <Route path="risks" element={<Risks />} />
+        <Route path="risks/:id" element={<RiskDetail />} />
       </Route>
     </Routes>
   );
