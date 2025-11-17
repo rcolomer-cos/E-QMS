@@ -977,3 +977,101 @@ export const validateCAPAVerification = [
     .withMessage('Effectiveness verification is required and must not exceed 2000 characters'),
 ];
 
+export const validateCompetency = [
+  body('competencyCode')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Competency code is required and must not exceed 100 characters'),
+  body('name')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Name is required and must not exceed 500 characters'),
+  body('category')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Category is required and must not exceed 200 characters'),
+  body('status')
+    .isIn(['active', 'deprecated', 'draft', 'obsolete'])
+    .withMessage('Invalid status'),
+  body('isRegulatory')
+    .isBoolean()
+    .withMessage('isRegulatory must be a boolean'),
+  body('isMandatory')
+    .isBoolean()
+    .withMessage('isMandatory must be a boolean'),
+  body('hasExpiry')
+    .isBoolean()
+    .withMessage('hasExpiry must be a boolean'),
+  body('renewalRequired')
+    .isBoolean()
+    .withMessage('renewalRequired must be a boolean'),
+  body('requiresAssessment')
+    .isBoolean()
+    .withMessage('requiresAssessment must be a boolean'),
+  body('defaultValidityMonths')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Default validity months must be a positive integer'),
+  body('minimumScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Minimum score must be between 0 and 100'),
+];
+
+export const validateCompetencyUpdate = [
+  body('competencyCode')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Competency code must not exceed 100 characters'),
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Name must not exceed 500 characters'),
+  body('status')
+    .optional()
+    .isIn(['active', 'deprecated', 'draft', 'obsolete'])
+    .withMessage('Invalid status'),
+];
+
+export const validateUserCompetency = [
+  body('userId')
+    .isInt({ min: 1 })
+    .withMessage('Valid user ID is required'),
+  body('competencyId')
+    .isInt({ min: 1 })
+    .withMessage('Valid competency ID is required'),
+  body('acquiredDate')
+    .isISO8601()
+    .withMessage('Valid acquired date is required'),
+  body('effectiveDate')
+    .isISO8601()
+    .withMessage('Valid effective date is required'),
+  body('status')
+    .isIn(['active', 'expired', 'suspended', 'revoked', 'pending'])
+    .withMessage('Invalid status'),
+  body('verified')
+    .isBoolean()
+    .withMessage('verified must be a boolean'),
+  body('assessmentScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Assessment score must be between 0 and 100'),
+];
+
+export const validateUserCompetencyUpdate = [
+  body('status')
+    .optional()
+    .isIn(['active', 'expired', 'suspended', 'revoked', 'pending'])
+    .withMessage('Invalid status'),
+  body('verified')
+    .optional()
+    .isBoolean()
+    .withMessage('verified must be a boolean'),
+  body('assessmentScore')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Assessment score must be between 0 and 100'),
+];
+
