@@ -178,3 +178,18 @@ export enum ServiceStatus {
   CANCELLED = 'cancelled',
   ON_HOLD = 'on_hold',
 }
+
+export enum CompetencyStatus {
+  ACTIVE = 'active',
+  DEPRECATED = 'deprecated',
+  DRAFT = 'draft',
+  OBSOLETE = 'obsolete',
+}
+
+export enum UserCompetencyStatus {
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  SUSPENDED = 'suspended',
+  REVOKED = 'revoked',
+  PENDING = 'pending',
+}
