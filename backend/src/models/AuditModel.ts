@@ -17,6 +17,9 @@ export interface Audit {
   relatedProcesses?: string;
   findings?: string;
   conclusions?: string;
+  reviewerId?: number;
+  reviewedAt?: Date;
+  reviewComments?: string;
   createdBy: number;
   createdAt?: Date;
   updatedAt?: Date;
@@ -100,5 +103,56 @@ export class AuditModel {
   static async delete(id: number): Promise<void> {
     const pool = await getConnection();
     await pool.request().input('id', sql.Int, id).query('DELETE FROM Audits WHERE id = @id');
+  }
+
+  static async submitForReview(id: number): Promise<void> {
+    const pool = await getConnection();
+    await pool
+      .request()
+      .input('id', sql.Int, id)
+      .input('status', sql.NVarChar, AuditStatus.PENDING_REVIEW)
+      .query(`
+        UPDATE Audits 
+        SET status = @status, updatedAt = GETDATE()
+        WHERE id = @id AND status = '${AuditStatus.COMPLETED}'
+      `);
+  }
+
+  static async approveAudit(id: number, reviewerId: number, reviewComments?: string): Promise<void> {
+    const pool = await getConnection();
+    await pool
+      .request()
+      .input('id', sql.Int, id)
+      .input('reviewerId', sql.Int, reviewerId)
+      .input('reviewComments', sql.NVarChar, reviewComments)
+      .input('status', sql.NVarChar, AuditStatus.APPROVED)
+      .query(`
+        UPDATE Audits 
+        SET status = @status, 
+            reviewerId = @reviewerId, 
+            reviewedAt = GETDATE(), 
+            reviewComments = @reviewComments,
+            updatedAt = GETDATE()
+        WHERE id = @id AND status = '${AuditStatus.PENDING_REVIEW}'
+      `);
+  }
+
+  static async rejectAudit(id: number, reviewerId: number, reviewComments: string): Promise<void> {
+    const pool = await getConnection();
+    await pool
+      .request()
+      .input('id', sql.Int, id)
+      .input('reviewerId', sql.Int, reviewerId)
+      .input('reviewComments', sql.NVarChar, reviewComments)
+      .input('status', sql.NVarChar, AuditStatus.REJECTED)
+      .query(`
+        UPDATE Audits 
+        SET status = @status, 
+            reviewerId = @reviewerId, 
+            reviewedAt = GETDATE(), 
+            reviewComments = @reviewComments,
+            updatedAt = GETDATE()
+        WHERE id = @id AND status = '${AuditStatus.PENDING_REVIEW}'
+      `);
   }
 }

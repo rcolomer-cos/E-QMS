@@ -92,3 +92,97 @@ export const deleteAudit = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to delete audit' });
   }
 };
+
+export const submitAuditForReview = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const audit = await AuditModel.findById(parseInt(id, 10));
+    if (!audit) {
+      res.status(404).json({ error: 'Audit not found' });
+      return;
+    }
+
+    if (audit.status !== 'completed') {
+      res.status(400).json({ error: 'Only completed audits can be submitted for review' });
+      return;
+    }
+
+    await AuditModel.submitForReview(parseInt(id, 10));
+
+    res.json({ message: 'Audit submitted for review successfully' });
+  } catch (error) {
+    console.error('Submit audit for review error:', error);
+    res.status(500).json({ error: 'Failed to submit audit for review' });
+  }
+};
+
+export const approveAudit = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { reviewComments } = req.body;
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const audit = await AuditModel.findById(parseInt(id, 10));
+    if (!audit) {
+      res.status(404).json({ error: 'Audit not found' });
+      return;
+    }
+
+    if (audit.status !== 'pending_review') {
+      res.status(400).json({ error: 'Only audits pending review can be approved' });
+      return;
+    }
+
+    await AuditModel.approveAudit(parseInt(id, 10), req.user.id, reviewComments);
+
+    res.json({ message: 'Audit approved successfully' });
+  } catch (error) {
+    console.error('Approve audit error:', error);
+    res.status(500).json({ error: 'Failed to approve audit' });
+  }
+};
+
+export const rejectAudit = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { reviewComments } = req.body;
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    if (!reviewComments || reviewComments.trim() === '') {
+      res.status(400).json({ error: 'Review comments are required when rejecting an audit' });
+      return;
+    }
+
+    const audit = await AuditModel.findById(parseInt(id, 10));
+    if (!audit) {
+      res.status(404).json({ error: 'Audit not found' });
+      return;
+    }
+
+    if (audit.status !== 'pending_review') {
+      res.status(400).json({ error: 'Only audits pending review can be rejected' });
+      return;
+    }
+
+    await AuditModel.rejectAudit(parseInt(id, 10), req.user.id, reviewComments);
+
+    res.json({ message: 'Audit rejected successfully' });
+  } catch (error) {
+    console.error('Reject audit error:', error);
+    res.status(500).json({ error: 'Failed to reject audit' });
+  }
+};

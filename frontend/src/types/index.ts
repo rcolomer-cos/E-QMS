@@ -106,6 +106,12 @@ export interface Audit {
   status: string;
   scheduledDate: string;
   leadAuditorId: number;
+  reviewerId?: number;
+  reviewedAt?: string;
+  reviewComments?: string;
+  completedDate?: string;
+  scope?: string;
+  description?: string;
 }
 
 export interface NCR {
