@@ -5,6 +5,9 @@ import {
   getTrainingById,
   updateTraining,
   getTrainingAttendees,
+  getExpiringCertificates,
+  getExpiringAttendeeRecords,
+  getMyExpiringCertificates,
 } from '../controllers/trainingController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { validateId, validateTraining, validateTrainingUpdate } from '../utils/validators';
@@ -21,6 +24,15 @@ router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER)
 
 // Get all Trainings - Accessible to all authenticated users
 router.get('/', getTrainings);
+
+// Get expiring certificates - Accessible to all authenticated users
+router.get('/certificates/expiring', getExpiringCertificates);
+
+// Get expiring attendee records - Accessible to all authenticated users
+router.get('/attendees/expiring', getExpiringAttendeeRecords);
+
+// Get my expiring certificates - Returns certificates for the authenticated user
+router.get('/my-certificates/expiring', getMyExpiringCertificates);
 
 // Get Training by ID - Accessible to all authenticated users
 router.get('/:id', validateId, getTrainingById);

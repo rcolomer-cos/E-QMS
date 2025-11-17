@@ -3,6 +3,7 @@ import { TrainingModel, Training } from '../models/TrainingModel';
 import { AuthRequest, TrainingStatus } from '../types';
 import { validationResult } from 'express-validator';
 import { logCreate, logUpdate, AuditActionCategory } from '../services/auditLogService';
+import { TrainingCertificateService } from '../services/trainingCertificateService';
 
 export const createTraining = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -148,5 +149,97 @@ export const getTrainingAttendees = async (req: AuthRequest, res: Response): Pro
   } catch (error) {
     console.error('Get Training attendees error:', error);
     res.status(500).json({ error: 'Failed to get Training attendees' });
+  }
+};
+
+export const getExpiringCertificates = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { daysThreshold = '90', includeExpired = 'true' } = req.query;
+
+    const threshold = parseInt(daysThreshold as string, 10);
+    const expired = includeExpired === 'true';
+
+    // Validate threshold parameter
+    if (isNaN(threshold) || threshold < 1 || threshold > 365) {
+      res.status(400).json({ error: 'Invalid daysThreshold. Must be between 1 and 365.' });
+      return;
+    }
+
+    const expiringCertificates = await TrainingCertificateService.getExpiringCertificates(
+      threshold,
+      expired
+    );
+
+    res.json({
+      data: expiringCertificates,
+      count: expiringCertificates.length,
+      threshold,
+      includeExpired: expired,
+    });
+  } catch (error) {
+    console.error('Get expiring certificates error:', error);
+    res.status(500).json({ error: 'Failed to get expiring certificates' });
+  }
+};
+
+export const getExpiringAttendeeRecords = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { daysThreshold = '90', includeExpired = 'true' } = req.query;
+
+    const threshold = parseInt(daysThreshold as string, 10);
+    const expired = includeExpired === 'true';
+
+    // Validate threshold parameter
+    if (isNaN(threshold) || threshold < 1 || threshold > 365) {
+      res.status(400).json({ error: 'Invalid daysThreshold. Must be between 1 and 365.' });
+      return;
+    }
+
+    const expiringRecords = await TrainingCertificateService.getExpiringAttendeeRecords(
+      threshold,
+      expired
+    );
+
+    res.json({
+      data: expiringRecords,
+      count: expiringRecords.length,
+      threshold,
+      includeExpired: expired,
+    });
+  } catch (error) {
+    console.error('Get expiring attendee records error:', error);
+    res.status(500).json({ error: 'Failed to get expiring attendee records' });
+  }
+};
+
+export const getMyExpiringCertificates = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { daysThreshold = '90' } = req.query;
+    const threshold = parseInt(daysThreshold as string, 10);
+
+    // Validate threshold parameter
+    if (isNaN(threshold) || threshold < 1 || threshold > 365) {
+      res.status(400).json({ error: 'Invalid daysThreshold. Must be between 1 and 365.' });
+      return;
+    }
+
+    const expiringCertificates = await TrainingCertificateService.getExpiringCertificatesForUser(
+      req.user.id,
+      threshold
+    );
+
+    res.json({
+      data: expiringCertificates,
+      count: expiringCertificates.length,
+      threshold,
+    });
+  } catch (error) {
+    console.error('Get my expiring certificates error:', error);
+    res.status(500).json({ error: 'Failed to get your expiring certificates' });
   }
 };
