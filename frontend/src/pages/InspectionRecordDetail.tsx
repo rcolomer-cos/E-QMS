@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getInspectionRecordById, InspectionRecord } from '../services/inspectionRecordService';
 import { getEquipmentById, Equipment } from '../services/equipmentService';
+import { getAttachmentsByEntity, Attachment, getAttachmentDownloadUrl } from '../services/attachmentService';
 import '../styles/RecordDetail.css';
 
 function InspectionRecordDetail() {
@@ -9,8 +10,10 @@ function InspectionRecordDetail() {
   const navigate = useNavigate();
   const [record, setRecord] = useState<InspectionRecord | null>(null);
   const [equipment, setEquipment] = useState<Equipment | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -27,6 +30,14 @@ function InspectionRecordDetail() {
       if (recordData.equipmentId) {
         const equipmentData = await getEquipmentById(recordData.equipmentId);
         setEquipment(equipmentData);
+      }
+
+      // Load attachments
+      try {
+        const attachmentData = await getAttachmentsByEntity('inspection', parseInt(id!));
+        setAttachments(attachmentData.data);
+      } catch (err) {
+        console.error('Failed to load attachments:', err);
       }
       
       setError('');
@@ -309,6 +320,35 @@ function InspectionRecordDetail() {
           </section>
         )}
 
+        {/* Inspection Photos */}
+        {attachments.length > 0 && (
+          <section className="detail-section">
+            <h2>Inspection Photos</h2>
+            <div className="inspection-photos-grid">
+              {attachments
+                .filter(att => att.category === 'inspection_photo')
+                .map((attachment) => (
+                  <div
+                    key={attachment.id}
+                    className="photo-thumbnail"
+                    onClick={() => setSelectedImage(getAttachmentDownloadUrl(attachment.id))}
+                  >
+                    <img
+                      src={getAttachmentDownloadUrl(attachment.id)}
+                      alt={attachment.description || 'Inspection photo'}
+                      loading="lazy"
+                    />
+                    <div className="photo-info">
+                      <span className="photo-size">
+                        {(attachment.fileSize / 1024).toFixed(0)} KB
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </section>
+        )}
+
         {/* Attachments */}
         {record.attachments && (
           <section className="detail-section">
@@ -338,6 +378,18 @@ function InspectionRecordDetail() {
           </div>
         </section>
       </div>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="image-modal-overlay" onClick={() => setSelectedImage(null)}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal" onClick={() => setSelectedImage(null)}>
+              ✕
+            </button>
+            <img src={selectedImage} alt="Full size inspection photo" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

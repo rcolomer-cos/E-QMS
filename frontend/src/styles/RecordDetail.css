@@ -178,6 +178,107 @@
   border: 1px solid #f5c6cb;
 }
 
+/* Inspection Photos Gallery */
+.inspection-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.photo-thumbnail {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #f5f5f5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.photo-thumbnail:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.photo-thumbnail img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 12px;
+}
+
+.photo-size {
+  font-weight: 500;
+}
+
+/* Image Modal */
+.image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.image-modal-content {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-modal-content img {
+  max-width: 100%;
+  max-height: 95vh;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.close-modal {
+  position: absolute;
+  top: -2rem;
+  right: 0;
+  background: white;
+  color: #333;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.close-modal:hover {
+  background: #f44336;
+  color: white;
+  transform: scale(1.1);
+}
+
 @media (max-width: 768px) {
   .record-detail-page {
     padding: 1rem;
@@ -190,5 +291,18 @@
 
   .detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .inspection-photos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .photo-thumbnail img {
+    height: 150px;
+  }
+
+  .close-modal {
+    top: 0.5rem;
+    right: 0.5rem;
   }
 }
