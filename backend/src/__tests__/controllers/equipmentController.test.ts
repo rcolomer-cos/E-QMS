@@ -9,6 +9,7 @@ import {
   getCalibrationDue,
   getEquipmentReadOnly,
   regenerateQRCode,
+  getEquipmentMetrics,
 } from '../../controllers/equipmentController';
 import { EquipmentModel } from '../../models/EquipmentModel';
 import { AuthRequest, UserRole, EquipmentStatus } from '../../types';
@@ -527,6 +528,99 @@ describe('Equipment Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to regenerate QR code' });
+    });
+  });
+
+  describe('getEquipmentMetrics', () => {
+    it('should return equipment metrics with default upcomingDays', async () => {
+      const mockMetrics = {
+        total: 10,
+        byStatus: {
+          operational: 7,
+          maintenance: 2,
+          out_of_service: 1,
+        },
+        overdue: {
+          calibration: 2,
+          maintenance: 1,
+          total: 3,
+        },
+        upcoming: {
+          calibration: 3,
+          maintenance: 2,
+          total: 5,
+        },
+      };
+
+      (EquipmentModel.getEquipmentOverviewMetrics as jest.Mock).mockResolvedValue(mockMetrics);
+
+      await getEquipmentMetrics(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(EquipmentModel.getEquipmentOverviewMetrics).toHaveBeenCalledWith(30);
+      expect(mockJson).toHaveBeenCalledWith(mockMetrics);
+    });
+
+    it('should return equipment metrics with custom upcomingDays', async () => {
+      const mockMetrics = {
+        total: 10,
+        byStatus: {
+          operational: 7,
+          maintenance: 2,
+          out_of_service: 1,
+        },
+        overdue: {
+          calibration: 2,
+          maintenance: 1,
+          total: 3,
+        },
+        upcoming: {
+          calibration: 1,
+          maintenance: 0,
+          total: 1,
+        },
+      };
+
+      mockAuthRequest.query = { upcomingDays: '7' };
+      (EquipmentModel.getEquipmentOverviewMetrics as jest.Mock).mockResolvedValue(mockMetrics);
+
+      await getEquipmentMetrics(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(EquipmentModel.getEquipmentOverviewMetrics).toHaveBeenCalledWith(7);
+      expect(mockJson).toHaveBeenCalledWith(mockMetrics);
+    });
+
+    it('should handle database errors', async () => {
+      (EquipmentModel.getEquipmentOverviewMetrics as jest.Mock).mockRejectedValue(
+        new Error('Database error')
+      );
+
+      await getEquipmentMetrics(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get equipment metrics' });
+    });
+
+    it('should return zero metrics when no equipment exists', async () => {
+      const emptyMetrics = {
+        total: 0,
+        byStatus: {},
+        overdue: {
+          calibration: 0,
+          maintenance: 0,
+          total: 0,
+        },
+        upcoming: {
+          calibration: 0,
+          maintenance: 0,
+          total: 0,
+        },
+      };
+
+      (EquipmentModel.getEquipmentOverviewMetrics as jest.Mock).mockResolvedValue(emptyMetrics);
+
+      await getEquipmentMetrics(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockJson).toHaveBeenCalledWith(emptyMetrics);
     });
   });
 });
