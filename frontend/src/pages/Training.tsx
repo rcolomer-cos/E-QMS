@@ -111,7 +111,7 @@ function TrainingManagement() {
     <div className="page">
       <div className="page-header">
         <h1>Training Management</h1>
-        <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+        <button className="tw-btn tw-btn-primary" onClick={() => setShowCreateModal(true)}>
           Schedule Training
         </button>
       </div>
@@ -126,13 +126,13 @@ function TrainingManagement() {
       <div style={{ marginBottom: '30px' }}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
           <button
-            className={showExpiringCertificates ? 'btn-primary' : 'btn-secondary'}
+            className={showExpiringCertificates ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-secondary'}
             onClick={() => setShowExpiringCertificates(!showExpiringCertificates)}
           >
             {showExpiringCertificates ? 'Hide' : 'Show'} Expiring Certificates
           </button>
           <button
-            className={showExpiringRecords ? 'btn-primary' : 'btn-secondary'}
+            className={showExpiringRecords ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-secondary'}
             onClick={() => setShowExpiringRecords(!showExpiringRecords)}
           >
             {showExpiringRecords ? 'Hide' : 'Show'} Expiring Training Records
@@ -217,7 +217,7 @@ function TrainingManagement() {
                   <td>{new Date(training.scheduledDate).toLocaleDateString()}</td>
                   <td>{training.duration || 'N/A'}</td>
                   <td>
-                    <button className="btn-small" onClick={() => alert('View details - To be implemented')}>
+                    <button className="tw-btn-small" onClick={() => alert('View details - To be implemented')}>
                       View
                     </button>
                   </td>
@@ -365,10 +365,10 @@ function TrainingManagement() {
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowCreateModal(false)}>
+                <button type="button" className="tw-btn tw-btn-secondary" onClick={() => setShowCreateModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="tw-btn tw-btn-primary">
                   Schedule Training
                 </button>
               </div>

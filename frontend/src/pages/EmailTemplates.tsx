@@ -179,7 +179,7 @@ function EmailTemplates() {
     <div className="page">
       <div className="page-header">
         <h1>Email Templates</h1>
-        <button className="btn-primary" onClick={() => handleOpenModal()}>
+        <button className="tw-btn tw-btn-primary" onClick={() => handleOpenModal()}>
           Create Template
         </button>
       </div>
@@ -257,10 +257,10 @@ function EmailTemplates() {
                   )}
                 </div>
                 <div className="template-actions">
-                  <button className="btn-secondary" onClick={() => handleOpenModal(template)}>
+                  <button className="tw-btn tw-btn-secondary" onClick={() => handleOpenModal(template)}>
                     Edit
                   </button>
-                  <button className="btn-danger" onClick={() => handleDelete(template.id!)}>
+                  <button className="tw-btn tw-btn-danger" onClick={() => handleDelete(template.id!)}>
                     Delete
                   </button>
                 </div>
@@ -438,10 +438,10 @@ function EmailTemplates() {
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={handleCloseModal}>
+                <button type="button" className="tw-btn tw-btn-secondary" onClick={handleCloseModal}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="tw-btn tw-btn-primary">
                   {editingTemplate ? 'Update Template' : 'Create Template'}
                 </button>
               </div>

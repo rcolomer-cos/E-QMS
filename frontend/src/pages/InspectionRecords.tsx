@@ -109,51 +109,51 @@ function InspectionRecords() {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'badge badge-success';
+        return 'tw-badge tw-badge-success';
       case 'in_progress':
-        return 'badge badge-warning';
+        return 'tw-badge tw-badge-warning';
       case 'scheduled':
-        return 'badge badge-info';
+        return 'tw-badge tw-badge-info';
       case 'overdue':
-        return 'badge badge-danger';
+        return 'tw-badge tw-badge-danger';
       case 'cancelled':
-        return 'badge badge-secondary';
+        return 'tw-badge tw-badge-secondary';
       default:
-        return 'badge';
+        return 'tw-badge tw-badge-secondary';
     }
   };
 
   const getResultBadgeClass = (result: string) => {
     switch (result) {
       case 'passed':
-        return 'badge badge-success';
+        return 'tw-badge tw-badge-success';
       case 'passed_with_observations':
-        return 'badge badge-info';
+        return 'tw-badge tw-badge-info';
       case 'failed':
-        return 'badge badge-danger';
+        return 'tw-badge tw-badge-danger';
       case 'conditional':
-        return 'badge badge-warning';
+        return 'tw-badge tw-badge-warning';
       case 'pending':
-        return 'badge badge-secondary';
+        return 'tw-badge tw-badge-secondary';
       default:
-        return 'badge';
+        return 'tw-badge tw-badge-secondary';
     }
   };
 
   const getSeverityBadgeClass = (severity?: string) => {
     switch (severity) {
       case 'critical':
-        return 'badge badge-danger';
+        return 'tw-badge tw-badge-danger';
       case 'major':
-        return 'badge badge-warning';
+        return 'tw-badge tw-badge-warning';
       case 'moderate':
-        return 'badge badge-info';
+        return 'tw-badge tw-badge-info';
       case 'minor':
-        return 'badge badge-secondary';
+        return 'tw-badge tw-badge-secondary';
       case 'none':
-        return 'badge badge-success';
+        return 'tw-badge tw-badge-success';
       default:
-        return 'badge';
+        return 'tw-badge tw-badge-secondary';
     }
   };
 
@@ -239,7 +239,7 @@ function InspectionRecords() {
           <button onClick={() => {
             setFilters({ page: 1, limit: 20 });
             setSearchTerm('');
-          }} className="btn btn-secondary">
+          }} className="tw-btn tw-btn-secondary">
             Clear Filters
           </button>
         </div>
@@ -315,7 +315,7 @@ function InspectionRecords() {
                   <td>
                     <button
                       onClick={() => navigate(`/inspection-records/${record.id}`)}
-                      className="btn btn-sm btn-primary"
+                      className="tw-btn tw-btn-small tw-btn-primary"
                     >
                       View Details
                     </button>
@@ -332,7 +332,7 @@ function InspectionRecords() {
           <button
             onClick={() => handlePageChange((filters.page || 1) - 1)}
             disabled={filters.page === 1}
-            className="btn btn-secondary"
+            className="tw-btn tw-btn-secondary"
           >
             Previous
           </button>
@@ -342,7 +342,7 @@ function InspectionRecords() {
           <button
             onClick={() => handlePageChange((filters.page || 1) + 1)}
             disabled={filters.page === totalPages}
-            className="btn btn-secondary"
+            className="tw-btn tw-btn-secondary"
           >
             Next
           </button>

@@ -103,7 +103,7 @@ function Audits() {
     <div className="page">
       <div className="page-header">
         <h1>Audit Management</h1>
-        <button className="btn-primary">Schedule Audit</button>
+        <button className="tw-btn tw-btn-primary">Schedule Audit</button>
       </div>
 
       <table className="data-table">
@@ -146,12 +146,12 @@ function Audits() {
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button className="btn-small">View</button>
-                    <button className="btn-small">Edit</button>
+                    <button className="tw-btn-small">View</button>
+                    <button className="tw-btn-small">Edit</button>
                     
                     {(audit.status === 'planned' || audit.status === 'in_progress') && (
                       <button 
-                        className="btn-small btn-primary"
+                        className="tw-btn-small tw-btn-primary"
                         onClick={() => handleExecuteAudit(audit.id)}
                       >
                         Execute
@@ -160,7 +160,7 @@ function Audits() {
                     
                     {audit.status === 'completed' && (
                       <button 
-                        className="btn-small btn-primary"
+                        className="tw-btn-small tw-btn-primary"
                         onClick={() => handleSubmitForReview(audit.id)}
                         disabled={actionLoading}
                       >
@@ -171,14 +171,14 @@ function Audits() {
                     {audit.status === 'pending_review' && (
                       <>
                         <button 
-                          className="btn-small btn-success"
+                          className="tw-btn-small tw-btn-success"
                           onClick={() => handleOpenReviewModal(audit, 'approve')}
                           disabled={actionLoading}
                         >
                           Approve
                         </button>
                         <button 
-                          className="btn-small btn-danger"
+                          className="tw-btn-small tw-btn-danger"
                           onClick={() => handleOpenReviewModal(audit, 'reject')}
                           disabled={actionLoading}
                         >
@@ -225,14 +225,14 @@ function Audits() {
             </div>
             <div className="modal-footer">
               <button 
-                className="btn-secondary" 
+                className="tw-btn tw-btn-secondary" 
                 onClick={handleCloseReviewModal}
                 disabled={actionLoading}
               >
                 Cancel
               </button>
               <button 
-                className={reviewAction === 'approve' ? 'btn-primary' : 'btn-danger'}
+                className={reviewAction === 'approve' ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-danger'}
                 onClick={handleSubmitReview}
                 disabled={actionLoading}
               >

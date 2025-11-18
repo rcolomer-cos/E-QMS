@@ -111,10 +111,10 @@ function Dashboard() {
       <div className="dashboard-header">
         <h1>KPI Dashboard</h1>
         <div className="dashboard-actions">
-          <button className="btn-secondary" onClick={() => setShowCharts(!showCharts)}>
+          <button className="tw-btn tw-btn-secondary" onClick={() => setShowCharts(!showCharts)}>
             {showCharts ? 'Hide Charts' : 'Show Charts'}
           </button>
-          <button className="btn-primary" onClick={handleRefreshData}>
+          <button className="tw-btn tw-btn-primary" onClick={handleRefreshData}>
             Refresh Data
           </button>
         </div>
@@ -143,13 +143,13 @@ function Dashboard() {
             />
           </div>
           <button 
-            className="btn-primary" 
+            className="tw-btn tw-btn-primary" 
             onClick={handleFilterApply}
             disabled={!dateRange.startDate || !dateRange.endDate}
           >
             Apply Filter
           </button>
-          <button className="btn-secondary" onClick={handleFilterClear}>
+          <button className="tw-btn tw-btn-secondary" onClick={handleFilterClear}>
             Clear Filter
           </button>
         </div>
@@ -199,7 +199,7 @@ function Dashboard() {
         <div className="dashboard-section full-width">
           <div className="section-header">
             <h2>NCR Metrics Overview</h2>
-            <button className="btn-link" onClick={() => navigate('/ncr/dashboard')}>
+            <button className="tw-btn-link" onClick={() => navigate('/ncr/dashboard')}>
               View Detailed Dashboard →
             </button>
           </div>
@@ -273,7 +273,7 @@ function Dashboard() {
         <div className="dashboard-section full-width">
           <div className="section-header">
             <h2>Equipment Service Indicators</h2>
-            <button className="btn-link" onClick={() => navigate('/equipment')}>
+            <button className="tw-btn-link" onClick={() => navigate('/equipment')}>
               View Equipment List →
             </button>
           </div>
@@ -333,7 +333,7 @@ function Dashboard() {
         <div className="dashboard-section full-width">
           <div className="section-header">
             <h2>Audit Findings Overview</h2>
-            <button className="btn-link" onClick={() => navigate('/audit-findings')}>
+            <button className="tw-btn-link" onClick={() => navigate('/audit-findings')}>
               View All Findings →
             </button>
           </div>

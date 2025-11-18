@@ -193,10 +193,10 @@ function AuditFindings() {
           )}
         </div>
         <div>
-          <button className="btn-secondary" onClick={() => navigate(`/audits/${auditId}/execute`)}>
+          <button className="tw-btn tw-btn-secondary" onClick={() => navigate(`/audits/${auditId}/execute`)}>
             Back to Audit
           </button>
-          <button className="btn-primary" onClick={() => setShowForm(true)}>
+          <button className="tw-btn tw-btn-primary" onClick={() => setShowForm(true)}>
             Add Finding
           </button>
         </div>
@@ -381,10 +381,10 @@ function AuditFindings() {
               </div>
 
               <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
+                <button type="button" className="tw-btn tw-btn-secondary" onClick={() => setShowForm(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="tw-btn tw-btn-primary">
                   {editingFinding ? 'Update' : 'Create'} Finding
                 </button>
               </div>
@@ -433,10 +433,10 @@ function AuditFindings() {
               </div>
 
               <div className="finding-actions">
-                <button className="btn-small" onClick={() => handleEdit(finding)}>
+                <button className="tw-btn-small" onClick={() => handleEdit(finding)}>
                   Edit
                 </button>
-                <button className="btn-small btn-danger" onClick={() => handleDelete(finding.id!)}>
+                <button className="tw-btn-small tw-btn-danger" onClick={() => handleDelete(finding.id!)}>
                   Delete
                 </button>
               </div>

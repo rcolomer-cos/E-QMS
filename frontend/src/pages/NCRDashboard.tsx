@@ -69,22 +69,22 @@ function NCRDashboard() {
 
   const getStatusBadgeClass = (status: string) => {
     const statusMap: Record<string, string> = {
-      open: 'status-open',
-      in_progress: 'status-in-progress',
-      resolved: 'status-resolved',
-      closed: 'status-closed',
-      rejected: 'status-rejected',
+      open: 'tw-badge tw-badge-info',
+      in_progress: 'tw-badge tw-badge-warning',
+      resolved: 'tw-badge tw-badge-success',
+      closed: 'tw-badge tw-badge-secondary',
+      rejected: 'tw-badge tw-badge-danger',
     };
-    return statusMap[status] || 'status-open';
+    return statusMap[status] || 'tw-badge tw-badge-info';
   };
 
   const getSeverityBadgeClass = (severity: string) => {
     const severityMap: Record<string, string> = {
-      minor: 'severity-minor',
-      major: 'severity-major',
-      critical: 'severity-critical',
+      minor: 'tw-badge tw-badge-info',
+      major: 'tw-badge tw-badge-warning',
+      critical: 'tw-badge tw-badge-danger',
     };
-    return severityMap[severity] || 'severity-minor';
+    return severityMap[severity] || 'tw-badge tw-badge-info';
   };
 
   if (loading) {
@@ -99,7 +99,7 @@ function NCRDashboard() {
     <div className="ncr-dashboard">
       <div className="page-header">
         <h1>NCR Metrics Dashboard</h1>
-        <button className="btn-secondary" onClick={() => navigate('/ncr')}>
+        <button className="tw-btn tw-btn-secondary" onClick={() => navigate('/ncr')}>
           View All NCRs
         </button>
       </div>
@@ -140,7 +140,7 @@ function NCRDashboard() {
             {metrics?.bySeverity && metrics.bySeverity.length > 0 ? (
               metrics.bySeverity.map((item) => (
                 <div key={item.severity} className="breakdown-item">
-                  <span className={`badge ${getSeverityBadgeClass(item.severity)}`}>
+                  <span className={getSeverityBadgeClass(item.severity)}>
                     {item.severity}
                   </span>
                   <span className="breakdown-count">{item.count}</span>
@@ -233,7 +233,7 @@ function NCRDashboard() {
           </div>
 
           <button 
-            className="btn-secondary"
+            className="tw-btn tw-btn-secondary"
             onClick={() => {
               setStatusFilter('all');
               setSeverityFilter('all');
@@ -277,14 +277,14 @@ function NCRDashboard() {
                     </td>
                     <td>{ncr.category}</td>
                     <td>
-                      <span className={`badge ${getStatusBadgeClass(ncr.status)}`}>
+                      <span className={getStatusBadgeClass(ncr.status)}>
                         {ncr.status.replace('_', ' ')}
                       </span>
                     </td>
                     <td>{new Date(ncr.detectedDate).toLocaleDateString()}</td>
                     <td>
                       <button 
-                        className="btn-small"
+                        className="tw-btn tw-btn-small tw-btn-primary"
                         onClick={() => handleViewNCR(ncr.id!)}
                       >
                         View

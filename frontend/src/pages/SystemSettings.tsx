@@ -261,14 +261,14 @@ const SystemSettings = () => {
 
           <div className="settings-actions">
             <button
-              className="btn btn-secondary"
+              className="tw-btn tw-btn-secondary"
               onClick={handleReset}
               disabled={saving}
             >
               Reset Changes
             </button>
             <button
-              className="btn btn-primary"
+              className="tw-btn tw-btn-primary"
               onClick={handleSave}
               disabled={saving}
             >

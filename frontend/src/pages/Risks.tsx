@@ -201,11 +201,11 @@ function Risks() {
       <div className="risks-header">
         <h1>Risk Management</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => navigate('/risks/board')} className="btn-secondary">
+          <button onClick={() => navigate('/risks/board')} className="tw-btn tw-btn-secondary">
             View Risk Board
           </button>
           {canModify && (
-            <button onClick={handleOpenModal} className="btn-primary">
+            <button onClick={handleOpenModal} className="tw-btn tw-btn-primary">
               Create New Risk
             </button>
           )}
@@ -571,10 +571,10 @@ function Risks() {
               </div>
 
               <div className="form-actions">
-                <button type="button" onClick={handleCloseModal} className="btn-secondary">
+                <button type="button" onClick={handleCloseModal} className="tw-btn tw-btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="tw-btn tw-btn-primary">
                   Create Risk
                 </button>
               </div>

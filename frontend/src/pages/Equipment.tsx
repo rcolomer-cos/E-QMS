@@ -317,7 +317,7 @@ function EquipmentPage() {
               </div>
             </div>
             <div className="header-actions">
-              <button className="btn-secondary" onClick={handleBackToList}>
+              <button className="tw-btn tw-btn-secondary" onClick={handleBackToList}>
                 Back to List
               </button>
               <button className="btn-edit" onClick={() => handleEdit(selectedEquipment.id!)}>
@@ -444,7 +444,7 @@ function EquipmentPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h3 style={{ margin: 0 }}>QR Code</h3>
                 <button 
-                  className="btn-secondary" 
+                  className="tw-btn tw-btn-secondary" 
                   onClick={() => handleRegenerateQR(selectedEquipment.id!)}
                   style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
                 >
@@ -493,7 +493,7 @@ function EquipmentPage() {
           <h1>Equipment Management</h1>
           <p className="subtitle">Manage equipment, calibration, and maintenance tracking</p>
         </div>
-        <button className="btn-primary" onClick={handleAdd}>
+        <button className="tw-btn tw-btn-primary" onClick={handleAdd}>
           Add Equipment
         </button>
       </div>
@@ -842,10 +842,10 @@ function EquipmentPage() {
               </div>
 
               <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={handleCloseModal}>
+                <button type="button" className="tw-btn tw-btn-secondary" onClick={handleCloseModal}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="tw-btn tw-btn-primary">
                   {editingEquipment ? 'Update' : 'Create'}
                 </button>
               </div>

@@ -107,10 +107,10 @@ function NCR() {
           <p className="subtitle">Manage and track non-conformances</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn-secondary" onClick={() => navigate('/ncr/dashboard')}>
+          <button className="tw-btn tw-btn-secondary" onClick={() => navigate('/ncr/dashboard')}>
             Dashboard
           </button>
-          <button className="btn-add" onClick={handleOpenModal}>
+          <button className="tw-btn tw-btn-primary" onClick={handleOpenModal}>
             Create NCR
           </button>
         </div>
@@ -155,7 +155,7 @@ function NCR() {
                   <td>{formatDate(ncr.detectedDate)}</td>
                   <td className="actions-cell">
                     <button 
-                      className="btn-view" 
+                      className="tw-btn tw-btn-small tw-btn-primary" 
                       onClick={() => navigate(`/ncr/${ncr.id}`)}
                     >
                       View

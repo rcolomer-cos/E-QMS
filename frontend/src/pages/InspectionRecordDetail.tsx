@@ -75,51 +75,51 @@ function InspectionRecordDetail() {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'badge badge-success';
+        return 'tw-badge tw-badge-success';
       case 'in_progress':
-        return 'badge badge-warning';
+        return 'tw-badge tw-badge-warning';
       case 'scheduled':
-        return 'badge badge-info';
+        return 'tw-badge tw-badge-info';
       case 'overdue':
-        return 'badge badge-danger';
+        return 'tw-badge tw-badge-danger';
       case 'cancelled':
-        return 'badge badge-secondary';
+        return 'tw-badge tw-badge-secondary';
       default:
-        return 'badge';
+        return 'tw-badge tw-badge-secondary';
     }
   };
 
   const getResultBadgeClass = (result: string) => {
     switch (result) {
       case 'passed':
-        return 'badge badge-success';
+        return 'tw-badge tw-badge-success';
       case 'passed_with_observations':
-        return 'badge badge-info';
+        return 'tw-badge tw-badge-info';
       case 'failed':
-        return 'badge badge-danger';
+        return 'tw-badge tw-badge-danger';
       case 'conditional':
-        return 'badge badge-warning';
+        return 'tw-badge tw-badge-warning';
       case 'pending':
-        return 'badge badge-secondary';
+        return 'tw-badge tw-badge-secondary';
       default:
-        return 'badge';
+        return 'tw-badge tw-badge-secondary';
     }
   };
 
   const getSeverityBadgeClass = (severity?: string) => {
     switch (severity) {
       case 'critical':
-        return 'badge badge-danger';
+        return 'tw-badge tw-badge-danger';
       case 'major':
-        return 'badge badge-warning';
+        return 'tw-badge tw-badge-warning';
       case 'moderate':
-        return 'badge badge-info';
+        return 'tw-badge tw-badge-info';
       case 'minor':
-        return 'badge badge-secondary';
+        return 'tw-badge tw-badge-secondary';
       case 'none':
-        return 'badge badge-success';
+        return 'tw-badge tw-badge-success';
       default:
-        return 'badge';
+        return 'tw-badge tw-badge-secondary';
     }
   };
 
@@ -154,7 +154,7 @@ function InspectionRecordDetail() {
     return (
       <div className="error-container">
         <div className="alert alert-danger">{error || 'Record not found'}</div>
-        <button onClick={() => navigate('/inspection-records')} className="btn btn-secondary">
+        <button onClick={() => navigate('/inspection-records')} className="tw-btn tw-btn-secondary">
           Back to List
         </button>
       </div>
@@ -172,13 +172,13 @@ function InspectionRecordDetail() {
           {(record.result === 'failed' || !record.passed) && linkedNCRs.length === 0 && (
             <button 
               onClick={() => setShowNCRModal(true)} 
-              className="btn btn-danger"
+              className="tw-btn tw-btn-danger"
               title="Create Non-Conformance Report from this failed inspection"
             >
               Create NCR
             </button>
           )}
-          <button onClick={() => navigate('/inspection-records')} className="btn btn-secondary">
+          <button onClick={() => navigate('/inspection-records')} className="tw-btn tw-btn-secondary">
             Back to List
           </button>
         </div>
@@ -263,25 +263,25 @@ function InspectionRecordDetail() {
           <div className="detail-grid">
             <div className="detail-item">
               <label>Passed:</label>
-              <span className={record.passed ? 'badge badge-success' : 'badge badge-danger'}>
+              <span className={record.passed ? 'tw-badge tw-badge-success' : 'tw-badge tw-badge-danger'}>
                 {record.passed ? 'Yes' : 'No'}
               </span>
             </div>
             <div className="detail-item">
               <label>Safety Compliant:</label>
-              <span className={record.safetyCompliant ? 'badge badge-success' : 'badge badge-danger'}>
+              <span className={record.safetyCompliant ? 'tw-badge tw-badge-success' : 'tw-badge tw-badge-danger'}>
                 {record.safetyCompliant ? 'Yes' : 'No'}
               </span>
             </div>
             <div className="detail-item">
               <label>Operational Compliant:</label>
-              <span className={record.operationalCompliant ? 'badge badge-success' : 'badge badge-danger'}>
+              <span className={record.operationalCompliant ? 'tw-badge tw-badge-success' : 'tw-badge tw-badge-danger'}>
                 {record.operationalCompliant ? 'Yes' : 'No'}
               </span>
             </div>
             <div className="detail-item">
               <label>Follow-up Required:</label>
-              <span className={record.followUpRequired ? 'badge badge-warning' : 'badge badge-success'}>
+              <span className={record.followUpRequired ? 'tw-badge tw-badge-warning' : 'tw-badge tw-badge-success'}>
                 {record.followUpRequired ? 'Yes' : 'No'}
               </span>
             </div>
@@ -430,10 +430,10 @@ function InspectionRecordDetail() {
                         {ncr.description.substring(0, 150)}...
                       </div>
                     </div>
-                    <span className={`badge ${
-                      ncr.status === 'closed' ? 'badge-success' : 
-                      ncr.status === 'in_progress' ? 'badge-warning' : 
-                      'badge-danger'
+                    <span className={`${
+                      ncr.status === 'closed' ? 'tw-badge tw-badge-success' : 
+                      ncr.status === 'in_progress' ? 'tw-badge tw-badge-warning' : 
+                      'tw-badge tw-badge-danger'
                     }`}>
                       {ncr.status.replace('_', ' ').toUpperCase()}
                     </span>
@@ -520,14 +520,14 @@ function InspectionRecordDetail() {
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button 
                 onClick={() => setShowNCRModal(false)} 
-                className="btn btn-secondary"
+                className="tw-btn tw-btn-secondary"
                 disabled={creatingNCR}
               >
                 Cancel
               </button>
               <button 
                 onClick={handleCreateNCR} 
-                className="btn btn-danger"
+                className="tw-btn tw-btn-danger"
                 disabled={creatingNCR}
               >
                 {creatingNCR ? 'Creating NCR...' : 'Create NCR'}

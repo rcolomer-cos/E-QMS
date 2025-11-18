@@ -343,10 +343,10 @@ const CompanyBranding = () => {
 
         {/* Action Buttons */}
         <div className="form-actions">
-          <button className="btn btn-secondary" onClick={handleReset} disabled={saving}>
+          <button className="tw-btn tw-btn-secondary" onClick={handleReset} disabled={saving}>
             Reset Changes
           </button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          <button className="tw-btn tw-btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>

@@ -87,7 +87,7 @@ function CalibrationRecordDetail() {
     return (
       <div className="error-container">
         <div className="alert alert-danger">{error || 'Record not found'}</div>
-        <button onClick={() => navigate('/calibration-records')} className="btn btn-secondary">
+        <button onClick={() => navigate('/calibration-records')} className="tw-btn tw-btn-secondary">
           Back to List
         </button>
       </div>
@@ -101,7 +101,7 @@ function CalibrationRecordDetail() {
           <h1>Calibration Record Details</h1>
           <p className="record-id">Record ID: {record.id}</p>
         </div>
-        <button onClick={() => navigate('/calibration-records')} className="btn btn-secondary">
+        <button onClick={() => navigate('/calibration-records')} className="tw-btn tw-btn-secondary">
           Back to List
         </button>
       </div>

@@ -162,7 +162,7 @@ function NCRDetail() {
     return (
       <div className="error-page">
         <h2>NCR Not Found</h2>
-        <button className="btn-primary" onClick={() => navigate('/ncrs')}>
+        <button className="tw-btn tw-btn-primary" onClick={() => navigate('/ncrs')}>
           Back to NCRs
         </button>
       </div>
@@ -173,7 +173,7 @@ function NCRDetail() {
     <div className="ncr-detail-page">
       <div className="page-header">
         <div>
-          <button className="btn-back" onClick={() => navigate('/ncrs')}>
+          <button className="tw-btn tw-btn-link" onClick={() => navigate('/ncrs')}>
             ← Back to NCRs
           </button>
           <h1>{ncr.ncrNumber}</h1>
@@ -181,7 +181,7 @@ function NCRDetail() {
         </div>
         <div className="header-actions">
           {!isEditing && canEdit && (
-            <button className="btn-edit" onClick={handleEdit}>
+            <button className="tw-btn tw-btn-secondary" onClick={handleEdit}>
               ✏️ Edit NCR
             </button>
           )}
@@ -272,10 +272,10 @@ function NCRDetail() {
               </div>
 
               <div className="form-actions">
-                <button className="btn-cancel" onClick={handleCancelEdit}>
+                <button className="tw-btn tw-btn-secondary" onClick={handleCancelEdit}>
                   Cancel
                 </button>
-                <button className="btn-save" onClick={handleSaveEdit}>
+                <button className="tw-btn tw-btn-primary" onClick={handleSaveEdit}>
                   Save Changes
                 </button>
               </div>
@@ -367,7 +367,7 @@ function NCRDetail() {
                 <label>Inspection Record ID</label>
                 <p>
                   <button 
-                    className="btn-link"
+                    className="tw-btn tw-btn-link"
                     onClick={() => navigate(`/inspection-records/${ncr.inspectionRecordId}`)}
                     style={{ 
                       color: '#007bff', 
@@ -397,14 +397,14 @@ function NCRDetail() {
             <h2>Status Management</h2>
             <div className="status-actions">
               <button
-                className="btn-status"
+                className="tw-btn tw-btn-secondary tw-btn-small"
                 onClick={() => handleStatusChange('in_progress')}
                 disabled={ncr.status === 'in_progress'}
               >
                 Mark In Progress
               </button>
               <button
-                className="btn-status"
+                className="tw-btn tw-btn-secondary tw-btn-small"
                 onClick={() => handleStatusChange('resolved')}
                 disabled={ncr.status === 'resolved'}
               >
@@ -412,7 +412,7 @@ function NCRDetail() {
               </button>
               {canDelete && (
                 <button
-                  className="btn-status"
+                  className="tw-btn tw-btn-danger tw-btn-small"
                   onClick={() => handleStatusChange('closed')}
                   disabled={ncr.status === 'closed'}
                 >
@@ -428,7 +428,7 @@ function NCRDetail() {
           <div className="section-header">
             <h2>Attachments ({attachments.length})</h2>
             <button
-              className="btn-add-attachment"
+              className="tw-btn tw-btn-primary tw-btn-small"
               onClick={() => setShowUploadSection(!showUploadSection)}
             >
               {showUploadSection ? '✕ Cancel' : '+ Add Attachment'}

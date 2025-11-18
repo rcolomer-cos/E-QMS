@@ -134,11 +134,11 @@ function CAPA() {
       <div className="page-header">
         <h1>Corrective and Preventive Actions (CAPA)</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn-secondary" onClick={() => navigate('/capa/dashboard')}>
+          <button className="tw-btn tw-btn-secondary" onClick={() => navigate('/capa/dashboard')}>
             Dashboard
           </button>
           {canCreateCAPA() && (
-            <button className="btn-primary" onClick={() => setShowCreateForm(true)}>
+            <button className="tw-btn tw-btn-primary" onClick={() => setShowCreateForm(true)}>
               Create CAPA
             </button>
           )}
@@ -147,19 +147,19 @@ function CAPA() {
 
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
         <button
-          className={viewMode === 'all' ? 'btn-primary' : 'btn-secondary'}
+          className={viewMode === 'all' ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-secondary'}
           onClick={() => setViewMode('all')}
         >
           All CAPAs
         </button>
         <button
-          className={viewMode === 'assigned' ? 'btn-primary' : 'btn-secondary'}
+          className={viewMode === 'assigned' ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-secondary'}
           onClick={() => setViewMode('assigned')}
         >
           Assigned to Me
         </button>
         <button
-          className={viewMode === 'overdue' ? 'btn-primary' : 'btn-secondary'}
+          className={viewMode === 'overdue' ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-secondary'}
           onClick={() => setViewMode('overdue')}
         >
           Overdue
@@ -213,7 +213,7 @@ function CAPA() {
                   </td>
                   <td>
                     <button 
-                      className="btn-small"
+                      className="tw-btn-small"
                       onClick={() => handleViewCAPA(capa.id)}
                     >
                       View Details

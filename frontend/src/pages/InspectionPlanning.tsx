@@ -332,23 +332,23 @@ function InspectionPlanning() {
 
   const getPriorityBadgeClass = (priority: string) => {
     const classes: { [key: string]: string } = {
-      critical: 'badge-critical',
-      high: 'badge-high',
-      normal: 'badge-normal',
-      low: 'badge-low',
+      critical: 'tw-badge tw-badge-critical',
+      high: 'tw-badge tw-badge-high',
+      normal: 'tw-badge tw-badge-medium',
+      low: 'tw-badge tw-badge-low',
     };
-    return classes[priority] || 'badge-normal';
+    return classes[priority] || 'tw-badge tw-badge-medium';
   };
 
   const getStatusBadgeClass = (status: string) => {
     const classes: { [key: string]: string } = {
-      active: 'badge-active',
-      inactive: 'badge-inactive',
-      on_hold: 'badge-on-hold',
-      completed: 'badge-completed',
-      cancelled: 'badge-cancelled',
+      active: 'tw-badge tw-badge-active',
+      inactive: 'tw-badge tw-badge-inactive',
+      on_hold: 'tw-badge tw-badge-on-hold',
+      completed: 'tw-badge tw-badge-completed',
+      cancelled: 'tw-badge tw-badge-cancelled',
     };
-    return classes[status] || 'badge-inactive';
+    return classes[status] || 'tw-badge tw-badge-inactive';
   };
 
   if (loading) {
@@ -366,7 +366,7 @@ function InspectionPlanning() {
         <p className="page-description">
           Create and manage inspection plans with acceptance criteria for equipment, processes, and products
         </p>
-        <button className="btn-primary" onClick={handleNewPlan}>
+        <button className="tw-btn tw-btn-primary" onClick={handleNewPlan}>
           ➕ Create New Inspection Plan
         </button>
       </div>
@@ -474,7 +474,7 @@ function InspectionPlanning() {
                     {selectedInspectionType && acceptanceCriteria.length > 0 && (
                       <button
                         type="button"
-                        className="btn-link"
+                        className="tw-btn tw-btn-link"
                         onClick={() => setShowCriteriaModal(true)}
                       >
                         View {acceptanceCriteria.length} Acceptance Criteria
@@ -842,10 +842,10 @@ function InspectionPlanning() {
               </fieldset>
 
               <div className="form-actions">
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="tw-btn tw-btn-primary">
                   {editingPlan ? 'Update Plan' : 'Create Plan'}
                 </button>
-                <button type="button" className="btn-secondary" onClick={handleCancel}>
+                <button type="button" className="tw-btn tw-btn-secondary" onClick={handleCancel}>
                   Cancel
                 </button>
               </div>
@@ -906,7 +906,7 @@ function InspectionPlanning() {
                           {criteria.ruleType === 'pass_fail' && <>Pass/Fail</>}
                         </td>
                         <td>
-                          <span className={`badge badge-${criteria.severity}`}>{criteria.severity}</span>
+                          <span className={`tw-badge tw-badge-${criteria.severity}`}>{criteria.severity}</span>
                         </td>
                         <td>{criteria.mandatory ? '✓' : '—'}</td>
                       </tr>
@@ -916,7 +916,7 @@ function InspectionPlanning() {
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowCriteriaModal(false)}>
+              <button className="tw-btn tw-btn-secondary" onClick={() => setShowCriteriaModal(false)}>
                 Close
               </button>
             </div>
@@ -956,13 +956,13 @@ function InspectionPlanning() {
                     </td>
                     <td>{plan.inspectionType}</td>
                     <td>
-                      <span className={`badge ${getPriorityBadgeClass(plan.priority)}`}>{plan.priority}</span>
+                          <span className={getPriorityBadgeClass(plan.priority)}>{plan.priority}</span>
                     </td>
                     <td>{plan.planType}</td>
                     <td>{new Date(plan.nextDueDate).toLocaleDateString()}</td>
                     <td>{plan.responsibleInspectorName}</td>
                     <td>
-                      <span className={`badge ${getStatusBadgeClass(plan.status)}`}>{plan.status}</span>
+                      <span className={getStatusBadgeClass(plan.status)}>{plan.status}</span>
                     </td>
                     <td className="actions-cell">
                       <button className="btn-icon" onClick={() => handleEditPlan(plan)} title="Edit">

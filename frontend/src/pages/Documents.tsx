@@ -79,7 +79,7 @@ function Documents() {
           <h1>Document Management</h1>
           <p className="subtitle">Manage and view quality documents</p>
         </div>
-        <button className="btn-primary">Create Document</button>
+        <button className="tw-btn tw-btn-primary">Create Document</button>
       </div>
 
       {error && <div className="error-message">{error}</div>}

@@ -243,7 +243,7 @@ function ServiceRecords() {
           <button onClick={() => {
             setFilters({ page: 1, limit: 20 });
             setSearchTerm('');
-          }} className="btn btn-secondary">
+          }} className="tw-btn tw-btn-secondary">
             Clear Filters
           </button>
         </div>
@@ -323,7 +323,7 @@ function ServiceRecords() {
                   <td>
                     <button
                       onClick={() => navigate(`/service-records/${record.id}`)}
-                      className="btn btn-sm btn-primary"
+                      className="tw-btn-small tw-btn-primary"
                     >
                       View Details
                     </button>
@@ -340,7 +340,7 @@ function ServiceRecords() {
           <button
             onClick={() => handlePageChange((filters.page || 1) - 1)}
             disabled={filters.page === 1}
-            className="btn btn-secondary"
+            className="tw-btn tw-btn-secondary"
           >
             Previous
           </button>
@@ -350,7 +350,7 @@ function ServiceRecords() {
           <button
             onClick={() => handlePageChange((filters.page || 1) + 1)}
             disabled={filters.page === totalPages}
-            className="btn btn-secondary"
+            className="tw-btn tw-btn-secondary"
           >
             Next
           </button>
