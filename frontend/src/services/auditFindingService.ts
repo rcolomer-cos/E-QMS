@@ -55,6 +55,8 @@ export const getAuditFindingsSummary = async (filters?: {
   startDate?: string;
   endDate?: string;
   processId?: number;
+  department?: string;
+  auditType?: string;
 }): Promise<{
   total: number;
   byCategory: Record<string, number>;
@@ -67,6 +69,8 @@ export const getAuditFindingsSummary = async (filters?: {
   if (filters?.startDate) params.append('startDate', filters.startDate);
   if (filters?.endDate) params.append('endDate', filters.endDate);
   if (filters?.processId) params.append('processId', filters.processId.toString());
+  if (filters?.department) params.append('department', filters.department);
+  if (filters?.auditType) params.append('auditType', filters.auditType);
 
   const response = await api.get(`/audit-findings/summary?${params.toString()}`);
   return response.data;

@@ -150,12 +150,14 @@ export const getAuditFindingStats = async (req: AuthRequest, res: Response): Pro
 
 export const getAuditFindingsSummary = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { startDate, endDate, processId } = req.query;
+    const { startDate, endDate, processId, department, auditType } = req.query;
 
     const filters: {
       startDate?: Date;
       endDate?: Date;
       processId?: number;
+      department?: string;
+      auditType?: string;
     } = {};
 
     if (startDate) {
@@ -166,6 +168,12 @@ export const getAuditFindingsSummary = async (req: AuthRequest, res: Response): 
     }
     if (processId) {
       filters.processId = parseInt(processId as string, 10);
+    }
+    if (department) {
+      filters.department = department as string;
+    }
+    if (auditType) {
+      filters.auditType = auditType as string;
     }
 
     const summary = await AuditFindingModel.getFindingsSummary(filters);

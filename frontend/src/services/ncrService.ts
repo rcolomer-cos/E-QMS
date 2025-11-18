@@ -129,7 +129,14 @@ export interface NCRMetrics {
 /**
  * Get NCR metrics for dashboard
  */
-export const getNCRMetrics = async (): Promise<NCRMetrics> => {
-  const response = await api.get<NCRMetrics>('/ncrs/metrics');
+export const getNCRMetrics = async (filters?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<NCRMetrics> => {
+  const params = new URLSearchParams();
+  if (filters?.startDate) params.append('startDate', filters.startDate);
+  if (filters?.endDate) params.append('endDate', filters.endDate);
+  
+  const response = await api.get<NCRMetrics>(`/ncrs/metrics?${params.toString()}`);
   return response.data;
 };

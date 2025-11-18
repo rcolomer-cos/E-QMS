@@ -436,9 +436,20 @@ export const getOverdueCAPAs = async (_req: AuthRequest, res: Response): Promise
   }
 };
 
-export const getCAPADashboardStats = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getCAPADashboardStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const stats = await CAPAModel.getDashboardStats();
+    const { startDate, endDate } = req.query;
+
+    const filters: { startDate?: Date; endDate?: Date } = {};
+
+    if (startDate) {
+      filters.startDate = new Date(startDate as string);
+    }
+    if (endDate) {
+      filters.endDate = new Date(endDate as string);
+    }
+
+    const stats = await CAPAModel.getDashboardStats(filters);
 
     res.json(stats);
   } catch (error) {

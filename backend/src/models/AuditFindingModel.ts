@@ -206,6 +206,8 @@ export class AuditFindingModel {
     startDate?: Date;
     endDate?: Date;
     processId?: number;
+    department?: string;
+    auditType?: string;
   }): Promise<{
     total: number;
     byCategory: Record<string, number>;
@@ -217,47 +219,69 @@ export class AuditFindingModel {
     const pool = await getConnection();
     const request = pool.request();
     let whereConditions = '1=1';
+    let joinClause = '';
 
     if (filters?.startDate) {
       request.input('startDate', sql.DateTime, filters.startDate);
-      whereConditions += ' AND identifiedDate >= @startDate';
+      whereConditions += ' AND af.identifiedDate >= @startDate';
     }
     if (filters?.endDate) {
       request.input('endDate', sql.DateTime, filters.endDate);
-      whereConditions += ' AND identifiedDate <= @endDate';
+      whereConditions += ' AND af.identifiedDate <= @endDate';
     }
     if (filters?.processId) {
       request.input('processId', sql.Int, filters.processId);
-      whereConditions += ' AND processId = @processId';
+      whereConditions += ' AND af.processId = @processId';
+    }
+    if (filters?.department) {
+      request.input('department', sql.NVarChar, filters.department);
+      whereConditions += ' AND af.department = @department';
+    }
+    if (filters?.auditType) {
+      request.input('auditType', sql.NVarChar, filters.auditType);
+      joinClause = ' INNER JOIN Audits a ON af.auditId = a.id';
+      whereConditions += ' AND a.auditType = @auditType';
     }
 
     // Get aggregated statistics
     const result = await request.query(`
       SELECT 
         COUNT(*) as total,
-        category,
-        severity,
-        status,
-        ISNULL(CAST(processId AS NVARCHAR), 'Unassigned') as processName
-      FROM AuditFindings 
+        af.category,
+        af.severity,
+        af.status,
+        ISNULL(CAST(af.processId AS NVARCHAR), 'Unassigned') as processName
+      FROM AuditFindings af${joinClause}
       WHERE ${whereConditions}
-      GROUP BY category, severity, status, processId
+      GROUP BY af.category, af.severity, af.status, af.processId
     `);
 
-    // Get time-series data (monthly aggregation)
-    const timeSeriesResult = await pool
-      .request()
-      .input('startDate', sql.DateTime, filters?.startDate)
-      .input('endDate', sql.DateTime, filters?.endDate)
-      .input('processId', sql.Int, filters?.processId)
-      .query(`
+    // Get time-series data (monthly aggregation) - need to create new request with all filters
+    const timeSeriesRequest = pool.request();
+    if (filters?.startDate) {
+      timeSeriesRequest.input('startDate', sql.DateTime, filters.startDate);
+    }
+    if (filters?.endDate) {
+      timeSeriesRequest.input('endDate', sql.DateTime, filters.endDate);
+    }
+    if (filters?.processId) {
+      timeSeriesRequest.input('processId', sql.Int, filters.processId);
+    }
+    if (filters?.department) {
+      timeSeriesRequest.input('department', sql.NVarChar, filters.department);
+    }
+    if (filters?.auditType) {
+      timeSeriesRequest.input('auditType', sql.NVarChar, filters.auditType);
+    }
+
+    const timeSeriesResult = await timeSeriesRequest.query(`
         SELECT 
-          FORMAT(identifiedDate, 'yyyy-MM') as month,
+          FORMAT(af.identifiedDate, 'yyyy-MM') as month,
           COUNT(*) as count
-        FROM AuditFindings 
+        FROM AuditFindings af${joinClause}
         WHERE ${whereConditions}
-        GROUP BY FORMAT(identifiedDate, 'yyyy-MM')
-        ORDER BY FORMAT(identifiedDate, 'yyyy-MM')
+        GROUP BY FORMAT(af.identifiedDate, 'yyyy-MM')
+        ORDER BY FORMAT(af.identifiedDate, 'yyyy-MM')
       `);
 
     const summary = {

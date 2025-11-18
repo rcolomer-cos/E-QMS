@@ -203,7 +203,9 @@ export class EquipmentModel {
     };
   }
 
-  static async getEquipmentOverviewMetrics(upcomingDays: number = 30): Promise<{
+  static async getEquipmentOverviewMetrics(upcomingDays: number = 30, filters?: {
+    department?: string;
+  }): Promise<{
     total: number;
     byStatus: Record<string, number>;
     overdue: {
@@ -218,62 +220,85 @@ export class EquipmentModel {
     };
   }> {
     const pool = await getConnection();
+    let whereConditions = '1=1';
+    
+    // Apply department filter
+    if (filters?.department) {
+      whereConditions += ` AND department = @department`;
+    }
     
     // Get total count and status breakdown
-    const statusResult = await pool
-      .request()
-      .query(`
+    const statusRequest = pool.request();
+    if (filters?.department) {
+      statusRequest.input('department', sql.NVarChar, filters.department);
+    }
+    const statusResult = await statusRequest.query(`
         SELECT 
           COUNT(*) as total,
           status,
           COUNT(*) as count
         FROM Equipment
+        WHERE ${whereConditions}
         GROUP BY status
       `);
 
     // Get total count
-    const totalResult = await pool
-      .request()
-      .query(`SELECT COUNT(*) as total FROM Equipment`);
+    const totalRequest = pool.request();
+    if (filters?.department) {
+      totalRequest.input('department', sql.NVarChar, filters.department);
+    }
+    const totalResult = await totalRequest.query(`SELECT COUNT(*) as total FROM Equipment WHERE ${whereConditions}`);
 
     // Get overdue calibration count
-    const overdueCalibrationResult = await pool
-      .request()
-      .query(`
+    const overdueCalibrationRequest = pool.request();
+    if (filters?.department) {
+      overdueCalibrationRequest.input('department', sql.NVarChar, filters.department);
+    }
+    const overdueCalibrationResult = await overdueCalibrationRequest.query(`
         SELECT COUNT(*) as count FROM Equipment 
         WHERE nextCalibrationDate IS NOT NULL 
         AND nextCalibrationDate < CAST(GETDATE() AS DATE)
+        AND ${whereConditions}
       `);
 
     // Get overdue maintenance count
-    const overdueMaintenanceResult = await pool
-      .request()
-      .query(`
+    const overdueMaintenanceRequest = pool.request();
+    if (filters?.department) {
+      overdueMaintenanceRequest.input('department', sql.NVarChar, filters.department);
+    }
+    const overdueMaintenanceResult = await overdueMaintenanceRequest.query(`
         SELECT COUNT(*) as count FROM Equipment 
         WHERE nextMaintenanceDate IS NOT NULL 
         AND nextMaintenanceDate < CAST(GETDATE() AS DATE)
+        AND ${whereConditions}
       `);
 
     // Get upcoming calibration count
-    const upcomingCalibrationResult = await pool
-      .request()
-      .input('days', sql.Int, upcomingDays)
-      .query(`
+    const upcomingCalibrationRequest = pool.request();
+    upcomingCalibrationRequest.input('days', sql.Int, upcomingDays);
+    if (filters?.department) {
+      upcomingCalibrationRequest.input('department', sql.NVarChar, filters.department);
+    }
+    const upcomingCalibrationResult = await upcomingCalibrationRequest.query(`
         SELECT COUNT(*) as count FROM Equipment 
         WHERE nextCalibrationDate IS NOT NULL 
         AND nextCalibrationDate >= CAST(GETDATE() AS DATE)
         AND nextCalibrationDate <= DATEADD(day, @days, GETDATE())
+        AND ${whereConditions}
       `);
 
     // Get upcoming maintenance count
-    const upcomingMaintenanceResult = await pool
-      .request()
-      .input('days', sql.Int, upcomingDays)
-      .query(`
+    const upcomingMaintenanceRequest = pool.request();
+    upcomingMaintenanceRequest.input('days', sql.Int, upcomingDays);
+    if (filters?.department) {
+      upcomingMaintenanceRequest.input('department', sql.NVarChar, filters.department);
+    }
+    const upcomingMaintenanceResult = await upcomingMaintenanceRequest.query(`
         SELECT COUNT(*) as count FROM Equipment 
         WHERE nextMaintenanceDate IS NOT NULL 
         AND nextMaintenanceDate >= CAST(GETDATE() AS DATE)
         AND nextMaintenanceDate <= DATEADD(day, @days, GETDATE())
+        AND ${whereConditions}
       `);
 
     // Build status breakdown

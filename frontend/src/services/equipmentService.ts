@@ -90,8 +90,13 @@ export interface EquipmentMetrics {
   };
 }
 
-export const getEquipmentMetrics = async (upcomingDays?: number): Promise<EquipmentMetrics> => {
-  const params = upcomingDays ? `?upcomingDays=${upcomingDays}` : '';
-  const response = await api.get(`/equipment/metrics${params}`);
+export const getEquipmentMetrics = async (upcomingDays?: number, filters?: {
+  department?: string;
+}): Promise<EquipmentMetrics> => {
+  const params = new URLSearchParams();
+  if (upcomingDays) params.append('upcomingDays', upcomingDays.toString());
+  if (filters?.department) params.append('department', filters.department);
+  
+  const response = await api.get(`/equipment/metrics?${params.toString()}`);
   return response.data;
 };

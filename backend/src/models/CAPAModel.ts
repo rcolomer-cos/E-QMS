@@ -145,7 +145,10 @@ export class CAPAModel {
     return result.recordset;
   }
 
-  static async getDashboardStats(): Promise<{
+  static async getDashboardStats(filters?: {
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<{
     totalOpen: number;
     totalInProgress: number;
     totalCompleted: number;
@@ -156,9 +159,24 @@ export class CAPAModel {
     byType: { type: string; count: number }[];
   }> {
     const pool = await getConnection();
+    const request = pool.request();
+    let whereConditions = '1=1';
+
+    // Apply date filters (using createdAt for CAPAs)
+    if (filters?.startDate) {
+      request.input('startDate', sql.DateTime, filters.startDate);
+      whereConditions += ' AND createdAt >= @startDate';
+    }
+    if (filters?.endDate) {
+      request.input('endDate', sql.DateTime, filters.endDate);
+      whereConditions += ' AND createdAt <= @endDate';
+    }
     
     // Get status counts
-    const statusResult = await pool.request().query(`
+    const statusResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT 
         SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as totalOpen,
         SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as totalInProgress,
@@ -167,13 +185,17 @@ export class CAPAModel {
         SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as totalClosed,
         SUM(CASE WHEN targetDate < GETDATE() AND status NOT IN ('completed', 'verified', 'closed') THEN 1 ELSE 0 END) as totalOverdue
       FROM CAPAs
+      WHERE ${whereConditions}
     `);
 
     // Get priority breakdown
-    const priorityResult = await pool.request().query(`
+    const priorityResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT priority, COUNT(*) as count
       FROM CAPAs
-      WHERE status NOT IN ('closed')
+      WHERE status NOT IN ('closed') AND ${whereConditions}
       GROUP BY priority
       ORDER BY 
         CASE priority
@@ -185,10 +207,13 @@ export class CAPAModel {
     `);
 
     // Get type breakdown
-    const typeResult = await pool.request().query(`
+    const typeResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT type, COUNT(*) as count
       FROM CAPAs
-      WHERE status NOT IN ('closed')
+      WHERE status NOT IN ('closed') AND ${whereConditions}
       GROUP BY type
     `);
 
