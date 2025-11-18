@@ -287,26 +287,26 @@ export class WebhookDeliveryModel {
   /**
    * Parse database record to WebhookDelivery object
    */
-  private static parseDelivery(record: any): WebhookDelivery {
+  private static parseDelivery(record: Record<string, unknown>): WebhookDelivery {
     return {
-      id: record.id,
-      subscriptionId: record.subscriptionId,
-      eventType: record.eventType,
-      entityType: record.entityType,
-      entityId: record.entityId,
-      requestUrl: record.requestUrl,
-      requestPayload: JSON.parse(record.requestPayload),
-      requestHeaders: record.requestHeaders ? JSON.parse(record.requestHeaders) : undefined,
-      responseStatus: record.responseStatus,
-      responseBody: record.responseBody,
-      responseTime: record.responseTime,
-      attempt: record.attempt,
-      maxAttempts: record.maxAttempts,
-      nextRetryAt: record.nextRetryAt,
-      status: record.status,
-      errorMessage: record.errorMessage,
-      createdAt: record.createdAt,
-      deliveredAt: record.deliveredAt,
+      id: record.id as number,
+      subscriptionId: record.subscriptionId as number,
+      eventType: record.eventType as string,
+      entityType: record.entityType as WebhookEntityType,
+      entityId: record.entityId as number,
+      requestUrl: record.requestUrl as string,
+      requestPayload: JSON.parse(record.requestPayload as string) as object,
+      requestHeaders: record.requestHeaders ? JSON.parse(record.requestHeaders as string) as Record<string, string> : undefined,
+      responseStatus: record.responseStatus as number | undefined,
+      responseBody: record.responseBody as string | undefined,
+      responseTime: record.responseTime as number | undefined,
+      attempt: record.attempt as number,
+      maxAttempts: record.maxAttempts as number,
+      nextRetryAt: record.nextRetryAt as Date | undefined,
+      status: record.status as WebhookDeliveryStatus,
+      errorMessage: record.errorMessage as string | undefined,
+      createdAt: record.createdAt as Date,
+      deliveredAt: record.deliveredAt as Date | undefined,
     };
   }
 }

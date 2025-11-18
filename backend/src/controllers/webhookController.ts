@@ -230,7 +230,7 @@ export const getWebhookDeliveries = async (req: AuthRequest, res: Response): Pro
     const deliveries = await WebhookDeliveryModel.findBySubscription(
       parseInt(id, 10),
       {
-        status: status as any,
+        status: status as 'pending' | 'success' | 'failed' | 'retrying' | undefined,
         limit: parseInt(limit as string, 10),
       }
     );

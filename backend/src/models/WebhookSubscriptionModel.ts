@@ -198,22 +198,22 @@ export class WebhookSubscriptionModel {
   /**
    * Parse database record to WebhookSubscription object
    */
-  private static parseSubscription(record: any): WebhookSubscription {
+  private static parseSubscription(record: Record<string, unknown>): WebhookSubscription {
     return {
-      id: record.id,
-      name: record.name,
-      url: record.url,
-      secret: record.secret,
-      events: JSON.parse(record.events),
-      active: record.active,
-      retryEnabled: record.retryEnabled,
-      maxRetries: record.maxRetries,
-      retryDelaySeconds: record.retryDelaySeconds,
-      customHeaders: record.customHeaders ? JSON.parse(record.customHeaders) : undefined,
-      createdBy: record.createdBy,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-      lastTriggeredAt: record.lastTriggeredAt,
+      id: record.id as number,
+      name: record.name as string,
+      url: record.url as string,
+      secret: record.secret as string,
+      events: JSON.parse(record.events as string) as string[],
+      active: record.active as boolean,
+      retryEnabled: record.retryEnabled as boolean,
+      maxRetries: record.maxRetries as number,
+      retryDelaySeconds: record.retryDelaySeconds as number,
+      customHeaders: record.customHeaders ? JSON.parse(record.customHeaders as string) as Record<string, string> : undefined,
+      createdBy: record.createdBy as number,
+      createdAt: record.createdAt as Date,
+      updatedAt: record.updatedAt as Date,
+      lastTriggeredAt: record.lastTriggeredAt as Date | undefined,
     };
   }
 }

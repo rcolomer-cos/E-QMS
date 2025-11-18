@@ -13,7 +13,7 @@ export type WebhookEventType =
 export interface WebhookPayload {
   event: WebhookEventType;
   timestamp: string;
-  data: any;
+  data: Record<string, unknown>;
 }
 
 export class WebhookService {
@@ -24,7 +24,7 @@ export class WebhookService {
     eventType: WebhookEventType,
     entityType: WebhookEntityType,
     entityId: number,
-    data: any
+    data: Record<string, unknown>
   ): Promise<void> {
     try {
       // Get active subscriptions for this event
@@ -125,8 +125,9 @@ export class WebhookService {
       } else {
         console.error(`Webhook delivery failed: ${eventType} to ${subscription.name} - Status: ${response.status}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       const responseTime = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
       // Create failed delivery log
       const delivery: WebhookDelivery = {
@@ -140,7 +141,7 @@ export class WebhookService {
         attempt: 1,
         maxAttempts: subscription.maxRetries,
         status: 'failed',
-        errorMessage: error.message || 'Unknown error',
+        errorMessage,
       };
 
       // Schedule retry if retry is enabled
@@ -254,13 +255,14 @@ export class WebhookService {
       }
 
       await WebhookDeliveryModel.update(delivery.id!, updates);
-    } catch (error: any) {
+    } catch (error) {
       const responseTime = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       const updates: Partial<WebhookDelivery> = {
         responseTime,
         attempt: delivery.attempt + 1,
-        errorMessage: error.message || 'Unknown error',
+        errorMessage,
       };
 
       if (delivery.attempt + 1 >= delivery.maxAttempts) {
@@ -364,11 +366,11 @@ export class WebhookService {
         responseStatus: response.status,
         responseTime,
       };
-    } catch (error: any) {
+    } catch (error) {
       const responseTime = Date.now() - startTime;
       return {
         success: false,
-        message: `Test webhook failed: ${error.message}`,
+        message: `Test webhook failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         responseTime,
       };
     }

@@ -140,13 +140,15 @@ export const updateCAPA = async (req: AuthRequest, res: Response): Promise<void>
 
     // Trigger webhook for CAPA updated event
     const updatedCapa = await CAPAModel.findById(parseInt(id, 10));
-    WebhookService.triggerEvent('capa.updated', 'CAPA', parseInt(id, 10), updatedCapa)
-      .catch(err => console.error('Webhook trigger error:', err));
-
-    // Check if CAPA was closed and trigger closed event
-    if (updates.status === 'closed' && capa.status !== 'closed') {
-      WebhookService.triggerEvent('capa.closed', 'CAPA', parseInt(id, 10), updatedCapa)
+    if (updatedCapa) {
+      WebhookService.triggerEvent('capa.updated', 'CAPA', parseInt(id, 10), updatedCapa as unknown as Record<string, unknown>)
         .catch(err => console.error('Webhook trigger error:', err));
+
+      // Check if CAPA was closed and trigger closed event
+      if (updates.status === 'closed' && capa.status !== 'closed') {
+        WebhookService.triggerEvent('capa.closed', 'CAPA', parseInt(id, 10), updatedCapa as unknown as Record<string, unknown>)
+          .catch(err => console.error('Webhook trigger error:', err));
+      }
     }
 
     res.json({ message: 'CAPA updated successfully' });

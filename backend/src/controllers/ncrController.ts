@@ -148,8 +148,10 @@ export const updateNCR = async (req: AuthRequest, res: Response): Promise<void> 
 
     // Trigger webhook for NCR updated event
     const updatedNcr = await NCRModel.findById(parseInt(id, 10));
-    WebhookService.triggerEvent('ncr.updated', 'NCR', parseInt(id, 10), updatedNcr)
-      .catch(err => console.error('Webhook trigger error:', err));
+    if (updatedNcr) {
+      WebhookService.triggerEvent('ncr.updated', 'NCR', parseInt(id, 10), updatedNcr as unknown as Record<string, unknown>)
+        .catch(err => console.error('Webhook trigger error:', err));
+    }
 
     res.json({ message: 'NCR updated successfully' });
   } catch (error) {
@@ -210,8 +212,10 @@ export const updateNCRStatus = async (req: AuthRequest, res: Response): Promise<
     // Trigger webhook for NCR closed event
     if (status === 'closed') {
       const updatedNcr = await NCRModel.findById(parseInt(id, 10));
-      WebhookService.triggerEvent('ncr.closed', 'NCR', parseInt(id, 10), updatedNcr)
-        .catch(err => console.error('Webhook trigger error:', err));
+      if (updatedNcr) {
+        WebhookService.triggerEvent('ncr.closed', 'NCR', parseInt(id, 10), updatedNcr as unknown as Record<string, unknown>)
+          .catch(err => console.error('Webhook trigger error:', err));
+      }
     }
 
     res.json({ 
