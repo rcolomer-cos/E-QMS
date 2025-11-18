@@ -10,6 +10,7 @@ export interface Process {
   processCategory?: string;
   processType?: 'main' | 'sub' | 'support';
   parentProcessId?: number | null;
+  displayOrder?: number;
   objective?: string;
   scope?: string;
   flowchartSvg?: string | null;
@@ -27,6 +28,7 @@ export interface CreateProcessData {
   processCategory?: string;
   processType?: 'main' | 'sub' | 'support';
   parentProcessId?: number | null;
+  displayOrder?: number;
   objective?: string;
   scope?: string;
   flowchartSvg?: string | null;
@@ -52,11 +54,12 @@ export class ProcessModel {
       .input('objective', sql.NVarChar, processData.objective)
       .input('scope', sql.NVarChar, processData.scope)
       .input('flowchartSvg', sql.NVarChar(sql.MAX), processData.flowchartSvg)
+      .input('displayOrder', sql.Int, processData.displayOrder)
       .input('createdBy', sql.Int, processData.createdBy)
       .query(`
-        INSERT INTO Processes (name, code, description, departmentId, processCategory, processType, parentProcessId, objective, scope, flowchartSvg, active, createdBy)
+        INSERT INTO Processes (name, code, description, departmentId, processCategory, processType, parentProcessId, displayOrder, objective, scope, flowchartSvg, active, createdBy)
         OUTPUT INSERTED.id
-        VALUES (@name, @code, @description, @departmentId, @processCategory, @processType, @parentProcessId, @objective, @scope, @flowchartSvg, 1, @createdBy)
+        VALUES (@name, @code, @description, @departmentId, @processCategory, @processType, @parentProcessId, @displayOrder, @objective, @scope, @flowchartSvg, 1, @createdBy)
       `);
 
     return result.recordset[0].id;
@@ -72,8 +75,23 @@ export class ProcessModel {
       .input('id', sql.Int, id)
       .query(`
         SELECT 
-          p.*,
-          d.name as departmentName
+          p.id,
+          p.name,
+          p.code,
+          p.description,
+          p.departmentId,
+          d.name as departmentName,
+          p.processCategory,
+          COALESCE(p.processType, 'main') as processType,
+          p.parentProcessId,
+          COALESCE(p.displayOrder, 0) as displayOrder,
+          p.objective,
+          p.scope,
+          p.flowchartSvg,
+          p.active,
+          p.createdAt,
+          p.updatedAt,
+          p.createdBy
         FROM Processes p
         LEFT JOIN Departments d ON p.departmentId = d.id
         WHERE p.id = @id AND p.active = 1
@@ -96,8 +114,23 @@ export class ProcessModel {
       .input('code', sql.NVarChar, code.toUpperCase())
       .query(`
         SELECT 
-          p.*,
-          d.name as departmentName
+          p.id,
+          p.name,
+          p.code,
+          p.description,
+          p.departmentId,
+          d.name as departmentName,
+          p.processCategory,
+          COALESCE(p.processType, 'main') as processType,
+          p.parentProcessId,
+          COALESCE(p.displayOrder, 0) as displayOrder,
+          p.objective,
+          p.scope,
+          p.flowchartSvg,
+          p.active,
+          p.createdAt,
+          p.updatedAt,
+          p.createdBy
         FROM Processes p
         LEFT JOIN Departments d ON p.departmentId = d.id
         WHERE p.code = @code AND p.active = 1
@@ -143,12 +176,35 @@ export class ProcessModel {
       .request()
       .query(`
         SELECT 
-          p.*,
-          d.name as departmentName
+          p.id,
+          p.name,
+          p.code,
+          p.description,
+          p.departmentId,
+          d.name as departmentName,
+          p.processCategory,
+          COALESCE(p.processType, 'main') as processType,
+          p.parentProcessId,
+          COALESCE(p.displayOrder, 0) as displayOrder,
+          p.objective,
+          p.scope,
+          p.flowchartSvg,
+          p.active,
+          p.createdAt,
+          p.updatedAt,
+          p.createdBy
         FROM Processes p
         LEFT JOIN Departments d ON p.departmentId = d.id
         WHERE p.active = 1
-        ORDER BY p.name
+        ORDER BY 
+          CASE 
+            WHEN COALESCE(p.processType, 'main') = 'main' THEN 1 
+            WHEN COALESCE(p.processType, 'main') = 'support' THEN 2 
+            WHEN COALESCE(p.processType, 'main') = 'sub' THEN 3 
+            ELSE 4 
+          END,
+          ISNULL(p.displayOrder, 999999),
+          p.name
       `);
 
     return result.recordset;
@@ -201,6 +257,10 @@ export class ProcessModel {
     if (updates.flowchartSvg !== undefined) {
       request.input('flowchartSvg', sql.NVarChar(sql.MAX), updates.flowchartSvg);
       fields.push('flowchartSvg = @flowchartSvg');
+    }
+    if (updates.displayOrder !== undefined) {
+      request.input('displayOrder', sql.Int, updates.displayOrder);
+      fields.push('displayOrder = @displayOrder');
     }
 
     if (fields.length > 0) {

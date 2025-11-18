@@ -3,12 +3,13 @@ import { Process, ProcessOwner } from '../types';
 
 export interface CreateProcessData {
   name: string;
-  code: string;
+  code?: string;
   description?: string;
   departmentId?: number;
   processCategory?: string;
   processType?: 'main' | 'sub' | 'support';
   parentProcessId?: number | null;
+  displayOrder?: number;
   objective?: string;
   scope?: string;
   flowchartSvg?: string | null;
@@ -22,6 +23,7 @@ export interface UpdateProcessData {
   processCategory?: string;
   processType?: 'main' | 'sub' | 'support';
   parentProcessId?: number | null;
+  displayOrder?: number;
   objective?: string;
   scope?: string;
   flowchartSvg?: string | null;

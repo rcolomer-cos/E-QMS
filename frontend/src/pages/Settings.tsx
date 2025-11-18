@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getCurrentUser } from '../services/authService';
 import CompanyBranding from './CompanyBranding';
-import Processes from './Processes';
+import ProcessManagement from './ProcessManagement';
 import Users from './Users';
 import '../styles/Settings.css';
 
@@ -106,7 +106,7 @@ function Settings() {
           {activeTab === 'processes' && (
             <div className="tab-panel" role="tabpanel">
               {canProcesses ? (
-                <Processes />
+                <ProcessManagement />
               ) : (
                 <div className="no-results">You do not have permission to manage Processes.</div>
               )}

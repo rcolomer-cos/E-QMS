@@ -7,7 +7,6 @@ import { NotificationService } from '../services/notificationService';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 import { DocumentContentModel } from '../models/DocumentContentModel';
 import PDFDocument from 'pdfkit';
-import { createReadStream } from 'fs';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

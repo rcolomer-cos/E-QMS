@@ -110,15 +110,18 @@
 }
 
 .cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0;
   margin: 1rem 0;
 }
 
 .process-card {
   background: #fff;
   border: 1px solid #ecf0f1;
+    min-width: 200px;
+    flex: 0 1 auto;
   border-radius: 8px;
   padding: 1rem;
   cursor: pointer;
@@ -138,11 +141,11 @@
 
 .type-badge {
   display: inline-block;
-  padding: 0.2rem 0.5rem;
+  padding: 0.4rem 0.75rem;
   background-color: #f1c40f;
   color: #2c3e50;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
@@ -484,4 +487,55 @@
   .modal-content {
     padding: 1.5rem;
   }
+}
+
+.process-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f39c12;
+  flex: 0 0 40px;
+  height: 60px;
+  margin: 0 0.5rem;
+}
+
+.process-arrow svg {
+  width: 40px;
+  height: 60px;
+}
+
+/* Main card with its subprocesses below */
+.main-with-subs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.down-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f39c12;
+  margin: 0.25rem 0;
+  height: 24px;
+}
+
+.sub-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.sub-row .process-card {
+  min-width: 220px;
+}
+
+.sub-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f39c12;
+  height: 24px;
 }

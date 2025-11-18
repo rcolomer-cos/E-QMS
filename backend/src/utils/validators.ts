@@ -257,9 +257,10 @@ export const validateProcess = [
     .isLength({ min: 1, max: 200 })
     .withMessage('Process name is required and must not exceed 200 characters'),
   body('code')
+    .optional({ nullable: true })
     .trim()
     .isLength({ min: 1, max: 50 })
-    .withMessage('Process code is required and must not exceed 50 characters')
+    .withMessage('Process code must not exceed 50 characters')
     .matches(/^[A-Z0-9_-]+$/)
     .withMessage('Process code must contain only uppercase letters, numbers, hyphens, and underscores'),
   body('description')
@@ -276,6 +277,20 @@ export const validateProcess = [
     .trim()
     .isLength({ max: 100 })
     .withMessage('Process category must not exceed 100 characters'),
+  body('processType')
+    .optional()
+    .isIn(['main', 'support', 'sub'])
+    .withMessage("Invalid processType. Must be one of: 'main', 'support', 'sub'"),
+  body('parentProcessId')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('parentProcessId must be a positive integer')
+    .toInt(),
+  body('displayOrder')
+    .optional({ nullable: true })
+    .isInt({ min: 0 })
+    .withMessage('displayOrder must be a non-negative integer')
+    .toInt(),
   body('objective')
     .optional()
     .trim()
@@ -315,6 +330,20 @@ export const validateProcessUpdate = [
     .trim()
     .isLength({ max: 100 })
     .withMessage('Process category must not exceed 100 characters'),
+  body('processType')
+    .optional()
+    .isIn(['main', 'support', 'sub'])
+    .withMessage("Invalid processType. Must be one of: 'main', 'support', 'sub'"),
+  body('parentProcessId')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('parentProcessId must be a positive integer')
+    .toInt(),
+  body('displayOrder')
+    .optional({ nullable: true })
+    .isInt({ min: 0 })
+    .withMessage('displayOrder must be a non-negative integer')
+    .toInt(),
   body('objective')
     .optional()
     .trim()

@@ -227,6 +227,7 @@ export interface Process {
   processCategory?: string;
   processType?: 'main' | 'sub' | 'support';
   parentProcessId?: number | null;
+  displayOrder?: number;
   objective?: string;
   scope?: string;
   flowchartSvg?: string | null;

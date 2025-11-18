@@ -74,9 +74,39 @@ export const createProcess = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const { name, code, description, departmentId, processCategory, processType, parentProcessId, objective, scope, flowchartSvg } = req.body;
+    let { name, code, description, departmentId, processCategory, processType, parentProcessId, displayOrder, objective, scope, flowchartSvg } = req.body;
 
-    // Check if process code already exists
+    // Defaults: ensure non-null values for critical fields
+    if (!processType) {
+      processType = 'main';
+    }
+    if (displayOrder === undefined || displayOrder === null) {
+      try {
+        const { getConnection } = await import('../config/database');
+        const pool = await getConnection();
+        const next = await pool.request().query('SELECT ISNULL(MAX(displayOrder), 0) + 10 AS nextOrder FROM Processes');
+        displayOrder = next.recordset?.[0]?.nextOrder ?? 10;
+      } catch {
+        displayOrder = 10;
+      }
+    }
+
+    // Auto-generate code if missing: 50-char uppercase alphanumeric
+    const genCode = async (): Promise<string> => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const rand = (len: number) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      for (let i = 0; i < 5; i++) {
+        const candidate = rand(50);
+        const exists = await ProcessModel.codeExists(candidate);
+        if (!exists) return candidate;
+      }
+      return rand(50);
+    };
+    if (!code || typeof code !== 'string' || code.trim().length === 0) {
+      code = await genCode();
+    }
+
+    // Check if process code already exists (after generation)
     const codeExists = await ProcessModel.codeExists(code);
     if (codeExists) {
       res.status(409).json({ error: 'Process with this code already exists' });
@@ -99,6 +129,7 @@ export const createProcess = async (req: AuthRequest, res: Response): Promise<vo
       processCategory,
       processType,
       parentProcessId,
+      displayOrder,
       objective,
       scope,
       flowchartSvg,
@@ -140,7 +171,7 @@ export const updateProcess = async (req: AuthRequest, res: Response): Promise<vo
 
     const { id } = req.params;
     const processId = parseInt(id, 10);
-    const { name, code, description, departmentId, processCategory, processType, parentProcessId, objective, scope, flowchartSvg } = req.body;
+    const { name, code, description, departmentId, processCategory, processType, parentProcessId, displayOrder, objective, scope, flowchartSvg } = req.body;
 
     const process = await ProcessModel.findById(processId);
     if (!process) {
@@ -174,6 +205,7 @@ export const updateProcess = async (req: AuthRequest, res: Response): Promise<vo
       processCategory,
       processType,
       parentProcessId,
+      displayOrder,
       objective,
       scope,
       flowchartSvg,
