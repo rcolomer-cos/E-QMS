@@ -4,6 +4,7 @@ import { AuthRequest, NCRStatus } from '../types';
 import { validationResult } from 'express-validator';
 import { addImpactScores } from '../services/ncrService';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
+import { WebhookService } from '../services/webhookService';
 
 export const createNCR = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -32,6 +33,12 @@ export const createNCR = async (req: AuthRequest, res: Response): Promise<void> 
       entityIdentifier: ncr.ncrNumber,
       newValues: ncr,
     });
+
+    // Trigger webhook for NCR created event
+    WebhookService.triggerEvent('ncr.created', 'NCR', ncrId, {
+      id: ncrId,
+      ...ncr,
+    }).catch(err => console.error('Webhook trigger error:', err));
 
     res.status(201).json({
       message: 'NCR created successfully',
@@ -139,6 +146,13 @@ export const updateNCR = async (req: AuthRequest, res: Response): Promise<void> 
       newValues: updates,
     });
 
+    // Trigger webhook for NCR updated event
+    const updatedNcr = await NCRModel.findById(parseInt(id, 10));
+    if (updatedNcr) {
+      WebhookService.triggerEvent('ncr.updated', 'NCR', parseInt(id, 10), updatedNcr as unknown as Record<string, unknown>)
+        .catch(err => console.error('Webhook trigger error:', err));
+    }
+
     res.json({ message: 'NCR updated successfully' });
   } catch (error) {
     console.error('Update NCR error:', error);
@@ -194,6 +208,15 @@ export const updateNCRStatus = async (req: AuthRequest, res: Response): Promise<
       newValues: { status },
       actionDescription: `NCR status changed from ${ncr.status} to ${status}`,
     });
+
+    // Trigger webhook for NCR closed event
+    if (status === 'closed') {
+      const updatedNcr = await NCRModel.findById(parseInt(id, 10));
+      if (updatedNcr) {
+        WebhookService.triggerEvent('ncr.closed', 'NCR', parseInt(id, 10), updatedNcr as unknown as Record<string, unknown>)
+          .catch(err => console.error('Webhook trigger error:', err));
+      }
+    }
 
     res.json({ 
       message: 'NCR status updated successfully',

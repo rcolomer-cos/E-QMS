@@ -3,6 +3,7 @@ import { CAPAModel, CAPA } from '../models/CAPAModel';
 import { AuthRequest, CAPAStatus } from '../types';
 import { validationResult } from 'express-validator';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
+import { WebhookService } from '../services/webhookService';
 
 export const createCAPA = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -31,6 +32,12 @@ export const createCAPA = async (req: AuthRequest, res: Response): Promise<void>
       entityIdentifier: capa.capaNumber,
       newValues: capa,
     });
+
+    // Trigger webhook for CAPA created event
+    WebhookService.triggerEvent('capa.created', 'CAPA', capaId, {
+      id: capaId,
+      ...capa,
+    }).catch(err => console.error('Webhook trigger error:', err));
 
     res.status(201).json({
       message: 'CAPA created successfully',
@@ -130,6 +137,19 @@ export const updateCAPA = async (req: AuthRequest, res: Response): Promise<void>
       oldValues: capa,
       newValues: updates,
     });
+
+    // Trigger webhook for CAPA updated event
+    const updatedCapa = await CAPAModel.findById(parseInt(id, 10));
+    if (updatedCapa) {
+      WebhookService.triggerEvent('capa.updated', 'CAPA', parseInt(id, 10), updatedCapa as unknown as Record<string, unknown>)
+        .catch(err => console.error('Webhook trigger error:', err));
+
+      // Check if CAPA was closed and trigger closed event
+      if (updates.status === 'closed' && capa.status !== 'closed') {
+        WebhookService.triggerEvent('capa.closed', 'CAPA', parseInt(id, 10), updatedCapa as unknown as Record<string, unknown>)
+          .catch(err => console.error('Webhook trigger error:', err));
+      }
+    }
 
     res.json({ message: 'CAPA updated successfully' });
   } catch (error) {
