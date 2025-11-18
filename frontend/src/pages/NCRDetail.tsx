@@ -358,6 +358,39 @@ function NCRDetail() {
           )}
         </div>
 
+        {/* Linked Inspection Record */}
+        {ncr.inspectionRecordId && (
+          <div className="content-section">
+            <h2>Linked Inspection Record</h2>
+            <div className="info-grid">
+              <div className="info-item">
+                <label>Inspection Record ID</label>
+                <p>
+                  <button 
+                    className="btn-link"
+                    onClick={() => navigate(`/inspection-records/${ncr.inspectionRecordId}`)}
+                    style={{ 
+                      color: '#007bff', 
+                      textDecoration: 'underline', 
+                      cursor: 'pointer',
+                      border: 'none',
+                      background: 'none',
+                      padding: 0,
+                      font: 'inherit'
+                    }}
+                  >
+                    #{ncr.inspectionRecordId} - View Inspection Record
+                  </button>
+                </p>
+              </div>
+              <div className="info-item">
+                <label>Source</label>
+                <p>This NCR was created from a failed inspection</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Status Management */}
         {!isEditing && canEdit && (
           <div className="content-section">

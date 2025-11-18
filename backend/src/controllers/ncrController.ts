@@ -301,3 +301,22 @@ export const getNCRClassificationOptions = async (_req: AuthRequest, res: Respon
     res.status(500).json({ error: 'Failed to get NCR classification options' });
   }
 };
+
+export const getNCRsByInspectionRecord = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { inspectionRecordId } = req.params;
+
+    const ncrs = await NCRModel.findByInspectionRecordId(parseInt(inspectionRecordId, 10));
+
+    // Add impact scores to NCRs
+    const ncrsWithImpact = addImpactScores(ncrs);
+
+    res.json({
+      data: ncrsWithImpact,
+      count: ncrsWithImpact.length,
+    });
+  } catch (error) {
+    console.error('Get NCRs by inspection record error:', error);
+    res.status(500).json({ error: 'Failed to get NCRs for inspection record' });
+  }
+};

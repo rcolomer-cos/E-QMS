@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getInspectionRecordById, InspectionRecord } from '../services/inspectionRecordService';
+import { getInspectionRecordById, InspectionRecord, createNCRFromInspection } from '../services/inspectionRecordService';
 import { getEquipmentById, Equipment } from '../services/equipmentService';
 import { getAttachmentsByEntity, Attachment, getAttachmentDownloadUrl } from '../services/attachmentService';
+import { getNCRsByInspectionRecord } from '../services/ncrService';
+import { NCR } from '../types';
 import '../styles/RecordDetail.css';
 
 function InspectionRecordDetail() {
@@ -11,9 +13,13 @@ function InspectionRecordDetail() {
   const [record, setRecord] = useState<InspectionRecord | null>(null);
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [linkedNCRs, setLinkedNCRs] = useState<NCR[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showNCRModal, setShowNCRModal] = useState(false);
+  const [creatingNCR, setCreatingNCR] = useState(false);
+  const [ncrError, setNcrError] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -38,6 +44,14 @@ function InspectionRecordDetail() {
         setAttachments(attachmentData.data);
       } catch (err) {
         console.error('Failed to load attachments:', err);
+      }
+
+      // Load linked NCRs
+      try {
+        const ncrData = await getNCRsByInspectionRecord(parseInt(id!));
+        setLinkedNCRs(ncrData.data);
+      } catch (err) {
+        console.error('Failed to load linked NCRs:', err);
       }
       
       setError('');
@@ -109,6 +123,29 @@ function InspectionRecordDetail() {
     }
   };
 
+  const handleCreateNCR = async () => {
+    if (!id) return;
+
+    try {
+      setCreatingNCR(true);
+      setNcrError('');
+      
+      const result = await createNCRFromInspection(parseInt(id));
+      
+      // Reload the inspection record data to show the newly created NCR
+      await loadData();
+      
+      // Close modal and navigate to the new NCR
+      setShowNCRModal(false);
+      alert(`NCR ${result.ncrNumber} created successfully!`);
+      navigate(`/ncrs/${result.id}`);
+    } catch (err: any) {
+      setNcrError(err.response?.data?.error || 'Failed to create NCR');
+    } finally {
+      setCreatingNCR(false);
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading inspection record...</div>;
   }
@@ -131,9 +168,20 @@ function InspectionRecordDetail() {
           <h1>Inspection Record Details</h1>
           <p className="record-id">Record ID: {record.id}</p>
         </div>
-        <button onClick={() => navigate('/inspection-records')} className="btn btn-secondary">
-          Back to List
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {(record.result === 'failed' || !record.passed) && linkedNCRs.length === 0 && (
+            <button 
+              onClick={() => setShowNCRModal(true)} 
+              className="btn btn-danger"
+              title="Create Non-Conformance Report from this failed inspection"
+            >
+              Create NCR
+            </button>
+          )}
+          <button onClick={() => navigate('/inspection-records')} className="btn btn-secondary">
+            Back to List
+          </button>
+        </div>
       </div>
 
       <div className="detail-sections">
@@ -359,6 +407,43 @@ function InspectionRecordDetail() {
           </section>
         )}
 
+        {/* Linked NCRs */}
+        {linkedNCRs.length > 0 && (
+          <section className="detail-section">
+            <h2>Linked Non-Conformance Reports</h2>
+            <div className="ncr-list">
+              {linkedNCRs.map((ncr) => (
+                <div key={ncr.id} className="ncr-item" style={{ 
+                  padding: '15px', 
+                  border: '1px solid #ddd', 
+                  borderRadius: '4px', 
+                  marginBottom: '10px',
+                  cursor: 'pointer',
+                  backgroundColor: '#f8f9fa'
+                }}
+                onClick={() => navigate(`/ncrs/${ncr.id}`)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong>{ncr.ncrNumber}</strong> - {ncr.title}
+                      <div style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                        {ncr.description.substring(0, 150)}...
+                      </div>
+                    </div>
+                    <span className={`badge ${
+                      ncr.status === 'closed' ? 'badge-success' : 
+                      ncr.status === 'in_progress' ? 'badge-warning' : 
+                      'badge-danger'
+                    }`}>
+                      {ncr.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Revision History */}
         <section className="detail-section">
           <h2>Revision History</h2>
@@ -387,6 +472,67 @@ function InspectionRecordDetail() {
               ✕
             </button>
             <img src={selectedImage} alt="Full size inspection photo" />
+          </div>
+        </div>
+      )}
+
+      {/* NCR Creation Modal */}
+      {showNCRModal && (
+        <div className="modal-overlay" onClick={() => setShowNCRModal(false)} style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '8px',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <h2>Create NCR from Inspection</h2>
+            <p style={{ marginBottom: '20px', color: '#666' }}>
+              This will create a Non-Conformance Report pre-filled with information from this failed inspection.
+            </p>
+
+            {ncrError && (
+              <div className="alert alert-danger" style={{ marginBottom: '20px' }}>
+                {ncrError}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '20px' }}>
+              <p><strong>Inspection Type:</strong> {record.inspectionType}</p>
+              <p><strong>Equipment:</strong> {equipment?.name || 'N/A'} ({equipment?.equipmentNumber || 'N/A'})</p>
+              <p><strong>Inspection Date:</strong> {formatDate(record.inspectionDate)}</p>
+              <p><strong>Severity:</strong> {record.severity || 'N/A'}</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setShowNCRModal(false)} 
+                className="btn btn-secondary"
+                disabled={creatingNCR}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleCreateNCR} 
+                className="btn btn-danger"
+                disabled={creatingNCR}
+              >
+                {creatingNCR ? 'Creating NCR...' : 'Create NCR'}
+              </button>
+            </div>
           </div>
         </div>
       )}

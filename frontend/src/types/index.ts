@@ -132,6 +132,7 @@ export interface NCR {
   verifiedBy?: number;
   verifiedDate?: string;
   closedDate?: string;
+  inspectionRecordId?: number;
   createdAt?: string;
   updatedAt?: string;
 }

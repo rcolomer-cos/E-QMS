@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { InspectionRecordModel, InspectionRecord, InspectionStatus, InspectionResult } from '../models/InspectionRecordModel';
-import { AuthRequest } from '../types';
+import { NCRModel, NCR } from '../models/NCRModel';
+import { AuthRequest, NCRStatus } from '../types';
 import { validationResult } from 'express-validator';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 
@@ -167,5 +168,74 @@ export const deleteInspectionRecord = async (req: AuthRequest, res: Response): P
   } catch (error) {
     console.error('Delete inspection record error:', error);
     res.status(500).json({ error: 'Failed to delete inspection record' });
+  }
+};
+
+export const createNCRFromInspection = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const inspectionRecordId = parseInt(id, 10);
+
+    // Check if inspection record exists
+    const inspectionRecord = await InspectionRecordModel.findById(inspectionRecordId);
+    if (!inspectionRecord) {
+      res.status(404).json({ error: 'Inspection record not found' });
+      return;
+    }
+
+    // Generate NCR number
+    const timestamp = Date.now();
+    const ncrNumber = `NCR-INS-${inspectionRecordId}-${timestamp}`;
+
+    // Prepare NCR data from inspection record
+    const ncrData: NCR = {
+      ncrNumber,
+      title: req.body.title || `Failed Inspection - Equipment ${inspectionRecord.equipmentId} - ${inspectionRecord.inspectionType}`,
+      description: req.body.description || 
+        `Non-conformance detected during inspection.\n\nInspection Type: ${inspectionRecord.inspectionType}\nInspection Date: ${new Date(inspectionRecord.inspectionDate).toLocaleDateString()}\n\nFindings: ${inspectionRecord.findings || 'N/A'}\nDefects Found: ${inspectionRecord.defectsFound || 'N/A'}`,
+      source: req.body.source || 'inspection',
+      category: req.body.category || 'product',
+      status: NCRStatus.OPEN,
+      severity: req.body.severity || inspectionRecord.severity || 'major',
+      detectedDate: new Date(inspectionRecord.inspectionDate),
+      reportedBy: req.user.id,
+      assignedTo: req.body.assignedTo,
+      inspectionRecordId,
+    };
+
+    // Create NCR
+    const ncrId = await NCRModel.create(ncrData);
+
+    // Log audit entry
+    await logCreate({
+      req,
+      actionCategory: AuditActionCategory.NCR,
+      entityType: 'NCR',
+      entityId: ncrId,
+      entityIdentifier: ncrNumber,
+      newValues: ncrData,
+      actionDescription: `NCR created from inspection record ${inspectionRecordId}`,
+    });
+
+    res.status(201).json({
+      message: 'NCR created successfully from inspection record',
+      id: ncrId,
+      ncrNumber,
+    });
+  } catch (error) {
+    console.error('Create NCR from inspection error:', error);
+    res.status(500).json({ error: 'Failed to create NCR from inspection record' });
   }
 };
