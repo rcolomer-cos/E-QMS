@@ -112,10 +112,10 @@ export const updateSystemSetting = async (req: AuthRequest, res: Response): Prom
       message: 'Setting updated successfully',
       setting: newSetting,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update system setting error:', error);
     res.status(500).json({ 
-      error: error.message || 'Failed to update system setting' 
+      error: error instanceof Error ? error.message : 'Failed to update system setting' 
     });
   }
 };
@@ -145,7 +145,7 @@ export const batchUpdateSystemSettings = async (req: AuthRequest, res: Response)
     }
 
     // Get old values for audit log
-    const oldValues: Record<string, any> = {};
+    const oldValues: Record<string, string | null> = {};
     for (const update of settings) {
       const oldSetting = await SystemSettingsModel.findByKey(update.key);
       if (oldSetting) {
@@ -157,7 +157,7 @@ export const batchUpdateSystemSettings = async (req: AuthRequest, res: Response)
     await SystemSettingsModel.batchUpdate(settings);
 
     // Get new values
-    const newValues: Record<string, any> = {};
+    const newValues: Record<string, string | null> = {};
     for (const update of settings) {
       const newSetting = await SystemSettingsModel.findByKey(update.key);
       if (newSetting) {
@@ -180,10 +180,10 @@ export const batchUpdateSystemSettings = async (req: AuthRequest, res: Response)
       message: `${settings.length} settings updated successfully`,
       updatedCount: settings.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Batch update system settings error:', error);
     res.status(500).json({ 
-      error: error.message || 'Failed to batch update system settings' 
+      error: error instanceof Error ? error.message : 'Failed to batch update system settings' 
     });
   }
 };
