@@ -6,6 +6,8 @@ export interface DocumentFilters {
   category?: string;
   documentType?: string;
   search?: string;
+  processId?: number;
+  includeSubProcesses?: boolean;
 }
 
 export const getDocuments = async (filters?: DocumentFilters): Promise<Document[]> => {
@@ -14,6 +16,8 @@ export const getDocuments = async (filters?: DocumentFilters): Promise<Document[
   if (filters?.status) params.append('status', filters.status);
   if (filters?.category) params.append('category', filters.category);
   if (filters?.documentType) params.append('documentType', filters.documentType);
+  if (filters?.processId) params.append('processId', String(filters.processId));
+  if (filters?.includeSubProcesses) params.append('includeSubProcesses', 'true');
   
   const response = await api.get(`/documents?${params.toString()}`);
   return response.data;
@@ -107,5 +111,40 @@ export const createDocumentRevision = async (
   }
 ): Promise<{ revisionId: number }> => {
   const response = await api.post(`/documents/${id}/revisions`, revision);
+  return response.data;
+};
+
+export interface DocumentContentPayload {
+  content: string;
+  contentFormat: 'html' | 'prosemirror';
+}
+
+export const getDocumentContent = async (id: number): Promise<DocumentContentPayload & { documentId: number } > => {
+  const response = await api.get(`/documents/${id}/content`);
+  return response.data;
+};
+
+export const saveDocumentContent = async (id: number, payload: DocumentContentPayload): Promise<void> => {
+  await api.put(`/documents/${id}/content`, payload);
+};
+
+export const uploadContentImage = async (id: number, file: File): Promise<{ url: string } > => {
+  const formData = new FormData();
+  formData.append('file', file);
+  // Optionally hint server foldering
+  formData.append('entityType', 'general');
+  const response = await api.post(`/documents/${id}/content-images`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+export const exportDocumentPdf = async (id: number): Promise<Blob> => {
+  const response = await api.post(`/documents/${id}/export-pdf`, {}, { responseType: 'blob' });
+  return response.data;
+};
+
+export const getDocumentProcesses = async (id: number): Promise<any[]> => {
+  const response = await api.get(`/documents/${id}/processes`);
   return response.data;
 };

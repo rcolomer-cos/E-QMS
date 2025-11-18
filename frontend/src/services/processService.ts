@@ -7,8 +7,11 @@ export interface CreateProcessData {
   description?: string;
   departmentId?: number;
   processCategory?: string;
+  processType?: 'main' | 'sub' | 'support';
+  parentProcessId?: number | null;
   objective?: string;
   scope?: string;
+  flowchartSvg?: string | null;
 }
 
 export interface UpdateProcessData {
@@ -17,8 +20,11 @@ export interface UpdateProcessData {
   description?: string;
   departmentId?: number;
   processCategory?: string;
+  processType?: 'main' | 'sub' | 'support';
+  parentProcessId?: number | null;
   objective?: string;
   scope?: string;
+  flowchartSvg?: string | null;
 }
 
 export interface AssignProcessOwnerData {
@@ -89,4 +95,26 @@ export const assignProcessOwner = async (
  */
 export const removeProcessOwner = async (processId: number, ownerId: number): Promise<void> => {
   await api.delete(`/processes/${processId}/owners/${ownerId}`);
+};
+
+/**
+ * Get all documents linked to a process
+ */
+export const getProcessDocuments = async (processId: number): Promise<any[]> => {
+  const response = await api.get(`/processes/${processId}/documents`);
+  return response.data;
+};
+
+/**
+ * Link a document to a process
+ */
+export const linkDocumentToProcess = async (processId: number, documentId: number): Promise<void> => {
+  await api.post(`/processes/${processId}/documents`, { documentId });
+};
+
+/**
+ * Unlink a document from a process
+ */
+export const unlinkDocumentFromProcess = async (processId: number, documentId: number): Promise<void> => {
+  await api.delete(`/processes/${processId}/documents/${documentId}`);
 };

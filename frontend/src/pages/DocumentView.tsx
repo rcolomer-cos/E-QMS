@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getDocumentById, getDocumentVersionHistory, getDocumentRevisionHistory, uploadDocumentFile, downloadDocumentFile } from '../services/documentService';
+import { getDocumentById, getDocumentVersionHistory, getDocumentRevisionHistory, uploadDocumentFile, downloadDocumentFile, getDocumentProcesses } from '../services/documentService';
 import { Document, DocumentRevision } from '../types';
 import FileUpload from '../components/FileUpload';
 import '../styles/DocumentView.css';
@@ -11,10 +11,12 @@ function DocumentView() {
   const [document, setDocument] = useState<Document | null>(null);
   const [versionHistory, setVersionHistory] = useState<Document[]>([]);
   const [revisionHistory, setRevisionHistory] = useState<DocumentRevision[]>([]);
+  const [linkedProcesses, setLinkedProcesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showRevisionHistory, setShowRevisionHistory] = useState(false);
+  const [showLinkedProcesses, setShowLinkedProcesses] = useState(false);
   const [showUploadSection, setShowUploadSection] = useState(false);
 
   useEffect(() => {
@@ -26,14 +28,16 @@ function DocumentView() {
   const loadDocument = async (documentId: number) => {
     try {
       setLoading(true);
-      const [docData, versions, revisions] = await Promise.all([
+      const [docData, versions, revisions, processes] = await Promise.all([
         getDocumentById(documentId),
         getDocumentVersionHistory(documentId),
         getDocumentRevisionHistory(documentId),
+        getDocumentProcesses(documentId),
       ]);
       setDocument(docData);
       setVersionHistory(versions);
       setRevisionHistory(revisions);
+      setLinkedProcesses(processes);
       setError('');
     } catch (err) {
       console.error('Failed to load document:', err);
@@ -117,7 +121,7 @@ function DocumentView() {
           <p className="subtitle">{document.description || 'No description provided'}</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary">Edit</button>
+          <button className="btn-secondary" onClick={() => navigate(`/documents/${id}/edit`)}>Edit</button>
           <button className="btn-secondary">Create New Version</button>
           {!document.fileName && (
             <button 
@@ -306,6 +310,61 @@ function DocumentView() {
                                 View
                               </button>
                             )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Linked Processes Section */}
+          <section className="document-section">
+            <div className="section-header">
+              <h2>Linked Processes</h2>
+              <button
+                className="btn-toggle"
+                onClick={() => setShowLinkedProcesses(!showLinkedProcesses)}
+              >
+                {showLinkedProcesses ? 'Hide' : 'Show'} ({linkedProcesses.length} processes)
+              </button>
+            </div>
+            
+            {showLinkedProcesses && (
+              <div className="linked-processes">
+                {linkedProcesses.length === 0 ? (
+                  <p className="no-data">Not linked to any processes</p>
+                ) : (
+                  <table className="version-table">
+                    <thead>
+                      <tr>
+                        <th>Process Code</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Linked Date</th>
+                        <th>Linked By</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {linkedProcesses.map((proc: any) => (
+                        <tr key={proc.id}>
+                          <td>
+                            <span className="code-badge">{proc.code}</span>
+                          </td>
+                          <td>{proc.name}</td>
+                          <td>{proc.processType || 'N/A'}</td>
+                          <td>{formatDateTime(proc.linkedAt)}</td>
+                          <td>{proc.linkedByName || 'N/A'}</td>
+                          <td>
+                            <button
+                              className="btn-small"
+                              onClick={() => navigate(`/processes/${proc.id}/detail`)}
+                            >
+                              View Process
+                            </button>
                           </td>
                         </tr>
                       ))}

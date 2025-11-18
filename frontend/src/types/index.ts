@@ -1,8 +1,15 @@
+export interface RoleRef {
+  id: number;
+  name: string;
+}
+
 export interface User {
   id: number;
   username: string;
   email: string;
-  role: string;
+  role?: string; // legacy single-role support
+  roles?: RoleRef[]; // preferred: array of roles
+  roleNames?: string[]; // optional convenience from backend
   firstName?: string;
   lastName?: string;
   department?: string;
@@ -218,8 +225,11 @@ export interface Process {
   departmentId?: number;
   departmentName?: string;
   processCategory?: string;
+  processType?: 'main' | 'sub' | 'support';
+  parentProcessId?: number | null;
   objective?: string;
   scope?: string;
+  flowchartSvg?: string | null;
   active: boolean;
   createdAt?: string;
   updatedAt?: string;

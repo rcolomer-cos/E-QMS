@@ -62,6 +62,29 @@
   border-color: #667eea;
 }
 
+.form-group.checkbox-group {
+  margin-bottom: 1rem;
+}
+
+.form-group.checkbox-group label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+
+.form-group.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.form-group.checkbox-group span {
+  user-select: none;
+}
+
 .error-message {
   background-color: #f8d7da;
   color: #721c24;

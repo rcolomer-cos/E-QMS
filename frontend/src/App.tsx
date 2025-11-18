@@ -5,6 +5,7 @@ import Setup from './pages/Setup';
 import Dashboard from './pages/Dashboard';
 import Documents from './pages/Documents';
 import DocumentView from './pages/DocumentView';
+import DocumentEditor from './pages/DocumentEditor';
 import PendingChanges from './pages/PendingChanges';
 import Audits from './pages/Audits';
 import AuditExecution from './pages/AuditExecution';
@@ -23,6 +24,9 @@ import RoleTrainingRequirements from './pages/RoleTrainingRequirements';
 import Users from './pages/Users';
 import Departments from './pages/Departments';
 import Processes from './pages/Processes';
+import ProcessOverview from './pages/ProcessOverview';
+import ProcessDetail from './pages/ProcessDetail';
+import Settings from './pages/Settings';
 import CalibrationRecords from './pages/CalibrationRecords';
 import CalibrationRecordDetail from './pages/CalibrationRecordDetail';
 import InspectionRecords from './pages/InspectionRecords';
@@ -70,6 +74,7 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="documents" element={<Documents />} />
         <Route path="documents/:id" element={<DocumentView />} />
+        <Route path="documents/:id/edit" element={<DocumentEditor />} />
         <Route path="pending-changes" element={<PendingChanges />} />
         <Route path="audits" element={<Audits />} />
         <Route path="audits/:id/execute" element={<AuditExecution />} />
@@ -87,6 +92,8 @@ function App() {
         <Route path="users" element={<Users />} />
         <Route path="departments" element={<Departments />} />
         <Route path="processes" element={<Processes />} />
+        <Route path="processes/overview" element={<ProcessOverview />} />
+        <Route path="processes/:id/detail" element={<ProcessDetail />} />
         <Route path="calibration-records" element={<CalibrationRecords />} />
         <Route path="calibration-records/:id" element={<CalibrationRecordDetail />} />
         <Route path="inspection-records" element={<InspectionRecords />} />
@@ -109,6 +116,7 @@ function App() {
         <Route path="improvement-ideas/:id" element={<ImprovementIdeaDetail />} />
         <Route path="email-templates" element={<EmailTemplates />} />
         <Route path="backup-management" element={<BackupManagement />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="system-settings" element={<SystemSettings />} />
         <Route path="company-branding" element={<CompanyBranding />} />
         <Route path="api-keys" element={<ApiKeys />} />

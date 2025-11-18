@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../services/authService';
+import { login, getRememberMe } from '../services/authService';
+import { useToast } from '../contexts/ToastContext';
 import { getInitStatus } from '../services/systemService';
 import '../styles/Login.css';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState<boolean>(getRememberMe());
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(() => {
     // If the system needs setup, redirect to setup page
@@ -34,15 +37,28 @@ function Login() {
 
     try {
       console.log('Calling login API...');
-      const result = await login({ email, password });
+      const result = await login({ email, password, rememberMe });
       console.log('Login successful:', result);
+      const name = result?.user?.firstName || result?.user?.email || 'Welcome';
+      toast.success(`Welcome, ${name}!`);
       navigate('/');
     } catch (err: any) {
       console.error('Login error:', err);
       console.error('Error response:', err.response);
       console.error('Error message:', err.message);
-      const errorMessage = err.response?.data?.error || err.message || 'Invalid credentials. Please try again.';
+      const data = err?.response?.data;
+      const status = err?.response?.status;
+      const derived =
+        (typeof data === 'string' && data) ||
+        data?.error ||
+        data?.message ||
+        (status === 429 ? 'Too many attempts. Please try again later.' : undefined) ||
+        err.message ||
+        'Invalid credentials. Please try again.';
+      const errorMessage = derived;
       setError(errorMessage);
+      // Show toast for quick visual feedback
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -76,6 +92,17 @@ function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+          </div>
+
+          <div className="form-group checkbox-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span>Remember me</span>
+            </label>
           </div>
 
           {error && <div className="error-message">{error}</div>}

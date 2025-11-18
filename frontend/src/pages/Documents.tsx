@@ -1,24 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDocuments, DocumentFilters } from '../services/documentService';
-import { Document } from '../types';
+import { Document, Process } from '../types';
+import { getProcesses } from '../services/processService';
 import '../styles/Documents.css';
 
 function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
+  const [processes, setProcesses] = useState<Process[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState<DocumentFilters>({
     status: '',
     category: '',
     documentType: '',
+    processId: undefined,
+    includeSubProcesses: true,
   });
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     loadDocuments();
+    loadProcesses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
@@ -39,6 +44,15 @@ function Documents() {
       setError(error.response?.data?.error || 'Failed to load documents');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadProcesses = async () => {
+    try {
+      const data = await getProcesses();
+      setProcesses(data);
+    } catch (err) {
+      console.error('Failed to load processes:', err);
     }
   };
 
@@ -66,6 +80,17 @@ function Documents() {
 
   const handleFilterChange = (key: keyof DocumentFilters, value: string) => {
     setFilters({ ...filters, [key]: value });
+  };
+
+  const handleProcessFilterChange = (value: string) => {
+    setFilters({
+      ...filters,
+      processId: value ? parseInt(value, 10) : undefined,
+    });
+  };
+
+  const handleIncludeSubToggle = (checked: boolean) => {
+    setFilters({ ...filters, includeSubProcesses: checked });
   };
 
   if (loading) {
@@ -96,6 +121,28 @@ function Documents() {
         </div>
 
         <div className="filters">
+          <select
+            value={filters.processId || ''}
+            onChange={(e) => handleProcessFilterChange(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">All Processes</option>
+            {processes.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.code})
+              </option>
+            ))}
+          </select>
+
+          <label className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={!!filters.includeSubProcesses}
+              onChange={(e) => handleIncludeSubToggle(e.target.checked)}
+            />
+            Include subprocesses
+          </label>
+
           <select
             value={filters.status}
             onChange={(e) => handleFilterChange('status', e.target.value)}

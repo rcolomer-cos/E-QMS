@@ -14,6 +14,7 @@ import {
 import { getDepartments } from '../services/departmentService';
 import { getUsers } from '../services/userService';
 import { Process, Department, ProcessOwner, User } from '../types';
+import { getCurrentUser } from '../services/authService';
 import '../styles/Processes.css';
 
 const Processes = () => {
@@ -27,12 +28,15 @@ const Processes = () => {
   const [editingProcess, setEditingProcess] = useState<Process | null>(null);
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
   const [processOwners, setProcessOwners] = useState<ProcessOwner[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<CreateProcessData>({
     name: '',
     code: '',
     description: '',
     departmentId: undefined,
     processCategory: '',
+    processType: 'main',
+    parentProcessId: null,
     objective: '',
     scope: '',
   });
@@ -44,6 +48,7 @@ const Processes = () => {
 
   useEffect(() => {
     loadData();
+    setCurrentUser(getCurrentUser());
   }, []);
 
   const loadData = async () => {
@@ -74,6 +79,8 @@ const Processes = () => {
         description: process.description || '',
         departmentId: process.departmentId,
         processCategory: process.processCategory || '',
+        processType: process.processType || 'main',
+        parentProcessId: process.parentProcessId ?? null,
         objective: process.objective || '',
         scope: process.scope || '',
       });
@@ -85,6 +92,8 @@ const Processes = () => {
         description: '',
         departmentId: undefined,
         processCategory: '',
+        processType: 'main',
+        parentProcessId: null,
         objective: '',
         scope: '',
       });
@@ -101,6 +110,8 @@ const Processes = () => {
       description: '',
       departmentId: undefined,
       processCategory: '',
+      processType: 'main',
+      parentProcessId: null,
       objective: '',
       scope: '',
     });
@@ -116,6 +127,8 @@ const Processes = () => {
           description: formData.description,
           departmentId: formData.departmentId,
           processCategory: formData.processCategory,
+          processType: formData.processType,
+          parentProcessId: formData.parentProcessId,
           objective: formData.objective,
           scope: formData.scope,
         };
@@ -221,9 +234,11 @@ const Processes = () => {
       <div className="page-header">
         <h1>Process Management</h1>
         <p className="subtitle">Manage organizational processes</p>
-        <button className="btn-add" onClick={() => handleOpenModal()}>
-          Add Process
-        </button>
+        {currentUser?.role === 'admin' && (
+          <button className="btn-add" onClick={() => handleOpenModal()}>
+            Add Process
+          </button>
+        )}
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -234,6 +249,8 @@ const Processes = () => {
             <tr>
               <th>Code</th>
               <th>Name</th>
+              <th>Type</th>
+              <th>Parent</th>
               <th>Department</th>
               <th>Category</th>
               <th>Description</th>
@@ -248,18 +265,22 @@ const Processes = () => {
                   <span className="code-badge">{proc.code}</span>
                 </td>
                 <td>{proc.name}</td>
+                <td>{proc.processType || 'N/A'}</td>
+                <td>{proc.parentProcessId ? processes.find(p => p.id === proc.parentProcessId)?.name || proc.parentProcessId : '-'}</td>
                 <td>{proc.departmentName || 'N/A'}</td>
                 <td>{proc.processCategory || 'N/A'}</td>
                 <td>{proc.description || 'N/A'}</td>
                 <td>{formatDate(proc.createdAt)}</td>
                 <td className="actions-cell">
-                  <button
-                    onClick={() => handleOpenModal(proc)}
-                    className="btn-edit"
-                    title="Edit Process"
-                  >
-                    Edit
-                  </button>
+                  {currentUser?.role === 'admin' && (
+                    <button
+                      onClick={() => handleOpenModal(proc)}
+                      className="btn-edit"
+                      title="Edit Process"
+                    >
+                      Edit
+                    </button>
+                  )}
                   <button
                     onClick={() => handleOpenOwnersModal(proc)}
                     className="btn-secondary"
@@ -267,19 +288,21 @@ const Processes = () => {
                   >
                     Owners
                   </button>
-                  <button
-                    onClick={() => handleDelete(proc.id)}
-                    className="btn-delete"
-                    title="Delete Process"
-                  >
-                    Delete
-                  </button>
+                  {currentUser?.role === 'admin' && (
+                    <button
+                      onClick={() => handleDelete(proc.id)}
+                      className="btn-delete"
+                      title="Delete Process"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
             {processes.length === 0 && (
               <tr>
-                <td colSpan={7} className="no-data">
+                <td colSpan={9} className="no-data">
                   No processes found
                 </td>
               </tr>
@@ -317,6 +340,43 @@ const Processes = () => {
                   maxLength={100}
                   placeholder="Process name"
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="processType">Type *</label>
+                <select
+                  id="processType"
+                  value={formData.processType || 'main'}
+                  onChange={(e) => setFormData({ ...formData, processType: e.target.value as any })}
+                  required
+                >
+                  <option value="main">Main</option>
+                  <option value="sub">Sub</option>
+                  <option value="support">Support</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="parentProcessId">Parent Process</label>
+                <select
+                  id="parentProcessId"
+                  value={formData.parentProcessId ?? ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      parentProcessId: e.target.value ? parseInt(e.target.value, 10) : null,
+                    })
+                  }
+                >
+                  <option value="">No Parent</option>
+                  {processes
+                    .filter((p) => p.id !== editingProcess?.id)
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.code})
+                      </option>
+                    ))}
+                </select>
               </div>
 
               <div className="form-group">

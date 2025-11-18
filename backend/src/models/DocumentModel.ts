@@ -71,10 +71,12 @@ export class DocumentModel {
     status?: DocumentStatus;
     category?: string;
     documentType?: string;
+    processId?: number;
+    includeSubProcesses?: boolean;
   }): Promise<Document[]> {
     const pool = await getConnection();
     const request = pool.request();
-    let query = 'SELECT * FROM Documents WHERE 1=1';
+    let query = 'SELECT d.* FROM Documents d WHERE 1=1';
 
     if (filters?.status) {
       request.input('status', sql.NVarChar, filters.status);
@@ -86,10 +88,45 @@ export class DocumentModel {
     }
     if (filters?.documentType) {
       request.input('documentType', sql.NVarChar, filters.documentType);
-      query += ' AND documentType = @documentType';
+      query += ' AND d.documentType = @documentType';
     }
 
-    query += ' ORDER BY createdAt DESC';
+    // Filter by process linkage if provided
+    if (filters?.processId) {
+      request.input('processId', sql.Int, filters.processId);
+      if (filters?.includeSubProcesses) {
+        // Include descendants via recursive CTE
+        query = `
+          WITH Descendants AS (
+            SELECT id FROM Processes WHERE id = @processId AND active = 1
+            UNION ALL
+            SELECT p.id FROM Processes p
+            INNER JOIN Descendants dsc ON p.parentProcessId = dsc.id
+            WHERE p.active = 1
+          )
+          SELECT d.*
+          FROM Documents d
+          INNER JOIN ProcessDocuments pd ON pd.documentId = d.id
+          INNER JOIN Descendants pr ON pr.id = pd.processId
+          WHERE 1=1`;
+        if (filters?.status) {
+          request.input('status', sql.NVarChar, filters.status);
+          query += ' AND d.status = @status';
+        }
+        if (filters?.category) {
+          request.input('category', sql.NVarChar, filters.category);
+          query += ' AND d.category = @category';
+        }
+        if (filters?.documentType) {
+          // already bound
+          query += ' AND d.documentType = @documentType';
+        }
+      } else {
+        query += ' AND EXISTS (SELECT 1 FROM ProcessDocuments pd WHERE pd.documentId = d.id AND pd.processId = @processId)';
+      }
+    }
+
+    query += ' ORDER BY d.createdAt DESC';
 
     const result = await request.query(query);
     return result.recordset;

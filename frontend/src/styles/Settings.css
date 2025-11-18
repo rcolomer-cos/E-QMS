@@ -1,0 +1,205 @@
+.settings-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+}
+
+.subtitle {
+  color: #7f8c8d;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.search-container {
+  margin-bottom: 2rem;
+}
+
+.settings-search {
+  width: 100%;
+  max-width: 500px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.settings-search:focus {
+  outline: none;
+  border-color: #9b59b6;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.settings-card {
+  background: white;
+  border: 2px solid #ecf0f1;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.settings-card:hover {
+  border-color: #9b59b6;
+  box-shadow: 0 4px 12px rgba(155, 89, 182, 0.15);
+  transform: translateY(-2px);
+}
+
+.settings-card-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #ecf0f1 100%);
+  border-radius: 12px;
+}
+
+.settings-card-content {
+  flex: 1;
+}
+
+.settings-card-content h3 {
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.settings-card-content p {
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.settings-card-arrow {
+  font-size: 1.5rem;
+  color: #9b59b6;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.settings-card:hover .settings-card-arrow {
+  transform: translateX(4px);
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: #7f8c8d;
+}
+
+.no-results p {
+  font-size: 1.1rem;
+}
+
+/* Tabs */
+.settings-tabs {
+  margin-top: 1rem;
+}
+
+.tab-list {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid #ecf0f1;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.tab:hover {
+  color: #9b59b6;
+}
+
+.tab.active {
+  border-color: #9b59b6;
+  color: #9b59b6;
+}
+
+.tab-panels {
+  background: #fff;
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.tab-panel {
+  width: 100%;
+}
+
+.tab-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  padding: 2px 8px;
+}
+
+.tab.active .tab-badge {
+  color: #7c3aed;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 1rem;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .settings-card {
+    padding: 1rem;
+  }
+
+  .settings-card-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+  }
+
+  .settings-card-content h3 {
+    font-size: 1rem;
+  }
+
+  .settings-card-content p {
+    font-size: 0.85rem;
+  }
+}

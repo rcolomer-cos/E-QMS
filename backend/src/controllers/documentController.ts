@@ -5,6 +5,9 @@ import { validationResult } from 'express-validator';
 import { getConnection } from '../config/database';
 import { NotificationService } from '../services/notificationService';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
+import { DocumentContentModel } from '../models/DocumentContentModel';
+import PDFDocument from 'pdfkit';
+import { createReadStream } from 'fs';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -48,12 +51,14 @@ export const createDocument = async (req: AuthRequest, res: Response): Promise<v
 
 export const getDocuments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { status, category, documentType } = req.query;
+    const { status, category, documentType, processId, includeSubProcesses } = req.query as Record<string, string>;
 
     const documents = await DocumentModel.findAll({
       status: status as DocumentStatus | undefined,
       category: category as string | undefined,
       documentType: documentType as string | undefined,
+      processId: processId ? parseInt(processId, 10) : undefined,
+      includeSubProcesses: includeSubProcesses === 'true',
     });
 
     res.json(documents);
@@ -296,6 +301,143 @@ export const getDocumentRevisionHistory = async (req: AuthRequest, res: Response
   }
 };
 
+export const getDocumentContent = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    const content = await DocumentContentModel.getByDocumentId(documentId);
+    res.json(content || { documentId, content: '', contentFormat: 'prosemirror' });
+  } catch (error) {
+    console.error('Get document content error:', error);
+    res.status(500).json({ error: 'Failed to get document content' });
+  }
+};
+
+export const upsertDocumentContent = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { content, contentFormat } = req.body as { content: string; contentFormat: 'html' | 'prosemirror' };
+
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    await DocumentContentModel.upsert({ documentId, content, contentFormat, updatedBy: req.user.id });
+
+    res.json({ message: 'Content saved' });
+  } catch (error) {
+    console.error('Upsert document content error:', error);
+    res.status(500).json({ error: 'Failed to save document content' });
+  }
+};
+
+export const uploadDocumentContentImage = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Return a URL that frontend can use in the editor; here we use file path
+    res.status(201).json({
+      message: 'Image uploaded',
+      url: `/uploads/${req.file.filename}`,
+      filePath: req.file.path,
+      fileName: req.file.originalname,
+    });
+  } catch (error) {
+    console.error('Upload content image error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+};
+
+export const exportDocumentPdf = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    const content = await DocumentContentModel.getByDocumentId(documentId);
+
+    // Basic PDF export using PDFKit (text-only for this iteration)
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('error', (e) => console.error('PDF error:', e));
+
+    // Watermark: UNCONTROLLED COPY diagonally on each page
+    const addWatermark = () => {
+      const { width, height } = doc.page;
+      doc.save();
+      doc.rotate(-45, { origin: [width / 2, height / 2] });
+      doc.fontSize(50).fillColor('#cccccc').opacity(0.3).text('UNCONTROLLED COPY', width / 2 - 200, height / 2, {
+        align: 'center',
+      });
+      doc.opacity(1).fillColor('#000000');
+      doc.restore();
+    };
+
+    addWatermark();
+
+    doc.font('Helvetica-Bold').fontSize(16).text(document.title);
+    doc.moveDown();
+    doc.font('Helvetica').fontSize(10).text(`Version: ${document.version} | Status: ${document.status}`);
+    doc.moveDown();
+
+    const raw = (content?.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    doc.fontSize(12).text(raw, { align: 'left' });
+
+    doc.on('pageAdded', addWatermark);
+    doc.end();
+
+    const buffer = await new Promise<Buffer>((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+    });
+
+    const fileName = `${document.title.replace(/[^a-zA-Z0-9_-]/g, '_')}-v${document.version}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.status(200).send(buffer);
+  } catch (error) {
+    console.error('Export document PDF error:', error);
+    res.status(500).json({ error: 'Failed to export PDF' });
+  }
+};
 export const createDocumentRevision = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -545,5 +687,36 @@ export const requestChangesDocument = async (req: AuthRequest, res: Response): P
   } catch (error) {
     console.error('Request changes error:', error);
     res.status(500).json({ error: 'Failed to request changes' });
+  }
+};
+
+export const getDocumentProcesses = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input('documentId', documentId)
+      .query(`
+        SELECT 
+          p.id,
+          p.name,
+          p.code,
+          p.processType,
+          pd.linkedAt,
+          u.firstName + ' ' + u.lastName as linkedByName
+        FROM ProcessDocuments pd
+        INNER JOIN Processes p ON pd.processId = p.id
+        LEFT JOIN Users u ON pd.linkedBy = u.id
+        WHERE pd.documentId = @documentId AND p.active = 1
+        ORDER BY pd.linkedAt DESC
+      `);
+
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Get document processes error:', error);
+    res.status(500).json({ error: 'Failed to fetch document processes' });
   }
 };

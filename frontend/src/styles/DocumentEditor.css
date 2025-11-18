@@ -1,0 +1,8 @@
+.document-editor-page { padding: 16px; }
+.editor-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+.editor-toolbar button, .editor-toolbar .image-upload span { padding: 6px 10px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+.editor-toolbar .is-active { background: #eef; border-color: #99c; }
+.editor-container { border: 1px solid #ddd; min-height: 400px; padding: 12px; border-radius: 6px; background: #fff; }
+.editor-status { margin-top: 8px; color: #666; font-size: 12px; }
+.btn-back { margin-bottom: 8px; }
+.header-actions { display: flex; gap: 8px; }

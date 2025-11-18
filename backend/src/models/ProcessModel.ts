@@ -8,8 +8,11 @@ export interface Process {
   departmentId?: number;
   departmentName?: string; // Populated when fetched with department info
   processCategory?: string;
+  processType?: 'main' | 'sub' | 'support';
+  parentProcessId?: number | null;
   objective?: string;
   scope?: string;
+  flowchartSvg?: string | null;
   active: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -22,8 +25,11 @@ export interface CreateProcessData {
   description?: string;
   departmentId?: number;
   processCategory?: string;
+  processType?: 'main' | 'sub' | 'support';
+  parentProcessId?: number | null;
   objective?: string;
   scope?: string;
+  flowchartSvg?: string | null;
   createdBy: number;
 }
 
@@ -41,13 +47,16 @@ export class ProcessModel {
       .input('description', sql.NVarChar, processData.description)
       .input('departmentId', sql.Int, processData.departmentId)
       .input('processCategory', sql.NVarChar, processData.processCategory)
+      .input('processType', sql.NVarChar, processData.processType)
+      .input('parentProcessId', sql.Int, processData.parentProcessId)
       .input('objective', sql.NVarChar, processData.objective)
       .input('scope', sql.NVarChar, processData.scope)
+      .input('flowchartSvg', sql.NVarChar(sql.MAX), processData.flowchartSvg)
       .input('createdBy', sql.Int, processData.createdBy)
       .query(`
-        INSERT INTO Processes (name, code, description, departmentId, processCategory, objective, scope, active, createdBy)
+        INSERT INTO Processes (name, code, description, departmentId, processCategory, processType, parentProcessId, objective, scope, flowchartSvg, active, createdBy)
         OUTPUT INSERTED.id
-        VALUES (@name, @code, @description, @departmentId, @processCategory, @objective, @scope, 1, @createdBy)
+        VALUES (@name, @code, @description, @departmentId, @processCategory, @processType, @parentProcessId, @objective, @scope, @flowchartSvg, 1, @createdBy)
       `);
 
     return result.recordset[0].id;
@@ -173,6 +182,14 @@ export class ProcessModel {
       request.input('processCategory', sql.NVarChar, updates.processCategory);
       fields.push('processCategory = @processCategory');
     }
+    if (updates.processType !== undefined) {
+      request.input('processType', sql.NVarChar, updates.processType);
+      fields.push('processType = @processType');
+    }
+    if (updates.parentProcessId !== undefined) {
+      request.input('parentProcessId', sql.Int, updates.parentProcessId as number | null);
+      fields.push('parentProcessId = @parentProcessId');
+    }
     if (updates.objective !== undefined) {
       request.input('objective', sql.NVarChar, updates.objective);
       fields.push('objective = @objective');
@@ -180,6 +197,10 @@ export class ProcessModel {
     if (updates.scope !== undefined) {
       request.input('scope', sql.NVarChar, updates.scope);
       fields.push('scope = @scope');
+    }
+    if (updates.flowchartSvg !== undefined) {
+      request.input('flowchartSvg', sql.NVarChar(sql.MAX), updates.flowchartSvg);
+      fields.push('flowchartSvg = @flowchartSvg');
     }
 
     if (fields.length > 0) {
@@ -233,5 +254,83 @@ export class ProcessModel {
 
     const result = await request.query(query);
     return result.recordset[0].count > 0;
+  }
+
+  /**
+   * Get all documents linked to a process
+   */
+  static async getLinkedDocuments(processId: number): Promise<any[]> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input('processId', sql.Int, processId)
+      .query(`
+        SELECT 
+          d.id,
+          d.title,
+          d.documentType,
+          d.category,
+          d.version,
+          d.status,
+          d.createdAt,
+          pd.linkedAt,
+          u.firstName + ' ' + u.lastName as linkedByName
+        FROM ProcessDocuments pd
+        INNER JOIN Documents d ON pd.documentId = d.id
+        LEFT JOIN Users u ON pd.linkedBy = u.id
+        WHERE pd.processId = @processId
+        ORDER BY pd.linkedAt DESC
+      `);
+
+    return result.recordset;
+  }
+
+  /**
+   * Check if a document is already linked to a process
+   */
+  static async documentLinkExists(processId: number, documentId: number): Promise<boolean> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input('processId', sql.Int, processId)
+      .input('documentId', sql.Int, documentId)
+      .query(`
+        SELECT COUNT(*) as count 
+        FROM ProcessDocuments 
+        WHERE processId = @processId AND documentId = @documentId
+      `);
+
+    return result.recordset[0].count > 0;
+  }
+
+  /**
+   * Link a document to a process
+   */
+  static async linkDocument(processId: number, documentId: number, linkedBy: number): Promise<void> {
+    const pool = await getConnection();
+    await pool
+      .request()
+      .input('processId', sql.Int, processId)
+      .input('documentId', sql.Int, documentId)
+      .input('linkedBy', sql.Int, linkedBy)
+      .query(`
+        INSERT INTO ProcessDocuments (processId, documentId, linkedBy, linkedAt)
+        VALUES (@processId, @documentId, @linkedBy, GETDATE())
+      `);
+  }
+
+  /**
+   * Unlink a document from a process
+   */
+  static async unlinkDocument(processId: number, documentId: number): Promise<void> {
+    const pool = await getConnection();
+    await pool
+      .request()
+      .input('processId', sql.Int, processId)
+      .input('documentId', sql.Int, documentId)
+      .query(`
+        DELETE FROM ProcessDocuments 
+        WHERE processId = @processId AND documentId = @documentId
+      `);
   }
 }

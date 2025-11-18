@@ -6,6 +6,27 @@ import '../styles/Layout.css';
 function Layout() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const roleNames: string[] = ((user?.roles?.map(r => r.name)) || (user?.role ? [user.role as string] : [])) as string[];
+  const normalizeRole = (name: string) => {
+    const n = (name || '').toLowerCase();
+    if (n === 'administrator' || n.startsWith('admin')) return 'admin';
+    if (n === 'super user' || n === 'super-user' || n.startsWith('super')) return 'superuser';
+    if (n.startsWith('manager')) return 'manager';
+    if (n.startsWith('auditor')) return 'auditor';
+    return n;
+  };
+  const roleNamesLower = roleNames.map(normalizeRole);
+  const hasRole = (r: string) => roleNamesLower.includes(r.toLowerCase());
+  const isAdminOrManagerOrSuper = hasRole('admin') || hasRole('manager') || hasRole('superuser');
+  const canSeeRoleRequirements = isAdminOrManagerOrSuper;
+  const canSeeExternalAudit = isAdminOrManagerOrSuper || hasRole('auditor');
+  const canSeeSettings = isAdminOrManagerOrSuper;
+
+  const rolePriority = ['superuser', 'admin', 'manager', 'auditor', 'user', 'viewer'];
+  const highestRoleLower = rolePriority.find(r => hasRole(r)) || '';
+  const highestRoleTitle = highestRoleLower
+    ? highestRoleLower.charAt(0).toUpperCase() + highestRoleLower.slice(1)
+    : '';
   const { branding } = useBranding();
 
   const handleLogout = () => {
@@ -36,6 +57,7 @@ function Layout() {
         <ul className="navbar-menu">
           <li><Link to="/">Dashboard</Link></li>
           <li><Link to="/documents">Documents</Link></li>
+          <li><Link to="/processes/overview">Processes</Link></li>
           <li><Link to="/pending-changes">Pending Changes</Link></li>
           <li><Link to="/audits">Audits</Link></li>
           <li><Link to="/ncr">NCR</Link></li>
@@ -46,31 +68,25 @@ function Layout() {
           <li><Link to="/inspection-mobile">Mobile Inspection</Link></li>
           <li><Link to="/training">Training</Link></li>
           <li><Link to="/training-matrix">Training Matrix</Link></li>
-          {(user?.role === 'admin' || user?.role === 'manager') && (
+          {canSeeRoleRequirements && (
             <li><Link to="/role-training-requirements">Role Requirements</Link></li>
           )}
-          {(user?.role === 'admin' || user?.role === 'manager' || user?.role === 'auditor') && (
+          {canSeeExternalAudit && (
             <li><Link to="/external-audit-support">External Audit</Link></li>
           )}
-          {user?.role === 'admin' && (
-            <>
-              <li><Link to="/departments">Departments</Link></li>
-              <li><Link to="/processes">Processes</Link></li>
-              <li><Link to="/users">Users</Link></li>
-              <li><Link to="/api-keys">API Keys</Link></li>
-              <li><Link to="/email-templates">Email Templates</Link></li>
-              <li><Link to="/backup-management">Backup & Restore</Link></li>
-              <li><Link to="/system-settings">System Settings</Link></li>
-              <li><Link to="/company-branding">Company Branding</Link></li>
-              <li><Link to="/audit-logs">Audit Logs</Link></li>
-            </>
-          )}
-          {user?.role === 'manager' && (
-            <li><Link to="/audit-logs">Audit Logs</Link></li>
+          {canSeeSettings && (
+            <li><Link to="/settings">Settings</Link></li>
           )}
         </ul>
         <div className="navbar-user">
-          <span>{user?.username} ({user?.role})</span>
+          <span className="user-info">
+            <span className="user-name">
+              {user?.firstName && user?.lastName 
+                ? `${user.firstName} ${user.lastName}` 
+                : user?.username}
+            </span>
+            <span className="user-role">{highestRoleTitle}</span>
+          </span>
           <button onClick={handleLogout}>Logout</button>
         </div>
       </nav>

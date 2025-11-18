@@ -74,7 +74,7 @@ export const createProcess = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const { name, code, description, departmentId, processCategory, objective, scope } = req.body;
+    const { name, code, description, departmentId, processCategory, processType, parentProcessId, objective, scope, flowchartSvg } = req.body;
 
     // Check if process code already exists
     const codeExists = await ProcessModel.codeExists(code);
@@ -97,8 +97,11 @@ export const createProcess = async (req: AuthRequest, res: Response): Promise<vo
       description,
       departmentId,
       processCategory,
+      processType,
+      parentProcessId,
       objective,
       scope,
+      flowchartSvg,
       createdBy: req.user.id,
     };
 
@@ -137,7 +140,7 @@ export const updateProcess = async (req: AuthRequest, res: Response): Promise<vo
 
     const { id } = req.params;
     const processId = parseInt(id, 10);
-    const { name, code, description, departmentId, processCategory, objective, scope } = req.body;
+    const { name, code, description, departmentId, processCategory, processType, parentProcessId, objective, scope, flowchartSvg } = req.body;
 
     const process = await ProcessModel.findById(processId);
     if (!process) {
@@ -169,8 +172,11 @@ export const updateProcess = async (req: AuthRequest, res: Response): Promise<vo
       description,
       departmentId,
       processCategory,
+      processType,
+      parentProcessId,
       objective,
       scope,
+      flowchartSvg,
     };
 
     await ProcessModel.update(processId, updates);
@@ -342,5 +348,106 @@ export const removeProcessOwner = async (req: AuthRequest, res: Response): Promi
   } catch (error) {
     console.error('Remove process owner error:', error);
     res.status(500).json({ error: 'Failed to remove process owner' });
+  }
+};
+
+/**
+ * Get all documents linked to a process
+ */
+export const getProcessDocuments = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const processId = parseInt(id, 10);
+
+    const process = await ProcessModel.findById(processId);
+    if (!process) {
+      res.status(404).json({ error: 'Process not found' });
+      return;
+    }
+
+    const documents = await ProcessModel.getLinkedDocuments(processId);
+    res.json(documents);
+  } catch (error) {
+    console.error('Get process documents error:', error);
+    res.status(500).json({ error: 'Failed to fetch process documents' });
+  }
+};
+
+/**
+ * Link a document to a process
+ */
+export const linkDocumentToProcess = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const processId = parseInt(id, 10);
+    const { documentId } = req.body;
+
+    if (!documentId) {
+      res.status(400).json({ error: 'documentId is required' });
+      return;
+    }
+
+    // Verify process exists
+    const process = await ProcessModel.findById(processId);
+    if (!process) {
+      res.status(404).json({ error: 'Process not found' });
+      return;
+    }
+
+    // Check if link already exists
+    const linkExists = await ProcessModel.documentLinkExists(processId, documentId);
+    if (linkExists) {
+      res.status(409).json({ error: 'Document is already linked to this process' });
+      return;
+    }
+
+    await ProcessModel.linkDocument(processId, documentId, req.user.id);
+
+    res.status(201).json({ message: 'Document linked to process successfully' });
+  } catch (error) {
+    console.error('Link document to process error:', error);
+    res.status(500).json({ error: 'Failed to link document to process' });
+  }
+};
+
+/**
+ * Unlink a document from a process
+ */
+export const unlinkDocumentFromProcess = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id, documentId } = req.params;
+    const processId = parseInt(id, 10);
+    const docId = parseInt(documentId, 10);
+
+    // Verify process exists
+    const process = await ProcessModel.findById(processId);
+    if (!process) {
+      res.status(404).json({ error: 'Process not found' });
+      return;
+    }
+
+    // Check if link exists
+    const linkExists = await ProcessModel.documentLinkExists(processId, docId);
+    if (!linkExists) {
+      res.status(404).json({ error: 'Document link not found' });
+      return;
+    }
+
+    await ProcessModel.unlinkDocument(processId, docId);
+
+    res.json({ message: 'Document unlinked from process successfully' });
+  } catch (error) {
+    console.error('Unlink document from process error:', error);
+    res.status(500).json({ error: 'Failed to unlink document from process' });
   }
 };
