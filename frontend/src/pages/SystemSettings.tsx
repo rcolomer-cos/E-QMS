@@ -53,9 +53,10 @@ const SystemSettings = () => {
         initialFormState[setting.settingKey] = setting.settingValue || '';
       });
       setFormState(initialFormState);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading system settings:', err);
-      setError(err.response?.data?.error || 'Failed to load system settings');
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to load system settings');
     } finally {
       setLoading(false);
     }
@@ -98,9 +99,10 @@ const SystemSettings = () => {
 
       // Reload settings to get fresh data
       await loadSettings();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving system settings:', err);
-      setError(err.response?.data?.error || 'Failed to save system settings');
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to save system settings');
     } finally {
       setSaving(false);
     }

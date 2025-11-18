@@ -41,12 +41,23 @@ export class SystemSettingsModel {
 
     const result = await request.query(query);
 
-    return result.recordset.map((row: any) => ({
+    return result.recordset.map((row: {
+      id: number;
+      setting_key: string;
+      setting_value: string | null;
+      setting_type: string;
+      category: string;
+      display_name: string;
+      description?: string;
+      is_editable: boolean;
+      created_at?: Date;
+      updated_at?: Date;
+    }): SystemSetting => ({
       id: row.id,
       settingKey: row.setting_key,
       settingValue: row.setting_value,
-      settingType: row.setting_type,
-      category: row.category,
+      settingType: row.setting_type as SystemSetting['settingType'],
+      category: row.category as SystemSetting['category'],
       displayName: row.display_name,
       description: row.description,
       isEditable: row.is_editable,
