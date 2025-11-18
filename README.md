@@ -154,6 +154,16 @@ E-QMS/
 - `POST /api/auth/refresh` - Refresh JWT token (authenticated, extends token expiry)
 - `GET /api/auth/profile` - Get user profile (authenticated)
 
+### API Key Management
+- `POST /api/api-keys` - Generate new API key (admin/superuser only)
+- `GET /api/api-keys` - List all API keys (admin/superuser only)
+- `GET /api/api-keys/:id` - Get API key details (admin/superuser only)
+- `PUT /api/api-keys/:id` - Update API key (admin/superuser only)
+- `POST /api/api-keys/:id/revoke` - Revoke API key (admin/superuser only)
+- `DELETE /api/api-keys/:id` - Delete API key (admin/superuser only)
+
+For detailed API key usage instructions, see [API_KEY_MANAGEMENT_GUIDE.md](./API_KEY_MANAGEMENT_GUIDE.md)
+
 ### User Management
 - `GET /api/users` - List all users (admin only)
 - `GET /api/users/:id` - Get user by ID (admin or self)
