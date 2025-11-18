@@ -106,9 +106,14 @@ function NCR() {
           <h1>Non-Conformance Reports (NCR)</h1>
           <p className="subtitle">Manage and track non-conformances</p>
         </div>
-        <button className="btn-add" onClick={handleOpenModal}>
-          Create NCR
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-secondary" onClick={() => navigate('/ncr/dashboard')}>
+            Dashboard
+          </button>
+          <button className="btn-add" onClick={handleOpenModal}>
+            Create NCR
+          </button>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
