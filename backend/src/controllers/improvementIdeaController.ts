@@ -483,11 +483,45 @@ export const rejectImprovementIdea = async (req: AuthRequest, res: Response): Pr
 };
 
 /**
- * Get improvement idea statistics
+ * Get improvement idea statistics with optional filtering
  */
-export const getImprovementIdeaStatistics = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getImprovementIdeaStatistics = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const statistics = await ImprovementIdeaModel.getStatistics();
+    const { startDate, endDate, department, category } = req.query;
+
+    // Build filters object
+    const filters: {
+      startDate?: Date;
+      endDate?: Date;
+      department?: string;
+      category?: string;
+    } = {};
+
+    if (startDate) {
+      filters.startDate = new Date(startDate as string);
+      if (isNaN(filters.startDate.getTime())) {
+        res.status(400).json({ error: 'Invalid startDate format. Use ISO 8601 format.' });
+        return;
+      }
+    }
+
+    if (endDate) {
+      filters.endDate = new Date(endDate as string);
+      if (isNaN(filters.endDate.getTime())) {
+        res.status(400).json({ error: 'Invalid endDate format. Use ISO 8601 format.' });
+        return;
+      }
+    }
+
+    if (department) {
+      filters.department = department as string;
+    }
+
+    if (category) {
+      filters.category = category as string;
+    }
+
+    const statistics = await ImprovementIdeaModel.getStatistics(filters);
     res.json(statistics);
   } catch (error) {
     console.error('Get improvement idea statistics error:', error);

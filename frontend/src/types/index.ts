@@ -411,4 +411,5 @@ export interface ImprovementIdeaStatistics {
   closed: number;
   byCategory: Record<string, number>;
   byImpactArea: Record<string, number>;
+  byDepartment: Record<string, number>;
 }

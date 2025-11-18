@@ -25,6 +25,7 @@ function Layout() {
           <li><Link to="/ncr">NCR</Link></li>
           <li><Link to="/capa">CAPA</Link></li>
           <li><Link to="/risks">Risks</Link></li>
+          <li><Link to="/improvement-ideas">Improvements</Link></li>
           <li><Link to="/equipment">Equipment</Link></li>
           <li><Link to="/inspection-mobile">Mobile Inspection</Link></li>
           <li><Link to="/training">Training</Link></li>
