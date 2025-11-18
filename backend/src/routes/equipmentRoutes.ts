@@ -9,6 +9,7 @@ import {
   getCalibrationDue,
   getEquipmentReadOnly,
   regenerateQRCode,
+  getEquipmentMetrics,
 } from '../controllers/equipmentController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { validateId, validateEquipment, validateEquipmentUpdate } from '../utils/validators';
@@ -25,6 +26,7 @@ router.use(authenticateToken);
 
 router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), validateEquipment, createEquipment);
 router.get('/', getEquipment);
+router.get('/metrics', getEquipmentMetrics);
 router.get('/calibration-due', getCalibrationDue);
 router.get('/qr/:qrCode', getEquipmentByQR);
 router.get('/:id', validateId, getEquipmentById);

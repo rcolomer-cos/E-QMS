@@ -241,3 +241,16 @@ export const regenerateQRCode = async (req: AuthRequest, res: Response): Promise
     res.status(500).json({ error: 'Failed to regenerate QR code' });
   }
 };
+
+export const getEquipmentMetrics = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const upcomingDays = req.query.upcomingDays ? parseInt(req.query.upcomingDays as string, 10) : 30;
+
+    const metrics = await EquipmentModel.getEquipmentOverviewMetrics(upcomingDays);
+
+    res.json(metrics);
+  } catch (error) {
+    console.error('Get equipment metrics error:', error);
+    res.status(500).json({ error: 'Failed to get equipment metrics' });
+  }
+};

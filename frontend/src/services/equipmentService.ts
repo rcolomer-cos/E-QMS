@@ -74,3 +74,24 @@ export const regenerateQRCode = async (id: number): Promise<{ qrCode: string }> 
   const response = await api.post(`/equipment/${id}/regenerate-qr`);
   return response.data;
 };
+
+export interface EquipmentMetrics {
+  total: number;
+  byStatus: Record<string, number>;
+  overdue: {
+    calibration: number;
+    maintenance: number;
+    total: number;
+  };
+  upcoming: {
+    calibration: number;
+    maintenance: number;
+    total: number;
+  };
+}
+
+export const getEquipmentMetrics = async (upcomingDays?: number): Promise<EquipmentMetrics> => {
+  const params = upcomingDays ? `?upcomingDays=${upcomingDays}` : '';
+  const response = await api.get(`/equipment/metrics${params}`);
+  return response.data;
+};
