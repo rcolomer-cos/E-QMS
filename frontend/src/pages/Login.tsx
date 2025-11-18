@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { login, getRememberMe } from '../services/authService';
 import { useToast } from '../contexts/ToastContext';
 import { getInitStatus } from '../services/systemService';
+import { useBranding } from '../contexts/BrandingContext';
 import '../styles/Login.css';
 
 function Login() {
@@ -12,7 +13,9 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
+  const { branding } = useBranding();
 
   useEffect(() => {
     // If the system needs setup, redirect to setup page
@@ -41,7 +44,13 @@ function Login() {
       console.log('Login successful:', result);
       const name = result?.user?.firstName || result?.user?.email || 'Welcome';
       toast.success(`Welcome, ${name}!`);
-      navigate('/');
+      const from = (location.state as any)?.from;
+      if (from && typeof from === 'object' && 'pathname' in from) {
+        const dest = `${from.pathname || '/'}${from.search || ''}${from.hash || ''}`;
+        navigate(dest, { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (err: any) {
       console.error('Login error:', err);
       console.error('Error response:', err.response);
@@ -67,9 +76,30 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-box">
-        <h1>E-QMS</h1>
+        {branding?.companyLogoUrl || branding?.companyLogoPath ? (
+          <div className="brand-logo-wrap">
+            <img
+              src={branding.companyLogoUrl || branding.companyLogoPath || ''}
+              alt={branding.companyName || 'Company Logo'}
+              className="brand-logo"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        ) : null}
+        <h1>{branding?.companyName || 'E-QMS'}</h1>
         <h2>Quality Management System</h2>
-        <p className="subtitle">ISO 9001:2015 Compliant</p>
+        {branding?.tagline ? (
+          <p className="subtitle">{branding.tagline}</p>
+        ) : (
+          <p className="subtitle">ISO 9001:2015 Compliant</p>
+        )}
+        {(location.state as any)?.from?.pathname && (
+          <p className="redirect-hint">
+            You'll be redirected back after login
+          </p>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">

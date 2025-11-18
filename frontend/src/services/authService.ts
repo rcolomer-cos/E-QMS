@@ -29,6 +29,11 @@ export const login = async (credentials: LoginOptions): Promise<AuthResponse> =>
     localStorage.removeItem('rememberMe');
   }
 
+  // Notify app about auth state change (same-tab updates)
+  try {
+    window.dispatchEvent(new CustomEvent('app:auth-changed', { detail: { isAuthenticated: true } }));
+  } catch {}
+
   return response.data;
 };
 
@@ -38,6 +43,9 @@ export const logout = () => {
   localStorage.removeItem('rememberMe');
   sessionStorage.removeItem('token');
   sessionStorage.removeItem('user');
+  try {
+    window.dispatchEvent(new CustomEvent('app:auth-changed', { detail: { isAuthenticated: false } }));
+  } catch {}
   window.location.href = '/login';
 };
 
@@ -63,6 +71,19 @@ export const useAuth = () => {
     const authed = Boolean(token && storedUser);
     setIsAuthenticated(authed);
     setUser(storedUser);
+  }, []);
+
+  // Listen for same-tab auth changes (triggered by login/logout)
+  useEffect(() => {
+    const handler = () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const storedUser = getCurrentUser();
+      const authed = Boolean(token && storedUser);
+      setIsAuthenticated(authed);
+      setUser(storedUser);
+    };
+    window.addEventListener('app:auth-changed', handler as EventListener);
+    return () => window.removeEventListener('app:auth-changed', handler as EventListener);
   }, []);
 
   // Validate token with backend once on mount; auto-logout if invalid/expired

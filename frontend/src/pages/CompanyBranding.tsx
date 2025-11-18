@@ -79,10 +79,17 @@ const CompanyBranding = () => {
   return (
     <div className="company-branding-page">
       <div className="page-header">
-        <h1>Company Branding</h1>
-        <p className="subtitle">
-          Customize your company's identity and appearance in the system
-        </p>
+        <div>
+          <h1>Company Branding</h1>
+          <p className="subtitle">
+            Customize your company's identity and appearance in the system
+          </p>
+        </div>
+        <div className="header-actions">
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -343,10 +350,10 @@ const CompanyBranding = () => {
 
         {/* Action Buttons */}
         <div className="form-actions">
-          <button className="tw-btn tw-btn-secondary" onClick={handleReset} disabled={saving}>
+          <button className="btn btn-secondary" onClick={handleReset} disabled={saving}>
             Reset Changes
           </button>
-          <button className="tw-btn tw-btn-primary" onClick={handleSave} disabled={saving}>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>

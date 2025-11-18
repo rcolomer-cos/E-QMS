@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Setup from './pages/Setup';
@@ -56,6 +56,7 @@ import { useAuth } from './services/authService';
 
 function App() {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
 
   return (
     <Routes>
@@ -68,7 +69,7 @@ function App() {
       <Route
         path="/"
         element={
-          isAuthenticated ? <Layout /> : <Navigate to="/login" replace />
+          isAuthenticated ? <Layout /> : <Navigate to="/login" replace state={{ from: location }} />
         }
       >
         <Route index element={<Dashboard />} />

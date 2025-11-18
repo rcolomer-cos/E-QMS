@@ -3,7 +3,11 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(
+    135deg,
+    var(--brand-primary-color, #667eea) 0%,
+    var(--brand-secondary-color, #764ba2) 100%
+  );
 }
 
 .login-box {
@@ -37,6 +41,18 @@
   font-size: 0.9rem;
 }
 
+.login-box .redirect-hint {
+  text-align: center;
+  color: #666;
+  margin: -1rem 0 1.5rem;
+  font-size: 0.85rem;
+  font-style: italic;
+  background-color: rgba(102, 126, 234, 0.1);
+  padding: 0.5rem;
+  border-radius: 5px;
+  border-left: 3px solid var(--brand-primary-color, #667eea);
+}
+
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -59,7 +75,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--brand-primary-color, #667eea);
 }
 
 .form-group.checkbox-group {
@@ -78,7 +94,7 @@
   width: auto;
   margin-right: 0.5rem;
   cursor: pointer;
-  accent-color: #667eea;
+  accent-color: var(--brand-primary-color, #667eea);
 }
 
 .form-group.checkbox-group span {
@@ -97,7 +113,7 @@
 .login-box button[type="submit"] {
   width: 100%;
   padding: 0.75rem;
-  background-color: #667eea;
+  background-color: var(--brand-primary-color, #667eea);
   color: white;
   border: none;
   border-radius: 4px;
@@ -114,4 +130,19 @@
 .login-box button[type="submit"]:disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+.brand-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.brand-logo {
+  max-width: 180px;
+  max-height: 80px;
+  object-fit: contain;
+  margin: 0 auto 0.5rem auto;
+  display: block;
 }
