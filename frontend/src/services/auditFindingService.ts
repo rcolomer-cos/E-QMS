@@ -50,3 +50,24 @@ export const getAuditFindingStats = async (auditId: number): Promise<AuditFindin
   const response = await api.get(`/audit-findings/audit/${auditId}/stats`);
   return response.data;
 };
+
+export const getAuditFindingsSummary = async (filters?: {
+  startDate?: string;
+  endDate?: string;
+  processId?: number;
+}): Promise<{
+  total: number;
+  byCategory: Record<string, number>;
+  bySeverity: Record<string, number>;
+  byProcess: Record<string, number>;
+  byStatus: Record<string, number>;
+  overTime: Array<{ month: string; count: number }>;
+}> => {
+  const params = new URLSearchParams();
+  if (filters?.startDate) params.append('startDate', filters.startDate);
+  if (filters?.endDate) params.append('endDate', filters.endDate);
+  if (filters?.processId) params.append('processId', filters.processId.toString());
+
+  const response = await api.get(`/audit-findings/summary?${params.toString()}`);
+  return response.data;
+};

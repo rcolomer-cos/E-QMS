@@ -147,3 +147,32 @@ export const getAuditFindingStats = async (req: AuthRequest, res: Response): Pro
     res.status(500).json({ error: 'Failed to get audit finding statistics' });
   }
 };
+
+export const getAuditFindingsSummary = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { startDate, endDate, processId } = req.query;
+
+    const filters: {
+      startDate?: Date;
+      endDate?: Date;
+      processId?: number;
+    } = {};
+
+    if (startDate) {
+      filters.startDate = new Date(startDate as string);
+    }
+    if (endDate) {
+      filters.endDate = new Date(endDate as string);
+    }
+    if (processId) {
+      filters.processId = parseInt(processId as string, 10);
+    }
+
+    const summary = await AuditFindingModel.getFindingsSummary(filters);
+
+    res.json(summary);
+  } catch (error) {
+    console.error('Get audit findings summary error:', error);
+    res.status(500).json({ error: 'Failed to get audit findings summary' });
+  }
+};
