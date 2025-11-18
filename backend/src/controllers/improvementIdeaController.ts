@@ -325,7 +325,7 @@ export const deleteImprovementIdea = async (req: AuthRequest, res: Response): Pr
 /**
  * Get improvement idea statistics
  */
-export const getImprovementIdeaStatistics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getImprovementIdeaStatistics = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const statistics = await ImprovementIdeaModel.getStatistics();
     res.json(statistics);
