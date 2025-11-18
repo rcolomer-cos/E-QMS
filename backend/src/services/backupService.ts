@@ -97,7 +97,8 @@ export class BackupService {
 
       // Fallback: parse output manually
       return this.parseBackupOutput(stdout, backupConfig);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during backup';
       console.error('Backup error:', error);
       return {
         success: false,
@@ -106,7 +107,7 @@ export class BackupService {
         filePath: '',
         fileSizeMB: 0,
         timestamp: new Date().toISOString(),
-        error: error.message || 'Unknown error during backup',
+        error: errorMessage,
       };
     }
   }
@@ -158,13 +159,14 @@ export class BackupService {
       }
 
       throw new Error('Restore did not complete successfully');
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during restore';
       console.error('Restore error:', error);
       return {
         success: false,
         database: restoreConfig.database,
         backupFile: restoreConfig.backupFile,
-        error: error.message || 'Unknown error during restore',
+        error: errorMessage,
       };
     }
   }
@@ -216,7 +218,7 @@ export class BackupService {
       backupInfos.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
       return backupInfos;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error listing backups:', error);
       return [];
     }
@@ -236,7 +238,7 @@ export class BackupService {
 
       fs.unlinkSync(filePath);
       return true;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting backup:', error);
       return false;
     }
