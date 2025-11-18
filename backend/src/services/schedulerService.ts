@@ -48,6 +48,7 @@ export class SchedulerService {
     
     this.scheduleReminders(finalConfig);
     this.scheduleSyncJobs();
+    this.scheduleWebhookRetries();
     this.isInitialized = true;
     
     console.log('Scheduler initialized successfully');
@@ -115,6 +116,34 @@ export class SchedulerService {
 
     this.tasks.set('sync', task);
     console.log('Sync jobs scheduled (check every 5 minutes)');
+  }
+
+  /**
+   * Schedule webhook retry processing
+   */
+  private static scheduleWebhookRetries(): void {
+    // Process webhook retries every 2 minutes
+    const task = cron.schedule(
+      '*/2 * * * *',
+      async () => {
+        console.log(`[${new Date().toISOString()}] Processing webhook retries...`);
+        
+        try {
+          const { WebhookService } = await import('./webhookService');
+          await WebhookService.processRetries();
+          
+          console.log(`[${new Date().toISOString()}] Webhook retry processing completed`);
+        } catch (error) {
+          console.error(`[${new Date().toISOString()}] Error processing webhook retries:`, error);
+        }
+      },
+      {
+        timezone: process.env.SCHEDULER_TIMEZONE || 'UTC',
+      }
+    );
+
+    this.tasks.set('webhookRetries', task);
+    console.log('Webhook retry processing scheduled (check every 2 minutes)');
   }
 
   /**

@@ -46,6 +46,7 @@ import emailTemplateRoutes from './routes/emailTemplateRoutes';
 import reminderLogRoutes from './routes/reminderLogRoutes';
 import apiKeyRoutes from './routes/apiKeyRoutes';
 import syncRoutes from './routes/syncRoutes';
+import webhookRoutes from './routes/webhookRoutes';
 
 // Import scheduler service
 import { SchedulerService } from './services/schedulerService';
@@ -120,6 +121,7 @@ app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/reminder-logs', reminderLogRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // 404 handler
 app.use((_req, res) => {
