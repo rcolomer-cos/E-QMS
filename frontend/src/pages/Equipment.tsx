@@ -6,7 +6,9 @@ import {
   updateEquipment,
   deleteEquipment,
   regenerateQRCode,
+  getEquipmentMetrics,
   Equipment as EquipmentType,
+  EquipmentMetrics,
 } from '../services/equipmentService';
 import { getUsers } from '../services/userService';
 import { User } from '../types';
@@ -18,6 +20,7 @@ function EquipmentPage() {
   const [equipment, setEquipment] = useState<EquipmentType[]>([]);
   const [filteredEquipment, setFilteredEquipment] = useState<EquipmentType[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [metrics, setMetrics] = useState<EquipmentMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -64,12 +67,14 @@ function EquipmentPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [equipmentData, usersData] = await Promise.all([
+      const [equipmentData, usersData, metricsData] = await Promise.all([
         getEquipment(),
         getUsers(),
+        getEquipmentMetrics(30),
       ]);
       setEquipment(equipmentData);
       setUsers(usersData);
+      setMetrics(metricsData);
       setError('');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load data');
@@ -275,6 +280,26 @@ function EquipmentPage() {
     return values as string[];
   };
 
+  const getDueDateStatus = (dateString?: string) => {
+    if (!dateString) return null;
+    
+    const dueDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return { status: 'overdue', label: 'Overdue', class: 'overdue' };
+    } else if (diffDays <= 7) {
+      return { status: 'critical', label: 'Due Soon', class: 'due-soon' };
+    } else if (diffDays <= 30) {
+      return { status: 'warning', label: 'Upcoming', class: 'upcoming' };
+    }
+    return null;
+  };
+
   if (loading) {
     return <div className="loading">Loading equipment...</div>;
   }
@@ -475,6 +500,33 @@ function EquipmentPage() {
 
       {error && <div className="error-message">{error}</div>}
 
+      {/* Metrics Overview */}
+      {metrics && (
+        <div className="equipment-metrics">
+          <div className="metrics-grid">
+            <div className="metric-card">
+              <h3>Total Equipment</h3>
+              <div className="metric-value">{metrics.total}</div>
+            </div>
+            <div className="metric-card overdue">
+              <h3>Overdue Calibrations</h3>
+              <div className="metric-value">{metrics.overdue.calibration}</div>
+            </div>
+            <div className="metric-card overdue">
+              <h3>Overdue Maintenance</h3>
+              <div className="metric-value">{metrics.overdue.maintenance}</div>
+            </div>
+            <div className="metric-card warning">
+              <h3>Upcoming (30 days)</h3>
+              <div className="metric-value">{metrics.upcoming.total}</div>
+              <div className="metric-breakdown">
+                Cal: {metrics.upcoming.calibration} | Maint: {metrics.upcoming.maintenance}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="filters-container">
         <div className="search-box">
@@ -546,44 +598,71 @@ function EquipmentPage() {
               <th onClick={() => handleSort('nextCalibrationDate')} style={{ cursor: 'pointer' }}>
                 Next Calibration {sortField === 'nextCalibrationDate' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
+              <th onClick={() => handleSort('nextMaintenanceDate')} style={{ cursor: 'pointer' }}>
+                Next Maintenance {sortField === 'nextMaintenanceDate' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredEquipment.length === 0 ? (
               <tr>
-                <td colSpan={7} className="no-data">
+                <td colSpan={8} className="no-data">
                   {searchTerm || filters.status || filters.department || filters.location
                     ? 'No equipment match your filters'
                     : 'No equipment found'}
                 </td>
               </tr>
             ) : (
-              filteredEquipment.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.equipmentNumber}</td>
-                  <td>{item.name}</td>
-                  <td>{item.location}</td>
-                  <td>{item.department || 'N/A'}</td>
-                  <td>
-                    <span className={`status-badge status-${item.status}`}>
-                      {getStatusLabel(item.status)}
-                    </span>
-                  </td>
-                  <td>{formatDate(item.nextCalibrationDate)}</td>
-                  <td className="actions-cell">
-                    <button className="btn-view" onClick={() => handleView(item.id!)}>
-                      View
-                    </button>
-                    <button className="btn-edit" onClick={() => handleEdit(item.id!)}>
-                      Edit
-                    </button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id!)}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
+              filteredEquipment.map((item) => {
+                const calibrationStatus = getDueDateStatus(item.nextCalibrationDate);
+                const maintenanceStatus = getDueDateStatus(item.nextMaintenanceDate);
+                
+                return (
+                  <tr key={item.id}>
+                    <td>{item.equipmentNumber}</td>
+                    <td>{item.name}</td>
+                    <td>{item.location}</td>
+                    <td>{item.department || 'N/A'}</td>
+                    <td>
+                      <span className={`status-badge status-${item.status}`}>
+                        {getStatusLabel(item.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="due-date-cell">
+                        <span>{formatDate(item.nextCalibrationDate)}</span>
+                        {calibrationStatus && (
+                          <span className={`due-badge ${calibrationStatus.class}`}>
+                            {calibrationStatus.label}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="due-date-cell">
+                        <span>{formatDate(item.nextMaintenanceDate)}</span>
+                        {maintenanceStatus && (
+                          <span className={`due-badge ${maintenanceStatus.class}`}>
+                            {maintenanceStatus.label}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="actions-cell">
+                      <button className="btn-view" onClick={() => handleView(item.id!)}>
+                        View
+                      </button>
+                      <button className="btn-edit" onClick={() => handleEdit(item.id!)}>
+                        Edit
+                      </button>
+                      <button className="btn-delete" onClick={() => handleDelete(item.id!)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

@@ -145,3 +145,60 @@
   background-color: #d4edda;
   color: #155724;
 }
+
+/* Equipment Overview Styles */
+.equipment-overview {
+  margin-top: 1rem;
+}
+
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.overview-card {
+  background: #f8f9fa;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.overview-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.overview-card.danger {
+  border-left-color: #dc3545;
+  background: #fff5f5;
+}
+
+.overview-card.warning {
+  border-left-color: #ffc107;
+  background: #fffbf0;
+}
+
+.overview-label {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.overview-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.overview-detail {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #dee2e6;
+}

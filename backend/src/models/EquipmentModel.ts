@@ -141,4 +141,167 @@ export class EquipmentModel {
 
     return result.recordset;
   }
+
+  static async getOverdueCalibration(): Promise<Equipment[]> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .query(`
+        SELECT * FROM Equipment 
+        WHERE nextCalibrationDate IS NOT NULL 
+        AND nextCalibrationDate < CAST(GETDATE() AS DATE)
+        ORDER BY nextCalibrationDate ASC
+      `);
+
+    return result.recordset;
+  }
+
+  static async getOverdueMaintenance(): Promise<Equipment[]> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .query(`
+        SELECT * FROM Equipment 
+        WHERE nextMaintenanceDate IS NOT NULL 
+        AND nextMaintenanceDate < CAST(GETDATE() AS DATE)
+        ORDER BY nextMaintenanceDate ASC
+      `);
+
+    return result.recordset;
+  }
+
+  static async getUpcomingDue(days: number = 30): Promise<{ calibration: Equipment[]; maintenance: Equipment[] }> {
+    const pool = await getConnection();
+    
+    // Get upcoming calibrations
+    const calibrationResult = await pool
+      .request()
+      .input('days', sql.Int, days)
+      .query(`
+        SELECT * FROM Equipment 
+        WHERE nextCalibrationDate IS NOT NULL 
+        AND nextCalibrationDate >= CAST(GETDATE() AS DATE)
+        AND nextCalibrationDate <= DATEADD(day, @days, GETDATE())
+        ORDER BY nextCalibrationDate ASC
+      `);
+
+    // Get upcoming maintenance
+    const maintenanceResult = await pool
+      .request()
+      .input('days', sql.Int, days)
+      .query(`
+        SELECT * FROM Equipment 
+        WHERE nextMaintenanceDate IS NOT NULL 
+        AND nextMaintenanceDate >= CAST(GETDATE() AS DATE)
+        AND nextMaintenanceDate <= DATEADD(day, @days, GETDATE())
+        ORDER BY nextMaintenanceDate ASC
+      `);
+
+    return {
+      calibration: calibrationResult.recordset,
+      maintenance: maintenanceResult.recordset,
+    };
+  }
+
+  static async getEquipmentOverviewMetrics(upcomingDays: number = 30): Promise<{
+    total: number;
+    byStatus: Record<string, number>;
+    overdue: {
+      calibration: number;
+      maintenance: number;
+      total: number;
+    };
+    upcoming: {
+      calibration: number;
+      maintenance: number;
+      total: number;
+    };
+  }> {
+    const pool = await getConnection();
+    
+    // Get total count and status breakdown
+    const statusResult = await pool
+      .request()
+      .query(`
+        SELECT 
+          COUNT(*) as total,
+          status,
+          COUNT(*) as count
+        FROM Equipment
+        GROUP BY status
+      `);
+
+    // Get total count
+    const totalResult = await pool
+      .request()
+      .query(`SELECT COUNT(*) as total FROM Equipment`);
+
+    // Get overdue calibration count
+    const overdueCalibrationResult = await pool
+      .request()
+      .query(`
+        SELECT COUNT(*) as count FROM Equipment 
+        WHERE nextCalibrationDate IS NOT NULL 
+        AND nextCalibrationDate < CAST(GETDATE() AS DATE)
+      `);
+
+    // Get overdue maintenance count
+    const overdueMaintenanceResult = await pool
+      .request()
+      .query(`
+        SELECT COUNT(*) as count FROM Equipment 
+        WHERE nextMaintenanceDate IS NOT NULL 
+        AND nextMaintenanceDate < CAST(GETDATE() AS DATE)
+      `);
+
+    // Get upcoming calibration count
+    const upcomingCalibrationResult = await pool
+      .request()
+      .input('days', sql.Int, upcomingDays)
+      .query(`
+        SELECT COUNT(*) as count FROM Equipment 
+        WHERE nextCalibrationDate IS NOT NULL 
+        AND nextCalibrationDate >= CAST(GETDATE() AS DATE)
+        AND nextCalibrationDate <= DATEADD(day, @days, GETDATE())
+      `);
+
+    // Get upcoming maintenance count
+    const upcomingMaintenanceResult = await pool
+      .request()
+      .input('days', sql.Int, upcomingDays)
+      .query(`
+        SELECT COUNT(*) as count FROM Equipment 
+        WHERE nextMaintenanceDate IS NOT NULL 
+        AND nextMaintenanceDate >= CAST(GETDATE() AS DATE)
+        AND nextMaintenanceDate <= DATEADD(day, @days, GETDATE())
+      `);
+
+    // Build status breakdown
+    const byStatus: Record<string, number> = {};
+    statusResult.recordset.forEach((row: any) => {
+      if (row.status) {
+        byStatus[row.status] = row.count;
+      }
+    });
+
+    const overdueCalibrationCount = overdueCalibrationResult.recordset[0]?.count || 0;
+    const overdueMaintenanceCount = overdueMaintenanceResult.recordset[0]?.count || 0;
+    const upcomingCalibrationCount = upcomingCalibrationResult.recordset[0]?.count || 0;
+    const upcomingMaintenanceCount = upcomingMaintenanceResult.recordset[0]?.count || 0;
+
+    return {
+      total: totalResult.recordset[0]?.total || 0,
+      byStatus,
+      overdue: {
+        calibration: overdueCalibrationCount,
+        maintenance: overdueMaintenanceCount,
+        total: overdueCalibrationCount + overdueMaintenanceCount,
+      },
+      upcoming: {
+        calibration: upcomingCalibrationCount,
+        maintenance: upcomingMaintenanceCount,
+        total: upcomingCalibrationCount + upcomingMaintenanceCount,
+      },
+    };
+  }
 }

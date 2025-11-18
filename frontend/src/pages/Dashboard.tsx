@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { getCurrentUser } from '../services/authService';
 import { getAuditFindingsSummary } from '../services/auditFindingService';
+import { getEquipmentMetrics, EquipmentMetrics } from '../services/equipmentService';
 import MissingCompetencies from '../components/MissingCompetencies';
 import '../styles/Dashboard.css';
 
@@ -32,6 +33,7 @@ function Dashboard() {
     equipmentCalibrationDue: 0,
     upcomingTrainings: 0,
   });
+  const [equipmentMetrics, setEquipmentMetrics] = useState<EquipmentMetrics | null>(null);
   const [auditFindingsSummary, setAuditFindingsSummary] = useState<AuditFindingsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const currentUser = getCurrentUser();
@@ -43,10 +45,11 @@ function Dashboard() {
   const loadDashboardData = async () => {
     try {
       // Fetch data from various endpoints
-      const [documents, audits, equipment, findingsSummary] = await Promise.all([
+      const [documents, audits, equipment, equipMetrics, findingsSummary] = await Promise.all([
         api.get('/documents'),
         api.get('/audits'),
         api.get('/equipment/calibration-due'),
+        getEquipmentMetrics(30),
         getAuditFindingsSummary(),
       ]);
 
@@ -58,6 +61,7 @@ function Dashboard() {
         equipmentCalibrationDue: equipment.data.length,
         upcomingTrainings: 0, // Would fetch from training endpoint
       });
+      setEquipmentMetrics(equipMetrics);
       setAuditFindingsSummary(findingsSummary);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -111,6 +115,37 @@ function Dashboard() {
           <p>Upcoming sessions</p>
         </div>
       </div>
+
+      {equipmentMetrics && (
+        <div className="dashboard-sections">
+          <div className="dashboard-section">
+            <h2>Equipment Overview</h2>
+            <div className="equipment-overview">
+              <div className="overview-stats">
+                <div className="overview-card">
+                  <div className="overview-label">Total Equipment</div>
+                  <div className="overview-value">{equipmentMetrics.total}</div>
+                </div>
+                <div className="overview-card danger">
+                  <div className="overview-label">Overdue Calibrations</div>
+                  <div className="overview-value">{equipmentMetrics.overdue.calibration}</div>
+                </div>
+                <div className="overview-card danger">
+                  <div className="overview-label">Overdue Maintenance</div>
+                  <div className="overview-value">{equipmentMetrics.overdue.maintenance}</div>
+                </div>
+                <div className="overview-card warning">
+                  <div className="overview-label">Upcoming (30 days)</div>
+                  <div className="overview-value">{equipmentMetrics.upcoming.total}</div>
+                  <div className="overview-detail">
+                    Cal: {equipmentMetrics.upcoming.calibration} | Maint: {equipmentMetrics.upcoming.maintenance}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {auditFindingsSummary && (
         <div className="dashboard-sections">
