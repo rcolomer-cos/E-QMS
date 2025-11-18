@@ -45,6 +45,7 @@ function Layout() {
               <li><Link to="/email-templates">Email Templates</Link></li>
               <li><Link to="/backup-management">Backup & Restore</Link></li>
               <li><Link to="/system-settings">System Settings</Link></li>
+              <li><Link to="/company-branding">Company Branding</Link></li>
               <li><Link to="/audit-logs">Audit Logs</Link></li>
             </>
           )}
