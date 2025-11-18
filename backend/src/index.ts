@@ -43,6 +43,10 @@ import inspectionItemRoutes from './routes/inspectionItemRoutes';
 import improvementIdeaRoutes from './routes/improvementIdeaRoutes';
 import implementationTaskRoutes from './routes/implementationTaskRoutes';
 import emailTemplateRoutes from './routes/emailTemplateRoutes';
+import reminderLogRoutes from './routes/reminderLogRoutes';
+
+// Import scheduler service
+import { SchedulerService } from './services/schedulerService';
 
 dotenv.config();
 
@@ -111,6 +115,7 @@ app.use('/api/inspection-items', inspectionItemRoutes);
 app.use('/api/improvement-ideas', improvementIdeaRoutes);
 app.use('/api/implementation-tasks', implementationTaskRoutes);
 app.use('/api/email-templates', emailTemplateRoutes);
+app.use('/api/reminder-logs', reminderLogRoutes);
 
 // 404 handler
 app.use((_req, res) => {
@@ -125,6 +130,14 @@ const PORT = config.port;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${config.nodeEnv}`);
+  
+  // Initialize scheduler after server starts
+  try {
+    SchedulerService.initialize();
+    console.log('Reminder scheduler initialized');
+  } catch (error) {
+    console.error('Failed to initialize scheduler:', error);
+  }
 });
 
 export default app;
