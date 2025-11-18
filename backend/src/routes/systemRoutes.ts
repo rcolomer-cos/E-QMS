@@ -10,6 +10,13 @@ import {
   verifyBackup,
   deleteBackup,
 } from '../controllers/systemController';
+import {
+  getSystemSettings,
+  getSystemSettingsByCategory,
+  getSystemSettingByKey,
+  updateSystemSetting,
+  batchUpdateSystemSettings,
+} from '../controllers/systemSettingsController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { UserRole } from '../types';
 
@@ -101,6 +108,57 @@ router.delete(
   authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER),
   [body('fileName').trim().notEmpty().withMessage('File name is required')],
   deleteBackup
+);
+
+/**
+ * @route   GET /api/system/settings
+ * @desc    Get all system settings (optionally filtered by category)
+ * @access  Private (Admin only)
+ */
+router.get('/settings', authenticateToken, authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), getSystemSettings);
+
+/**
+ * @route   GET /api/system/settings/by-category
+ * @desc    Get system settings grouped by category
+ * @access  Private (Admin only)
+ */
+router.get('/settings/by-category', authenticateToken, authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), getSystemSettingsByCategory);
+
+/**
+ * @route   GET /api/system/settings/:key
+ * @desc    Get a specific setting by key
+ * @access  Private (Admin only)
+ */
+router.get('/settings/:key', authenticateToken, authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), getSystemSettingByKey);
+
+/**
+ * @route   PUT /api/system/settings/:key
+ * @desc    Update a system setting
+ * @access  Private (Admin only)
+ */
+router.put(
+  '/settings/:key',
+  authenticateToken,
+  authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER),
+  [body('value').notEmpty().withMessage('Value is required')],
+  updateSystemSetting
+);
+
+/**
+ * @route   POST /api/system/settings/batch
+ * @desc    Batch update multiple settings
+ * @access  Private (Admin only)
+ */
+router.post(
+  '/settings/batch',
+  authenticateToken,
+  authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER),
+  [
+    body('settings').isArray().withMessage('Settings must be an array'),
+    body('settings.*.key').trim().notEmpty().withMessage('Each setting must have a key'),
+    body('settings.*.value').notEmpty().withMessage('Each setting must have a value'),
+  ],
+  batchUpdateSystemSettings
 );
 
 export default router;

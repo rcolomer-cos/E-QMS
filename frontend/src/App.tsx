@@ -45,6 +45,7 @@ import ImprovementIdeaDetail from './pages/ImprovementIdeaDetail';
 import ImprovementStatusDashboard from './pages/ImprovementStatusDashboard';
 import EmailTemplates from './pages/EmailTemplates';
 import BackupManagement from './pages/BackupManagement';
+import SystemSettings from './pages/SystemSettings';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -106,6 +107,7 @@ function App() {
         <Route path="improvement-ideas/:id" element={<ImprovementIdeaDetail />} />
         <Route path="email-templates" element={<EmailTemplates />} />
         <Route path="backup-management" element={<BackupManagement />} />
+        <Route path="system-settings" element={<SystemSettings />} />
         <Route path="chart-demo" element={<ChartDemo />} />
       </Route>
     </Routes>
