@@ -8,6 +8,7 @@ import {
   deleteAuditFinding,
   linkFindingToNCR,
   getAuditFindingStats,
+  getAuditFindingsSummary,
 } from '../../controllers/auditFindingController';
 import { AuditFindingModel } from '../../models/AuditFindingModel';
 import { AuthRequest } from '../../types';
@@ -323,6 +324,87 @@ describe('AuditFinding Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get audit finding statistics' });
+    });
+  });
+
+  describe('getAuditFindingsSummary', () => {
+    it('should get audit findings summary successfully with no filters', async () => {
+      const mockSummary = {
+        total: 25,
+        byCategory: { Process: 10, Documentation: 8, 'Product Quality': 7 },
+        bySeverity: { critical: 3, major: 8, minor: 10, observation: 4 },
+        byProcess: { '1': 15, Unassigned: 10 },
+        byStatus: { open: 12, resolved: 8, closed: 5 },
+        overTime: [
+          { month: '2024-01', count: 10 },
+          { month: '2024-02', count: 15 },
+        ],
+      };
+      mockAuthRequest.query = {};
+      (AuditFindingModel.getFindingsSummary as jest.Mock).mockResolvedValue(mockSummary);
+
+      await getAuditFindingsSummary(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(AuditFindingModel.getFindingsSummary).toHaveBeenCalledWith({});
+      expect(mockJson).toHaveBeenCalledWith(mockSummary);
+    });
+
+    it('should get audit findings summary with date filters', async () => {
+      const mockSummary = {
+        total: 10,
+        byCategory: { Process: 5, Documentation: 5 },
+        bySeverity: { major: 4, minor: 6 },
+        byProcess: { '1': 10 },
+        byStatus: { open: 6, resolved: 4 },
+        overTime: [{ month: '2024-01', count: 10 }],
+      };
+      mockAuthRequest.query = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+      };
+      (AuditFindingModel.getFindingsSummary as jest.Mock).mockResolvedValue(mockSummary);
+
+      await getAuditFindingsSummary(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(AuditFindingModel.getFindingsSummary).toHaveBeenCalledWith({
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-01-31'),
+      });
+      expect(mockJson).toHaveBeenCalledWith(mockSummary);
+    });
+
+    it('should get audit findings summary with process filter', async () => {
+      const mockSummary = {
+        total: 5,
+        byCategory: { Process: 5 },
+        bySeverity: { major: 2, minor: 3 },
+        byProcess: { '1': 5 },
+        byStatus: { open: 3, resolved: 2 },
+        overTime: [{ month: '2024-01', count: 5 }],
+      };
+      mockAuthRequest.query = {
+        processId: '1',
+      };
+      (AuditFindingModel.getFindingsSummary as jest.Mock).mockResolvedValue(mockSummary);
+
+      await getAuditFindingsSummary(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(AuditFindingModel.getFindingsSummary).toHaveBeenCalledWith({
+        processId: 1,
+      });
+      expect(mockJson).toHaveBeenCalledWith(mockSummary);
+    });
+
+    it('should return 500 on database error', async () => {
+      mockAuthRequest.query = {};
+      (AuditFindingModel.getFindingsSummary as jest.Mock).mockRejectedValue(
+        new Error('Database error')
+      );
+
+      await getAuditFindingsSummary(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get audit findings summary' });
     });
   });
 });

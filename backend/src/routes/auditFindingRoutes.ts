@@ -8,6 +8,7 @@ import {
   deleteAuditFinding,
   linkFindingToNCR,
   getAuditFindingStats,
+  getAuditFindingsSummary,
 } from '../controllers/auditFindingController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { validateId, validateAuditFinding, validateAuditFindingUpdate } from '../utils/validators';
@@ -29,6 +30,9 @@ router.post(
 
 // Get all audit findings with optional filters
 router.get('/', getAuditFindings);
+
+// Get audit findings summary with filtering by category, severity, process, and timeframe
+router.get('/summary', getAuditFindingsSummary);
 
 // Get findings by audit ID
 router.get('/audit/:auditId', validateId, getAuditFindingsByAuditId);

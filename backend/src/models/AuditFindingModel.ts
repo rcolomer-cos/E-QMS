@@ -201,4 +201,93 @@ export class AuditFindingModel {
 
     return stats;
   }
+
+  static async getFindingsSummary(filters?: {
+    startDate?: Date;
+    endDate?: Date;
+    processId?: number;
+  }): Promise<{
+    total: number;
+    byCategory: Record<string, number>;
+    bySeverity: Record<string, number>;
+    byProcess: Record<string, number>;
+    byStatus: Record<string, number>;
+    overTime: Array<{ month: string; count: number }>;
+  }> {
+    const pool = await getConnection();
+    const request = pool.request();
+    let whereConditions = '1=1';
+
+    if (filters?.startDate) {
+      request.input('startDate', sql.DateTime, filters.startDate);
+      whereConditions += ' AND identifiedDate >= @startDate';
+    }
+    if (filters?.endDate) {
+      request.input('endDate', sql.DateTime, filters.endDate);
+      whereConditions += ' AND identifiedDate <= @endDate';
+    }
+    if (filters?.processId) {
+      request.input('processId', sql.Int, filters.processId);
+      whereConditions += ' AND processId = @processId';
+    }
+
+    // Get aggregated statistics
+    const result = await request.query(`
+      SELECT 
+        COUNT(*) as total,
+        category,
+        severity,
+        status,
+        ISNULL(CAST(processId AS NVARCHAR), 'Unassigned') as processName
+      FROM AuditFindings 
+      WHERE ${whereConditions}
+      GROUP BY category, severity, status, processId
+    `);
+
+    // Get time-series data (monthly aggregation)
+    const timeSeriesResult = await pool
+      .request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .input('processId', sql.Int, filters?.processId)
+      .query(`
+        SELECT 
+          FORMAT(identifiedDate, 'yyyy-MM') as month,
+          COUNT(*) as count
+        FROM AuditFindings 
+        WHERE ${whereConditions}
+        GROUP BY FORMAT(identifiedDate, 'yyyy-MM')
+        ORDER BY FORMAT(identifiedDate, 'yyyy-MM')
+      `);
+
+    const summary = {
+      total: 0,
+      byCategory: {} as Record<string, number>,
+      bySeverity: {} as Record<string, number>,
+      byProcess: {} as Record<string, number>,
+      byStatus: {} as Record<string, number>,
+      overTime: [] as Array<{ month: string; count: number }>,
+    };
+
+    result.recordset.forEach((row: {
+      total: number;
+      category: string;
+      severity: string;
+      status: string;
+      processName: string;
+    }) => {
+      summary.total += row.total;
+      summary.byCategory[row.category] = (summary.byCategory[row.category] || 0) + row.total;
+      summary.bySeverity[row.severity] = (summary.bySeverity[row.severity] || 0) + row.total;
+      summary.byProcess[row.processName] = (summary.byProcess[row.processName] || 0) + row.total;
+      summary.byStatus[row.status] = (summary.byStatus[row.status] || 0) + row.total;
+    });
+
+    summary.overTime = timeSeriesResult.recordset.map((row: { month: string; count: number }) => ({
+      month: row.month,
+      count: row.count,
+    }));
+
+    return summary;
+  }
 }
