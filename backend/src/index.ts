@@ -44,6 +44,7 @@ import improvementIdeaRoutes from './routes/improvementIdeaRoutes';
 import implementationTaskRoutes from './routes/implementationTaskRoutes';
 import emailTemplateRoutes from './routes/emailTemplateRoutes';
 import reminderLogRoutes from './routes/reminderLogRoutes';
+import apiKeyRoutes from './routes/apiKeyRoutes';
 
 // Import scheduler service
 import { SchedulerService } from './services/schedulerService';
@@ -116,6 +117,7 @@ app.use('/api/improvement-ideas', improvementIdeaRoutes);
 app.use('/api/implementation-tasks', implementationTaskRoutes);
 app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/reminder-logs', reminderLogRoutes);
+app.use('/api/api-keys', apiKeyRoutes);
 
 // 404 handler
 app.use((_req, res) => {

@@ -11,6 +11,12 @@ export interface AuthRequest extends Request {
     roleIds: number[]; // Array of role IDs
   };
   document?: Document; // Populated by permission middleware
+  apiKey?: {
+    id: number;
+    name: string;
+    scopes: string[];
+    createdBy: number;
+  };
 }
 
 export enum UserRole {
