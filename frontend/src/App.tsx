@@ -11,6 +11,7 @@ import AuditExecution from './pages/AuditExecution';
 import AuditFindings from './pages/AuditFindings';
 import NCR from './pages/NCR';
 import NCRDetail from './pages/NCRDetail';
+import NCRDashboard from './pages/NCRDashboard';
 import CAPA from './pages/CAPA';
 import CAPADetail from './pages/CAPADetail';
 import CAPADashboard from './pages/CAPADashboard';
@@ -65,6 +66,7 @@ function App() {
         <Route path="audits/:id/execute" element={<AuditExecution />} />
         <Route path="audits/:auditId/findings" element={<AuditFindings />} />
         <Route path="ncr" element={<NCR />} />
+        <Route path="ncr/dashboard" element={<NCRDashboard />} />
         <Route path="ncr/:id" element={<NCRDetail />} />
         <Route path="capa" element={<CAPA />} />
         <Route path="capa/dashboard" element={<CAPADashboard />} />

@@ -109,3 +109,27 @@ export const getNCRsByInspectionRecord = async (inspectionRecordId: number): Pro
   const response = await api.get<{ data: NCR[]; count: number }>(`/ncrs/by-inspection/${inspectionRecordId}`);
   return response.data;
 };
+
+/**
+ * NCR Metrics interface
+ */
+export interface NCRMetrics {
+  totalOpen: number;
+  totalInProgress: number;
+  totalResolved: number;
+  totalClosed: number;
+  totalRejected: number;
+  bySeverity: { severity: string; count: number }[];
+  byCategory: { category: string; count: number }[];
+  bySource: { source: string; count: number }[];
+  monthlyTrend: { month: string; count: number }[];
+  averageClosureTime: number;
+}
+
+/**
+ * Get NCR metrics for dashboard
+ */
+export const getNCRMetrics = async (): Promise<NCRMetrics> => {
+  const response = await api.get<NCRMetrics>('/ncrs/metrics');
+  return response.data;
+};

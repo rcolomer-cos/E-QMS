@@ -320,3 +320,14 @@ export const getNCRsByInspectionRecord = async (req: AuthRequest, res: Response)
     res.status(500).json({ error: 'Failed to get NCRs for inspection record' });
   }
 };
+
+export const getNCRMetrics = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const metrics = await NCRModel.getMetrics();
+
+    res.json(metrics);
+  } catch (error) {
+    console.error('Get NCR metrics error:', error);
+    res.status(500).json({ error: 'Failed to get NCR metrics' });
+  }
+};

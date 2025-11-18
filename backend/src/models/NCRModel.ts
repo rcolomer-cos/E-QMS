@@ -111,4 +111,97 @@ export class NCRModel {
 
     return result.recordset;
   }
+
+  static async getMetrics(): Promise<{
+    totalOpen: number;
+    totalInProgress: number;
+    totalResolved: number;
+    totalClosed: number;
+    totalRejected: number;
+    bySeverity: { severity: string; count: number }[];
+    byCategory: { category: string; count: number }[];
+    bySource: { source: string; count: number }[];
+    monthlyTrend: { month: string; count: number }[];
+    averageClosureTime: number;
+  }> {
+    const pool = await getConnection();
+    
+    // Get status counts
+    const statusResult = await pool.request().query(`
+      SELECT 
+        SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as totalOpen,
+        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as totalInProgress,
+        SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as totalResolved,
+        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as totalClosed,
+        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as totalRejected
+      FROM NCRs
+    `);
+
+    // Get severity breakdown
+    const severityResult = await pool.request().query(`
+      SELECT severity, COUNT(*) as count
+      FROM NCRs
+      WHERE status NOT IN ('closed', 'rejected')
+      GROUP BY severity
+      ORDER BY 
+        CASE severity
+          WHEN 'critical' THEN 1
+          WHEN 'major' THEN 2
+          WHEN 'minor' THEN 3
+        END
+    `);
+
+    // Get category breakdown
+    const categoryResult = await pool.request().query(`
+      SELECT category, COUNT(*) as count
+      FROM NCRs
+      WHERE status NOT IN ('closed', 'rejected')
+      GROUP BY category
+      ORDER BY count DESC
+    `);
+
+    // Get source breakdown
+    const sourceResult = await pool.request().query(`
+      SELECT source, COUNT(*) as count
+      FROM NCRs
+      WHERE status NOT IN ('closed', 'rejected')
+      GROUP BY source
+      ORDER BY count DESC
+    `);
+
+    // Get monthly trend (last 12 months)
+    const monthlyTrendResult = await pool.request().query(`
+      SELECT 
+        FORMAT(detectedDate, 'yyyy-MM') as month,
+        COUNT(*) as count
+      FROM NCRs
+      WHERE detectedDate >= DATEADD(MONTH, -12, GETDATE())
+      GROUP BY FORMAT(detectedDate, 'yyyy-MM')
+      ORDER BY FORMAT(detectedDate, 'yyyy-MM')
+    `);
+
+    // Get average closure time (in days)
+    const closureTimeResult = await pool.request().query(`
+      SELECT 
+        AVG(DATEDIFF(DAY, detectedDate, closedDate)) as avgClosureTime
+      FROM NCRs
+      WHERE closedDate IS NOT NULL
+    `);
+
+    const stats = statusResult.recordset[0];
+    const avgClosureTime = closureTimeResult.recordset[0]?.avgClosureTime || 0;
+    
+    return {
+      totalOpen: stats.totalOpen || 0,
+      totalInProgress: stats.totalInProgress || 0,
+      totalResolved: stats.totalResolved || 0,
+      totalClosed: stats.totalClosed || 0,
+      totalRejected: stats.totalRejected || 0,
+      bySeverity: severityResult.recordset.map(r => ({ severity: r.severity, count: r.count })),
+      byCategory: categoryResult.recordset.map(r => ({ category: r.category, count: r.count })),
+      bySource: sourceResult.recordset.map(r => ({ source: r.source, count: r.count })),
+      monthlyTrend: monthlyTrendResult.recordset.map(r => ({ month: r.month, count: r.count })),
+      averageClosureTime: Math.round(avgClosureTime) || 0,
+    };
+  }
 }

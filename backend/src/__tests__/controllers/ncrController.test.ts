@@ -7,6 +7,7 @@ import {
   updateNCRStatus,
   assignNCR,
   deleteNCR,
+  getNCRMetrics,
 } from '../../controllers/ncrController';
 import { NCRModel } from '../../models/NCRModel';
 import { AuthRequest } from '../../types';
@@ -471,6 +472,51 @@ describe('NCR Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to delete NCR' });
+    });
+  });
+
+  describe('getNCRMetrics', () => {
+    it('should return NCR metrics successfully', async () => {
+      const mockMetrics = {
+        totalOpen: 5,
+        totalInProgress: 3,
+        totalResolved: 2,
+        totalClosed: 10,
+        totalRejected: 1,
+        bySeverity: [
+          { severity: 'critical', count: 2 },
+          { severity: 'major', count: 5 },
+          { severity: 'minor', count: 3 },
+        ],
+        byCategory: [
+          { category: 'Product Quality', count: 4 },
+          { category: 'Process', count: 3 },
+        ],
+        bySource: [
+          { source: 'Internal Audit', count: 6 },
+          { source: 'Customer Complaint', count: 4 },
+        ],
+        monthlyTrend: [
+          { month: '2024-01', count: 5 },
+          { month: '2024-02', count: 7 },
+        ],
+        averageClosureTime: 15,
+      };
+      (NCRModel.getMetrics as jest.Mock).mockResolvedValue(mockMetrics);
+
+      await getNCRMetrics(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(NCRModel.getMetrics).toHaveBeenCalled();
+      expect(mockJson).toHaveBeenCalledWith(mockMetrics);
+    });
+
+    it('should return 500 on database error', async () => {
+      (NCRModel.getMetrics as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await getNCRMetrics(mockAuthRequest as AuthRequest, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Failed to get NCR metrics' });
     });
   });
 });
