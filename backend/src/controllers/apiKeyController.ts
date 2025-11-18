@@ -71,7 +71,7 @@ export const createApiKey = async (req: AuthRequest, res: Response): Promise<voi
 /**
  * Get all API keys
  */
-export const getAllApiKeys = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAllApiKeys = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const apiKeys = await ApiKeyModel.findAll();
 
