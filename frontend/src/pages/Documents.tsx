@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getDocuments, DocumentFilters } from '../services/documentService';
 import { Document, Process } from '../types';
 import { getProcesses } from '../services/processService';
 import '../styles/Documents.css';
 
 function Documents() {
+  const { t } = useTranslation();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
@@ -41,7 +43,7 @@ function Documents() {
     } catch (err) {
       console.error('Failed to load documents:', err);
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to load documents');
+      setError(error.response?.data?.error || t('messages.loadError'));
     } finally {
       setLoading(false);
     }
@@ -94,17 +96,17 @@ function Documents() {
   };
 
   if (loading) {
-    return <div className="loading">Loading documents...</div>;
+    return <div className="loading">{t('common.loading')}</div>;
   }
 
   return (
     <div className="documents-page">
       <div className="page-header">
         <div>
-          <h1>Document Management</h1>
-          <p className="subtitle">Manage and view quality documents</p>
+          <h1>{t('documents.title')}</h1>
+          <p className="subtitle">{t('documents.allDocuments')}</p>
         </div>
-        <button className="tw-btn tw-btn-primary">Create Document</button>
+        <button className="tw-btn tw-btn-primary">{t('documents.createDocument')}</button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -113,7 +115,7 @@ function Documents() {
         <div className="search-box">
           <input
             type="text"
-            placeholder="Search documents by title, description, type, category..."
+            placeholder={t('common.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -126,7 +128,7 @@ function Documents() {
             onChange={(e) => handleProcessFilterChange(e.target.value)}
             className="filter-select"
           >
-            <option value="">All Processes</option>
+            <option value="">{t('processes.allProcesses')}</option>
             {processes.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({p.code})
@@ -140,7 +142,7 @@ function Documents() {
               checked={!!filters.includeSubProcesses}
               onChange={(e) => handleIncludeSubToggle(e.target.checked)}
             />
-            Include subprocesses
+            {t('processes.processInputs')}
           </label>
 
           <select
@@ -148,11 +150,11 @@ function Documents() {
             onChange={(e) => handleFilterChange('status', e.target.value)}
             className="filter-select"
           >
-            <option value="">All Statuses</option>
-            <option value="draft">Draft</option>
-            <option value="review">Under Review</option>
-            <option value="approved">Approved</option>
-            <option value="obsolete">Obsolete</option>
+            <option value="">{t('common.all')} {t('common.status')}</option>
+            <option value="draft">{t('documents.draft')}</option>
+            <option value="review">{t('improvements.underReview')}</option>
+            <option value="approved">{t('common.approved')}</option>
+            <option value="obsolete">{t('documents.archived')}</option>
           </select>
 
           <select
@@ -160,7 +162,7 @@ function Documents() {
             onChange={(e) => handleFilterChange('category', e.target.value)}
             className="filter-select"
           >
-            <option value="">All Categories</option>
+            <option value="">{t('common.all')} {t('common.category')}</option>
             <option value="quality">Quality</option>
             <option value="safety">Safety</option>
             <option value="environmental">Environmental</option>
@@ -171,11 +173,11 @@ function Documents() {
             onChange={(e) => handleFilterChange('documentType', e.target.value)}
             className="filter-select"
           >
-            <option value="">All Types</option>
-            <option value="policy">Policy</option>
-            <option value="procedure">Procedure</option>
-            <option value="work_instruction">Work Instruction</option>
-            <option value="form">Form</option>
+            <option value="">{t('common.all')} {t('common.type')}</option>
+            <option value="policy">{t('documents.policy')}</option>
+            <option value="procedure">{t('documents.procedure')}</option>
+            <option value="work_instruction">{t('documents.workInstruction')}</option>
+            <option value="form">{t('documents.form')}</option>
             <option value="record">Record</option>
           </select>
         </div>
@@ -185,20 +187,20 @@ function Documents() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Type</th>
-              <th>Category</th>
-              <th>Version</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Actions</th>
+              <th>{t('documents.documentTitle')}</th>
+              <th>{t('common.type')}</th>
+              <th>{t('common.category')}</th>
+              <th>{t('documents.version')}</th>
+              <th>{t('common.status')}</th>
+              <th>{t('users.createdDate')}</th>
+              <th>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {filteredDocuments.length === 0 ? (
               <tr>
                 <td colSpan={7} className="no-data">
-                  {searchTerm ? 'No documents match your search' : 'No documents found'}
+                  {searchTerm ? t('messages.noResults') : t('messages.noData')}
                 </td>
               </tr>
             ) : (
@@ -221,7 +223,7 @@ function Documents() {
                       className="btn-view"
                       onClick={() => handleViewDocument(doc.id)}
                     >
-                      View
+                      {t('common.view')}
                     </button>
                   </td>
                 </tr>
