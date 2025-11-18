@@ -6,6 +6,7 @@ import { BrandingProvider } from './contexts/BrandingContext';
 import { ToastProvider } from './contexts/ToastContext';
 import ToastContainer from './components/ToastContainer';
 import App from './App';
+import './i18n'; // Import i18n configuration
 import './styles/index.css';
 
 const queryClient = new QueryClient({
