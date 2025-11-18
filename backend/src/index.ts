@@ -40,6 +40,7 @@ import supplierRoutes from './routes/supplierRoutes';
 import acceptanceCriteriaRoutes from './routes/acceptanceCriteriaRoutes';
 import inspectionPlanRoutes from './routes/inspectionPlanRoutes';
 import inspectionItemRoutes from './routes/inspectionItemRoutes';
+import improvementIdeaRoutes from './routes/improvementIdeaRoutes';
 
 dotenv.config();
 
@@ -105,6 +106,7 @@ app.use('/api/supplier-evaluations', supplierEvaluationRoutes);
 app.use('/api/acceptance-criteria', acceptanceCriteriaRoutes);
 app.use('/api/inspection-plans', inspectionPlanRoutes);
 app.use('/api/inspection-items', inspectionItemRoutes);
+app.use('/api/improvement-ideas', improvementIdeaRoutes);
 
 // 404 handler
 app.use((_req, res) => {

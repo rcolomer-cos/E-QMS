@@ -366,3 +366,49 @@ export interface RiskStatistics {
   byLevel: Record<string, number>;
   byCategory: Record<string, number>;
 }
+
+export interface ImprovementIdea {
+  id?: number;
+  ideaNumber: string;
+  title: string;
+  description: string;
+  category: string;
+  expectedImpact?: string;
+  impactArea?: string;
+  submittedBy: number;
+  submitterFirstName?: string;
+  submitterLastName?: string;
+  submitterEmail?: string;
+  responsibleUser?: number;
+  responsibleFirstName?: string;
+  responsibleLastName?: string;
+  responsibleEmail?: string;
+  department?: string;
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'in_progress' | 'implemented' | 'closed';
+  submittedDate: string;
+  reviewedDate?: string;
+  implementedDate?: string;
+  reviewComments?: string;
+  reviewedBy?: number;
+  reviewerFirstName?: string;
+  reviewerLastName?: string;
+  reviewerEmail?: string;
+  implementationNotes?: string;
+  estimatedCost?: number;
+  estimatedBenefit?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ImprovementIdeaStatistics {
+  totalIdeas: number;
+  submitted: number;
+  underReview: number;
+  approved: number;
+  rejected: number;
+  inProgress: number;
+  implemented: number;
+  closed: number;
+  byCategory: Record<string, number>;
+  byImpactArea: Record<string, number>;
+}

@@ -1690,3 +1690,113 @@ export const validateSupplierEvaluationStatus = [
     .withMessage('Invalid status. Must be one of: draft, completed, under_review, approved, rejected'),
 ];
 
+export const validateImprovementIdea = [
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must be between 1 and 500 characters'),
+  body('description')
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Description must be between 1 and 2000 characters'),
+  body('category')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Category is required and must not exceed 200 characters'),
+  body('expectedImpact')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Expected impact must not exceed 2000 characters'),
+  body('impactArea')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Impact area must not exceed 200 characters'),
+  body('responsibleUser')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid responsible user ID'),
+  body('department')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Department must not exceed 100 characters'),
+  body('estimatedCost')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Estimated cost must be a non-negative number'),
+  body('estimatedBenefit')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Estimated benefit must not exceed 1000 characters'),
+];
+
+export const validateImprovementIdeaUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must be between 1 and 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Description must be between 1 and 2000 characters'),
+  body('category')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Category must not exceed 200 characters'),
+  body('expectedImpact')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Expected impact must not exceed 2000 characters'),
+  body('impactArea')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Impact area must not exceed 200 characters'),
+  body('responsibleUser')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid responsible user ID'),
+  body('department')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Department must not exceed 100 characters'),
+  body('reviewComments')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Review comments must not exceed 2000 characters'),
+  body('implementationNotes')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Implementation notes must not exceed 2000 characters'),
+  body('estimatedCost')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Estimated cost must be a non-negative number'),
+  body('estimatedBenefit')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Estimated benefit must not exceed 1000 characters'),
+];
+
+export const validateImprovementIdeaStatus = [
+  body('status')
+    .isIn(['submitted', 'under_review', 'approved', 'rejected', 'in_progress', 'implemented', 'closed'])
+    .withMessage('Invalid status. Must be one of: submitted, under_review, approved, rejected, in_progress, implemented, closed'),
+  body('reviewComments')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Review comments must not exceed 2000 characters'),
+];
+
