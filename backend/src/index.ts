@@ -41,6 +41,7 @@ import acceptanceCriteriaRoutes from './routes/acceptanceCriteriaRoutes';
 import inspectionPlanRoutes from './routes/inspectionPlanRoutes';
 import inspectionItemRoutes from './routes/inspectionItemRoutes';
 import improvementIdeaRoutes from './routes/improvementIdeaRoutes';
+import implementationTaskRoutes from './routes/implementationTaskRoutes';
 
 dotenv.config();
 
@@ -107,6 +108,7 @@ app.use('/api/acceptance-criteria', acceptanceCriteriaRoutes);
 app.use('/api/inspection-plans', inspectionPlanRoutes);
 app.use('/api/inspection-items', inspectionItemRoutes);
 app.use('/api/improvement-ideas', improvementIdeaRoutes);
+app.use('/api/implementation-tasks', implementationTaskRoutes);
 
 // 404 handler
 app.use((_req, res) => {

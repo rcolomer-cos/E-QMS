@@ -12,6 +12,7 @@ import {
 } from '../services/improvementIdeaService';
 import { ImprovementIdea } from '../types';
 import { useAuth } from '../services/authService';
+import ImplementationTasks from '../components/ImplementationTasks';
 import '../styles/ImprovementIdeaDetail.css';
 
 function ImprovementIdeaDetail() {
@@ -439,6 +440,14 @@ function ImprovementIdeaDetail() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Implementation Tasks Section */}
+      {idea && (
+        <ImplementationTasks 
+          improvementIdeaId={idea.id!} 
+          improvementIdeaStatus={idea.status}
+        />
       )}
 
       {/* Status Update Modal */}
