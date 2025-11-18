@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 import { getCurrentUser } from '../services/authService';
 import { getAuditFindingsSummary } from '../services/auditFindingService';
@@ -29,6 +30,7 @@ interface AuditFindingsSummary {
 }
 
 function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     totalDocuments: 0,
@@ -103,29 +105,29 @@ function Dashboard() {
   };
 
   if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
+    return <div className="loading">{t('common.loading')}</div>;
   }
 
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>KPI Dashboard</h1>
+        <h1>{t('dashboard.title')}</h1>
         <div className="dashboard-actions">
           <button className="tw-btn tw-btn-secondary" onClick={() => setShowCharts(!showCharts)}>
-            {showCharts ? 'Hide Charts' : 'Show Charts'}
+            {showCharts ? t('dashboard.hideCharts') : t('dashboard.showCharts')}
           </button>
           <button className="tw-btn tw-btn-primary" onClick={handleRefreshData}>
-            Refresh Data
+            {t('common.refresh')}
           </button>
         </div>
       </div>
 
       {/* Date Range Filter */}
       <div className="filter-section">
-        <h3>Filter by Date Range</h3>
+        <h3>{t('dashboard.dateRange')}</h3>
         <div className="filter-controls">
           <div className="filter-group">
-            <label htmlFor="startDate">Start Date:</label>
+            <label htmlFor="startDate">{t('dashboard.startDate')}:</label>
             <input
               type="date"
               id="startDate"
@@ -134,7 +136,7 @@ function Dashboard() {
             />
           </div>
           <div className="filter-group">
-            <label htmlFor="endDate">End Date:</label>
+            <label htmlFor="endDate">{t('dashboard.endDate')}:</label>
             <input
               type="date"
               id="endDate"
@@ -147,10 +149,10 @@ function Dashboard() {
             onClick={handleFilterApply}
             disabled={!dateRange.startDate || !dateRange.endDate}
           >
-            Apply Filter
+            {t('dashboard.applyFilters')}
           </button>
           <button className="tw-btn tw-btn-secondary" onClick={handleFilterClear}>
-            Clear Filter
+            {t('dashboard.clearFilters')}
           </button>
         </div>
       </div>
@@ -158,39 +160,39 @@ function Dashboard() {
       {/* Summary Statistics */}
       <div className="stats-grid">
         <div className="stat-card clickable" onClick={() => navigate('/documents')}>
-          <h3>Documents</h3>
+          <h3>{t('documents.title')}</h3>
           <div className="stat-value">{stats.totalDocuments}</div>
-          <p>Total documents</p>
+          <p>{t('dashboard.totalDocuments')}</p>
         </div>
 
         <div className="stat-card clickable" onClick={() => navigate('/audits')}>
-          <h3>Audits</h3>
+          <h3>{t('audits.title')}</h3>
           <div className="stat-value">{stats.activeAudits}</div>
-          <p>Active audits</p>
+          <p>{t('dashboard.activeAudits')}</p>
         </div>
 
         <div className="stat-card clickable" onClick={() => navigate('/ncr')}>
-          <h3>NCRs</h3>
+          <h3>{t('ncr.title')}</h3>
           <div className="stat-value">{stats.openNCRs}</div>
-          <p>Open/In Progress NCRs</p>
+          <p>{t('dashboard.openNCRs')}</p>
         </div>
 
         <div className="stat-card">
-          <h3>CAPAs</h3>
+          <h3>{t('capa.title')}</h3>
           <div className="stat-value">{stats.pendingCAPAs}</div>
-          <p>Pending CAPAs</p>
+          <p>{t('dashboard.pendingCAPAs')}</p>
         </div>
 
         <div className="stat-card warning clickable" onClick={() => navigate('/equipment')}>
-          <h3>Equipment</h3>
+          <h3>{t('equipment.title')}</h3>
           <div className="stat-value">{stats.equipmentCalibrationDue}</div>
-          <p>Calibration due</p>
+          <p>{t('dashboard.equipmentCalibrationDue')}</p>
         </div>
 
         <div className="stat-card clickable" onClick={() => navigate('/training')}>
-          <h3>Training</h3>
+          <h3>{t('training.title')}</h3>
           <div className="stat-value">{stats.upcomingTrainings}</div>
-          <p>Upcoming sessions</p>
+          <p>{t('dashboard.upcomingTrainings')}</p>
         </div>
       </div>
 
@@ -198,32 +200,32 @@ function Dashboard() {
       {ncrMetrics && (
         <div className="dashboard-section full-width">
           <div className="section-header">
-            <h2>NCR Metrics Overview</h2>
+            <h2>{t('dashboard.ncrMetrics')}</h2>
             <button className="tw-btn-link" onClick={() => navigate('/ncr/dashboard')}>
-              View Detailed Dashboard →
+              {t('dashboard.viewAll')} →
             </button>
           </div>
           
           <div className="metrics-grid">
             <div className="metric-card">
-              <div className="metric-label">Open</div>
+              <div className="metric-label">{t('common.open')}</div>
               <div className="metric-value open">{ncrMetrics.totalOpen}</div>
             </div>
             <div className="metric-card">
-              <div className="metric-label">In Progress</div>
+              <div className="metric-label">{t('common.inProgress')}</div>
               <div className="metric-value in-progress">{ncrMetrics.totalInProgress}</div>
             </div>
             <div className="metric-card">
-              <div className="metric-label">Resolved</div>
+              <div className="metric-label">{t('ncr.closureRate')}</div>
               <div className="metric-value resolved">{ncrMetrics.totalResolved}</div>
             </div>
             <div className="metric-card">
-              <div className="metric-label">Closed</div>
+              <div className="metric-label">{t('common.closed')}</div>
               <div className="metric-value closed">{ncrMetrics.totalClosed}</div>
             </div>
             <div className="metric-card">
-              <div className="metric-label">Avg. Closure Time</div>
-              <div className="metric-value">{ncrMetrics.averageClosureTime} days</div>
+              <div className="metric-label">{t('ncr.responseTime')}</div>
+              <div className="metric-value">{ncrMetrics.averageClosureTime} {t('common.date')}</div>
             </div>
           </div>
 
@@ -236,7 +238,7 @@ function Dashboard() {
                   color: item.severity === 'critical' ? '#dc3545' : 
                          item.severity === 'major' ? '#ffc107' : '#28a745'
                 }))}
-                title="NCR by Severity"
+                title={t('dashboard.bySeverity')}
                 height={300}
                 showPercentage={true}
               />
@@ -246,9 +248,9 @@ function Dashboard() {
                   name: item.category.length > 15 ? item.category.substring(0, 15) + '...' : item.category,
                   value: item.count,
                 }))}
-                title="Top 5 NCR Categories"
+                title={t('dashboard.byCategory')}
                 height={300}
-                yAxisLabel="Count"
+                yAxisLabel={t('common.total')}
               />
 
               <LineChart
@@ -257,11 +259,11 @@ function Dashboard() {
                   count: item.count,
                 }))}
                 series={[
-                  { dataKey: 'count', name: 'NCRs', color: '#007bff' }
+                  { dataKey: 'count', name: t('ncr.title'), color: '#007bff' }
                 ]}
-                title="NCR Monthly Trend (Last 6 Months)"
+                title={t('dashboard.overTime')}
                 height={300}
-                yAxisLabel="Count"
+                yAxisLabel={t('common.total')}
               />
             </div>
           )}
@@ -272,30 +274,30 @@ function Dashboard() {
       {equipmentMetrics && (
         <div className="dashboard-section full-width">
           <div className="section-header">
-            <h2>Equipment Service Indicators</h2>
+            <h2>{t('dashboard.equipmentMetrics')}</h2>
             <button className="tw-btn-link" onClick={() => navigate('/equipment')}>
-              View Equipment List →
+              {t('dashboard.viewAll')} →
             </button>
           </div>
           
           <div className="metrics-grid">
             <div className="metric-card">
-              <div className="metric-label">Total Equipment</div>
+              <div className="metric-label">{t('equipment.allEquipment')}</div>
               <div className="metric-value">{equipmentMetrics.total}</div>
             </div>
             <div className="metric-card danger">
-              <div className="metric-label">Overdue Calibrations</div>
+              <div className="metric-label">{t('equipment.calibrationDue')}</div>
               <div className="metric-value">{equipmentMetrics.overdue.calibration}</div>
             </div>
             <div className="metric-card danger">
-              <div className="metric-label">Overdue Maintenance</div>
+              <div className="metric-label">{t('equipment.maintenanceDue')}</div>
               <div className="metric-value">{equipmentMetrics.overdue.maintenance}</div>
             </div>
             <div className="metric-card warning">
-              <div className="metric-label">Upcoming (30 days)</div>
+              <div className="metric-label">{t('training.upcomingTraining')} (30 {t('common.date')})</div>
               <div className="metric-value">{equipmentMetrics.upcoming.total}</div>
               <div className="metric-detail">
-                Cal: {equipmentMetrics.upcoming.calibration} | Maint: {equipmentMetrics.upcoming.maintenance}
+                {t('equipment.calibration')}: {equipmentMetrics.upcoming.calibration} | {t('equipment.maintenance')}: {equipmentMetrics.upcoming.maintenance}
               </div>
             </div>
           </div>
@@ -307,21 +309,21 @@ function Dashboard() {
                   name: status.replace('_', ' ').toUpperCase(),
                   value: count,
                 }))}
-                title="Equipment by Status"
+                title={t('dashboard.byStatus')}
                 height={300}
                 showPercentage={true}
               />
 
               <BarChart
                 data={[
-                  { name: 'Overdue Cal', value: equipmentMetrics.overdue.calibration, color: '#dc3545' },
-                  { name: 'Overdue Maint', value: equipmentMetrics.overdue.maintenance, color: '#dc3545' },
-                  { name: 'Upcoming Cal', value: equipmentMetrics.upcoming.calibration, color: '#ffc107' },
-                  { name: 'Upcoming Maint', value: equipmentMetrics.upcoming.maintenance, color: '#ffc107' },
+                  { name: t('equipment.calibrationDue'), value: equipmentMetrics.overdue.calibration, color: '#dc3545' },
+                  { name: t('equipment.maintenanceDue'), value: equipmentMetrics.overdue.maintenance, color: '#dc3545' },
+                  { name: t('equipment.nextCalibration'), value: equipmentMetrics.upcoming.calibration, color: '#ffc107' },
+                  { name: t('equipment.nextMaintenance'), value: equipmentMetrics.upcoming.maintenance, color: '#ffc107' },
                 ]}
-                title="Equipment Service Overview"
+                title={t('equipment.title')}
                 height={300}
-                yAxisLabel="Count"
+                yAxisLabel={t('common.total')}
               />
             </div>
           )}
@@ -332,15 +334,15 @@ function Dashboard() {
       {auditFindingsSummary && (
         <div className="dashboard-section full-width">
           <div className="section-header">
-            <h2>Audit Findings Overview</h2>
+            <h2>{t('dashboard.auditFindings')}</h2>
             <button className="tw-btn-link" onClick={() => navigate('/audit-findings')}>
-              View All Findings →
+              {t('dashboard.viewAll')} →
             </button>
           </div>
           
           <div className="metrics-grid">
             <div className="metric-card">
-              <div className="metric-label">Total Findings</div>
+              <div className="metric-label">{t('audits.findings')}</div>
               <div className="metric-value">{auditFindingsSummary.total}</div>
             </div>
             {Object.entries(auditFindingsSummary.bySeverity).slice(0, 3).map(([severity, count]) => (
@@ -361,7 +363,7 @@ function Dashboard() {
                          severity === 'major' ? '#ffc107' : 
                          severity === 'minor' ? '#17a2b8' : '#28a745'
                 }))}
-                title="Findings by Severity"
+                title={t('dashboard.bySeverity')}
                 height={300}
                 showPercentage={true}
               />
@@ -371,9 +373,9 @@ function Dashboard() {
                   name: category.length > 15 ? category.substring(0, 15) + '...' : category,
                   value: count,
                 }))}
-                title="Top 5 Finding Categories"
+                title={t('dashboard.byCategory')}
                 height={300}
-                yAxisLabel="Count"
+                yAxisLabel={t('common.total')}
               />
 
               <BarChart
@@ -383,9 +385,9 @@ function Dashboard() {
                   color: status === 'open' ? '#dc3545' : 
                          status === 'resolved' ? '#28a745' : '#6c757d'
                 }))}
-                title="Findings by Status"
+                title={t('dashboard.byStatus')}
                 height={300}
-                yAxisLabel="Count"
+                yAxisLabel={t('common.total')}
               />
 
               {auditFindingsSummary.overTime && auditFindingsSummary.overTime.length > 0 && (
@@ -395,11 +397,11 @@ function Dashboard() {
                     count: item.count,
                   }))}
                   series={[
-                    { dataKey: 'count', name: 'Findings', color: '#007bff' }
+                    { dataKey: 'count', name: t('audits.findings'), color: '#007bff' }
                   ]}
-                  title="Findings Trend (Last 6 Months)"
+                  title={t('dashboard.overTime')}
                   height={300}
-                  yAxisLabel="Count"
+                  yAxisLabel={t('common.total')}
                 />
               )}
             </div>
@@ -409,20 +411,20 @@ function Dashboard() {
 
       <div className="dashboard-sections">
         <div className="dashboard-section">
-          <h2>My Training Compliance</h2>
+          <h2>{t('training.competency')}</h2>
           {currentUser && <MissingCompetencies userId={currentUser.id} daysThreshold={30} />}
         </div>
 
         <div className="dashboard-section">
-          <h2>Recent Activity</h2>
-          <p>No recent activity</p>
+          <h2>{t('dashboard.recentActivity')}</h2>
+          <p>{t('messages.noData')}</p>
         </div>
 
         <div className="dashboard-section">
-          <h2>Alerts & Notifications</h2>
+          <h2>{t('settings.notifications')}</h2>
           {stats.equipmentCalibrationDue > 0 && (
             <div className="alert">
-              {stats.equipmentCalibrationDue} equipment item(s) require calibration
+              {stats.equipmentCalibrationDue} {t('equipment.calibrationDue')}
             </div>
           )}
         </div>
