@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ReminderLogModel, ReminderLogFilters } from '../models/ReminderLogModel';
+import { ReminderLogModel, ReminderLogFilters, ReminderType, ReminderStatus } from '../models/ReminderLogModel';
 import { SchedulerService } from '../services/schedulerService';
 import { AuthRequest } from '../types';
 
@@ -14,11 +14,11 @@ export const getReminderLogs = async (req: Request, res: Response): Promise<void
     const filters: ReminderLogFilters = {};
     
     if (req.query.reminderType) {
-      filters.reminderType = req.query.reminderType as any;
+      filters.reminderType = req.query.reminderType as ReminderType;
     }
     
     if (req.query.status) {
-      filters.status = req.query.status as any;
+      filters.status = req.query.status as ReminderStatus;
     }
     
     if (req.query.startDate) {
@@ -87,7 +87,7 @@ export const getReminderLogById = async (req: Request, res: Response): Promise<v
 export const getLatestLog = async (req: Request, res: Response): Promise<void> => {
   try {
     const { type } = req.params;
-    const log = await ReminderLogModel.getLatestByType(type as any);
+    const log = await ReminderLogModel.getLatestByType(type as ReminderType);
 
     if (!log) {
       res.status(404).json({
