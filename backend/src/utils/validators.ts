@@ -1915,3 +1915,118 @@ export const validateImprovementIdeaIdParam: ValidationChain[] = [
     .withMessage('Invalid improvement idea ID parameter'),
 ];
 
+// Email Template Validators
+export const validateEmailTemplate = [
+  body('name')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Name must be between 1 and 200 characters'),
+  body('displayName')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Display name must be between 1 and 200 characters'),
+  body('type')
+    .trim()
+    .isIn([
+      'ncr_notification',
+      'ncr_assignment',
+      'ncr_status_update',
+      'training_reminder',
+      'training_assignment',
+      'training_expiry_warning',
+      'audit_assignment',
+      'audit_notification',
+      'audit_finding',
+      'capa_assignment',
+      'capa_deadline_reminder'
+    ])
+    .withMessage('Invalid template type'),
+  body('category')
+    .trim()
+    .isIn(['ncr', 'training', 'audit', 'capa', 'general'])
+    .withMessage('Invalid category'),
+  body('subject')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Subject must be between 1 and 500 characters'),
+  body('body')
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Body is required'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Description must not exceed 1000 characters'),
+  body('placeholders')
+    .optional()
+    .trim(),
+  body('isActive')
+    .isBoolean()
+    .withMessage('isActive must be a boolean'),
+  body('isDefault')
+    .isBoolean()
+    .withMessage('isDefault must be a boolean'),
+];
+
+export const validateEmailTemplateUpdate = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Name must be between 1 and 200 characters'),
+  body('displayName')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Display name must be between 1 and 200 characters'),
+  body('type')
+    .optional()
+    .trim()
+    .isIn([
+      'ncr_notification',
+      'ncr_assignment',
+      'ncr_status_update',
+      'training_reminder',
+      'training_assignment',
+      'training_expiry_warning',
+      'audit_assignment',
+      'audit_notification',
+      'audit_finding',
+      'capa_assignment',
+      'capa_deadline_reminder'
+    ])
+    .withMessage('Invalid template type'),
+  body('category')
+    .optional()
+    .trim()
+    .isIn(['ncr', 'training', 'audit', 'capa', 'general'])
+    .withMessage('Invalid category'),
+  body('subject')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Subject must be between 1 and 500 characters'),
+  body('body')
+    .optional()
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Body must not be empty'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Description must not exceed 1000 characters'),
+  body('placeholders')
+    .optional()
+    .trim(),
+  body('isActive')
+    .optional()
+    .isBoolean()
+    .withMessage('isActive must be a boolean'),
+  body('isDefault')
+    .optional()
+    .isBoolean()
+    .withMessage('isDefault must be a boolean'),
+];
+

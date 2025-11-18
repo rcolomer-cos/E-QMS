@@ -43,6 +43,7 @@ import ChartDemo from './pages/ChartDemo';
 import ImprovementIdeas from './pages/ImprovementIdeas';
 import ImprovementIdeaDetail from './pages/ImprovementIdeaDetail';
 import ImprovementStatusDashboard from './pages/ImprovementStatusDashboard';
+import EmailTemplates from './pages/EmailTemplates';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -102,6 +103,7 @@ function App() {
         <Route path="improvement-ideas" element={<ImprovementIdeas />} />
         <Route path="improvement-ideas/dashboard" element={<ImprovementStatusDashboard />} />
         <Route path="improvement-ideas/:id" element={<ImprovementIdeaDetail />} />
+        <Route path="email-templates" element={<EmailTemplates />} />
         <Route path="chart-demo" element={<ChartDemo />} />
       </Route>
     </Routes>

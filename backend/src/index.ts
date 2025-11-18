@@ -42,6 +42,7 @@ import inspectionPlanRoutes from './routes/inspectionPlanRoutes';
 import inspectionItemRoutes from './routes/inspectionItemRoutes';
 import improvementIdeaRoutes from './routes/improvementIdeaRoutes';
 import implementationTaskRoutes from './routes/implementationTaskRoutes';
+import emailTemplateRoutes from './routes/emailTemplateRoutes';
 
 dotenv.config();
 
@@ -109,6 +110,7 @@ app.use('/api/inspection-plans', inspectionPlanRoutes);
 app.use('/api/inspection-items', inspectionItemRoutes);
 app.use('/api/improvement-ideas', improvementIdeaRoutes);
 app.use('/api/implementation-tasks', implementationTaskRoutes);
+app.use('/api/email-templates', emailTemplateRoutes);
 
 // 404 handler
 app.use((_req, res) => {
