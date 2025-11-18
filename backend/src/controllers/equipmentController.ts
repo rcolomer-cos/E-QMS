@@ -245,8 +245,14 @@ export const regenerateQRCode = async (req: AuthRequest, res: Response): Promise
 export const getEquipmentMetrics = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const upcomingDays = req.query.upcomingDays ? parseInt(req.query.upcomingDays as string, 10) : 30;
+    const { department } = req.query;
 
-    const metrics = await EquipmentModel.getEquipmentOverviewMetrics(upcomingDays);
+    const filters: { department?: string } = {};
+    if (department) {
+      filters.department = department as string;
+    }
+
+    const metrics = await EquipmentModel.getEquipmentOverviewMetrics(upcomingDays, filters);
 
     res.json(metrics);
   } catch (error) {

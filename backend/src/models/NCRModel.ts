@@ -112,7 +112,10 @@ export class NCRModel {
     return result.recordset;
   }
 
-  static async getMetrics(): Promise<{
+  static async getMetrics(filters?: {
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<{
     totalOpen: number;
     totalInProgress: number;
     totalResolved: number;
@@ -125,9 +128,24 @@ export class NCRModel {
     averageClosureTime: number;
   }> {
     const pool = await getConnection();
+    const request = pool.request();
+    let whereConditions = '1=1';
+
+    // Apply date filters
+    if (filters?.startDate) {
+      request.input('startDate', sql.DateTime, filters.startDate);
+      whereConditions += ' AND detectedDate >= @startDate';
+    }
+    if (filters?.endDate) {
+      request.input('endDate', sql.DateTime, filters.endDate);
+      whereConditions += ' AND detectedDate <= @endDate';
+    }
     
     // Get status counts
-    const statusResult = await pool.request().query(`
+    const statusResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT 
         SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as totalOpen,
         SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as totalInProgress,
@@ -135,13 +153,17 @@ export class NCRModel {
         SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as totalClosed,
         SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as totalRejected
       FROM NCRs
+      WHERE ${whereConditions}
     `);
 
     // Get severity breakdown
-    const severityResult = await pool.request().query(`
+    const severityResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT severity, COUNT(*) as count
       FROM NCRs
-      WHERE status NOT IN ('closed', 'rejected')
+      WHERE status NOT IN ('closed', 'rejected') AND ${whereConditions}
       GROUP BY severity
       ORDER BY 
         CASE severity
@@ -152,40 +174,52 @@ export class NCRModel {
     `);
 
     // Get category breakdown
-    const categoryResult = await pool.request().query(`
+    const categoryResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT category, COUNT(*) as count
       FROM NCRs
-      WHERE status NOT IN ('closed', 'rejected')
+      WHERE status NOT IN ('closed', 'rejected') AND ${whereConditions}
       GROUP BY category
       ORDER BY count DESC
     `);
 
     // Get source breakdown
-    const sourceResult = await pool.request().query(`
+    const sourceResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT source, COUNT(*) as count
       FROM NCRs
-      WHERE status NOT IN ('closed', 'rejected')
+      WHERE status NOT IN ('closed', 'rejected') AND ${whereConditions}
       GROUP BY source
       ORDER BY count DESC
     `);
 
-    // Get monthly trend (last 12 months)
-    const monthlyTrendResult = await pool.request().query(`
+    // Get monthly trend (last 12 months by default, or within filter range)
+    const monthlyTrendResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT 
         FORMAT(detectedDate, 'yyyy-MM') as month,
         COUNT(*) as count
       FROM NCRs
-      WHERE detectedDate >= DATEADD(MONTH, -12, GETDATE())
+      WHERE ${whereConditions}${!filters?.startDate ? ' AND detectedDate >= DATEADD(MONTH, -12, GETDATE())' : ''}
       GROUP BY FORMAT(detectedDate, 'yyyy-MM')
       ORDER BY FORMAT(detectedDate, 'yyyy-MM')
     `);
 
     // Get average closure time (in days)
-    const closureTimeResult = await pool.request().query(`
+    const closureTimeResult = await pool.request()
+      .input('startDate', sql.DateTime, filters?.startDate)
+      .input('endDate', sql.DateTime, filters?.endDate)
+      .query(`
       SELECT 
         AVG(DATEDIFF(DAY, detectedDate, closedDate)) as avgClosureTime
       FROM NCRs
-      WHERE closedDate IS NOT NULL
+      WHERE closedDate IS NOT NULL AND ${whereConditions}
     `);
 
     const stats = statusResult.recordset[0];

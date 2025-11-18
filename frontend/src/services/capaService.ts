@@ -191,7 +191,14 @@ export interface CAPADashboardStats {
 /**
  * Get CAPA dashboard statistics
  */
-export const getCAPADashboardStats = async (): Promise<CAPADashboardStats> => {
-  const response = await api.get<CAPADashboardStats>('/capas/dashboard/stats');
+export const getCAPADashboardStats = async (filters?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<CAPADashboardStats> => {
+  const params = new URLSearchParams();
+  if (filters?.startDate) params.append('startDate', filters.startDate);
+  if (filters?.endDate) params.append('endDate', filters.endDate);
+  
+  const response = await api.get<CAPADashboardStats>(`/capas/dashboard/stats?${params.toString()}`);
   return response.data;
 };

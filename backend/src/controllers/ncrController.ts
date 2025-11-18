@@ -321,9 +321,20 @@ export const getNCRsByInspectionRecord = async (req: AuthRequest, res: Response)
   }
 };
 
-export const getNCRMetrics = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getNCRMetrics = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const metrics = await NCRModel.getMetrics();
+    const { startDate, endDate } = req.query;
+
+    const filters: { startDate?: Date; endDate?: Date } = {};
+
+    if (startDate) {
+      filters.startDate = new Date(startDate as string);
+    }
+    if (endDate) {
+      filters.endDate = new Date(endDate as string);
+    }
+
+    const metrics = await NCRModel.getMetrics(filters);
 
     res.json(metrics);
   } catch (error) {
