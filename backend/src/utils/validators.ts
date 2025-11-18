@@ -1826,3 +1826,92 @@ export const validateImprovementIdeaRejection = [
     .withMessage('Review comments must not exceed 2000 characters'),
 ];
 
+// ========================================
+// Implementation Task Validators
+// ========================================
+
+export const validateImplementationTask = [
+  body('improvementIdeaId')
+    .isInt({ min: 1 })
+    .withMessage('Valid improvement idea ID is required'),
+  body('taskName')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Task name is required and must not exceed 500 characters'),
+  body('taskDescription')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Task description must not exceed 2000 characters'),
+  body('assignedTo')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid assigned user ID'),
+  body('deadline')
+    .optional()
+    .isISO8601()
+    .withMessage('Deadline must be a valid date'),
+  body('status')
+    .optional()
+    .isIn(['pending', 'in_progress', 'completed', 'blocked', 'cancelled'])
+    .withMessage('Invalid status'),
+  body('progressPercentage')
+    .optional()
+    .isInt({ min: 0, max: 100 })
+    .withMessage('Progress percentage must be between 0 and 100'),
+];
+
+export const validateImplementationTaskUpdate = [
+  body('taskName')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Task name must not exceed 500 characters'),
+  body('taskDescription')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Task description must not exceed 2000 characters'),
+  body('assignedTo')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid assigned user ID'),
+  body('deadline')
+    .optional()
+    .isISO8601()
+    .withMessage('Deadline must be a valid date'),
+  body('status')
+    .optional()
+    .isIn(['pending', 'in_progress', 'completed', 'blocked', 'cancelled'])
+    .withMessage('Invalid status'),
+  body('progressPercentage')
+    .optional()
+    .isInt({ min: 0, max: 100 })
+    .withMessage('Progress percentage must be between 0 and 100'),
+  body('completionEvidence')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Completion evidence must not exceed 2000 characters'),
+];
+
+export const validateImplementationTaskComplete = [
+  body('completionEvidence')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Completion evidence must not exceed 2000 characters'),
+];
+
+export const validateIdParam: ValidationChain[] = [
+  param('id')
+    .isInt({ min: 1 })
+    .withMessage('Invalid ID parameter'),
+];
+
+export const validateImprovementIdeaIdParam: ValidationChain[] = [
+  param('improvementIdeaId')
+    .isInt({ min: 1 })
+    .withMessage('Invalid improvement idea ID parameter'),
+];
+
