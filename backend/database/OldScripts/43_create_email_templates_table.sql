@@ -63,7 +63,7 @@ BEGIN
         )),
         -- Ensure only one default template per type
         CONSTRAINT UQ_EmailTemplates_DefaultPerType UNIQUE (type, isDefault) 
-            WHERE isDefault = 1
+            
     );
 
     -- Indexes for Performance
@@ -85,6 +85,9 @@ BEGIN
     -- Audit trail lookups
     CREATE INDEX IX_EmailTemplates_CreatedAt ON EmailTemplates(createdAt DESC);
     CREATE INDEX IX_EmailTemplates_UpdatedAt ON EmailTemplates(updatedAt DESC);
+
+    CREATE UNIQUE INDEX UX_EmailTemplates_DefaultPerType ON EmailTemplates(type)
+    WHERE isDefault = 1;
 
     PRINT 'EmailTemplates table created successfully';
 END

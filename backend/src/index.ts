@@ -50,7 +50,8 @@ import webhookRoutes from './routes/webhookRoutes';
 import companyBrandingRoutes from './routes/companyBrandingRoutes';
 
 // Import scheduler service
-import { SchedulerService } from './services/schedulerService';
+// TEMPORARILY DISABLED FOR DEBUGGING
+// import { SchedulerService } from './services/schedulerService';
 
 dotenv.config();
 
@@ -133,19 +134,41 @@ app.use((_req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
+// Global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
 // Start server
 const PORT = config.port;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${config.nodeEnv}`);
   
   // Initialize scheduler after server starts
-  try {
-    SchedulerService.initialize();
-    console.log('Reminder scheduler initialized');
-  } catch (error) {
-    console.error('Failed to initialize scheduler:', error);
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  // try {
+  //   SchedulerService.initialize();
+  //   console.log('Reminder scheduler initialized');
+  // } catch (error) {
+  //   console.error('Failed to initialize scheduler:', error);
+  // }
+  console.log('Server initialized (scheduler disabled)');
+});
+
+// Handle server errors
+server.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use`);
+  } else {
+    console.error('Server error:', error);
   }
+  process.exit(1);
 });
 
 export default app;

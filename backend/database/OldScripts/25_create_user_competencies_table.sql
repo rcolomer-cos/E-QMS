@@ -33,12 +33,12 @@ BEGIN
         -- Validity and Expiration
         effectiveDate DATETIME2 NOT NULL, -- Date competency becomes effective
         expiryDate DATETIME2, -- Date competency expires (NULL = no expiry)
-        isExpired BIT GENERATED ALWAYS AS (
+        isExpired AS (
             CASE 
                 WHEN expiryDate IS NOT NULL AND expiryDate < GETDATE() THEN 1
                 ELSE 0
             END
-        ) PERSISTED, -- Computed column for expiry status
+        ), -- Computed column for expiry status
         
         -- Renewal Tracking
         lastRenewalDate DATETIME2, -- Date of last renewal
