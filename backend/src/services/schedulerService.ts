@@ -47,6 +47,7 @@ export class SchedulerService {
     console.log(`Initializing scheduler with cron: ${finalConfig.cronExpression}`);
     
     this.scheduleReminders(finalConfig);
+    this.scheduleSyncJobs();
     this.isInitialized = true;
     
     console.log('Scheduler initialized successfully');
@@ -82,6 +83,38 @@ export class SchedulerService {
 
     this.tasks.set('reminders', task);
     console.log('Reminder tasks scheduled');
+  }
+
+  /**
+   * Schedule sync jobs
+   */
+  private static scheduleSyncJobs(): void {
+    // Check for sync jobs every 5 minutes
+    const task = cron.schedule(
+      '*/5 * * * *',
+      async () => {
+        console.log(`[${new Date().toISOString()}] Checking for due sync jobs...`);
+        
+        try {
+          const { SyncService } = await import('./syncService');
+          const result = await SyncService.executeScheduledSyncs();
+          
+          console.log(`[${new Date().toISOString()}] Sync jobs completed:`, {
+            totalProcessed: result.totalProcessed,
+            successful: result.successful,
+            failed: result.failed,
+          });
+        } catch (error) {
+          console.error(`[${new Date().toISOString()}] Error running sync jobs:`, error);
+        }
+      },
+      {
+        timezone: process.env.SCHEDULER_TIMEZONE || 'UTC',
+      }
+    );
+
+    this.tasks.set('sync', task);
+    console.log('Sync jobs scheduled (check every 5 minutes)');
   }
 
   /**
