@@ -1,10 +1,12 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { logout, getCurrentUser } from '../services/authService';
+import { useBranding } from '../contexts/BrandingContext';
 import '../styles/Layout.css';
 
 function Layout() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const { branding } = useBranding();
 
   const handleLogout = () => {
     logout();
@@ -15,7 +17,21 @@ function Layout() {
     <div className="layout">
       <nav className="navbar">
         <div className="navbar-brand">
-          <h1>E-QMS</h1>
+          {branding?.companyLogoUrl || branding?.companyLogoPath ? (
+            <>
+              <img 
+                src={branding.companyLogoUrl || branding.companyLogoPath || ''} 
+                alt={branding.companyName || 'Company Logo'} 
+                className="company-logo"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+              <h1>{branding.companyName || 'E-QMS'}</h1>
+            </>
+          ) : (
+            <h1>{branding?.companyName || 'E-QMS'}</h1>
+          )}
         </div>
         <ul className="navbar-menu">
           <li><Link to="/">Dashboard</Link></li>
@@ -45,6 +61,7 @@ function Layout() {
               <li><Link to="/email-templates">Email Templates</Link></li>
               <li><Link to="/backup-management">Backup & Restore</Link></li>
               <li><Link to="/system-settings">System Settings</Link></li>
+              <li><Link to="/company-branding">Company Branding</Link></li>
               <li><Link to="/audit-logs">Audit Logs</Link></li>
             </>
           )}
