@@ -1,3 +1,8 @@
+:root {
+  --brand-primary-color: #1976d2;
+  --brand-secondary-color: #dc004e;
+}
+
 * {
   margin: 0;
   padding: 0;

@@ -4,9 +4,11 @@ import {
   updateCompanyBranding,
   CompanyBranding as CompanyBrandingType,
 } from '../services/companyBrandingService';
+import { useBranding } from '../contexts/BrandingContext';
 import '../styles/CompanyBranding.css';
 
 const CompanyBranding = () => {
+  const { refreshBranding } = useBranding();
   const [branding, setBranding] = useState<CompanyBrandingType | null>(null);
   const [formData, setFormData] = useState<Partial<CompanyBrandingType>>({});
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,9 @@ const CompanyBranding = () => {
       setSuccess(result.message);
       setBranding(result.branding);
       setFormData(result.branding);
+      
+      // Refresh global branding context to update logo and colors throughout the app
+      await refreshBranding();
     } catch (err) {
       console.error('Error saving company branding:', err);
       const error = err as { response?: { data?: { error?: string } } };
