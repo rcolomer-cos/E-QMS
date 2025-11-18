@@ -323,6 +323,166 @@ export const deleteImprovementIdea = async (req: AuthRequest, res: Response): Pr
 };
 
 /**
+ * Approve improvement idea
+ * Only managers and admins can approve ideas
+ */
+export const approveImprovementIdea = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const id = parseInt(req.params.id, 10);
+    const { reviewComments, responsibleUser, implementationNotes } = req.body;
+
+    const oldIdea = await ImprovementIdeaModel.findById(id);
+
+    if (!oldIdea) {
+      res.status(404).json({ error: 'Improvement idea not found' });
+      return;
+    }
+
+    // Validate workflow transition
+    if (oldIdea.status !== 'submitted' && oldIdea.status !== 'under_review') {
+      res.status(400).json({ 
+        error: `Cannot approve idea with status '${oldIdea.status}'. Only ideas with status 'submitted' or 'under_review' can be approved.` 
+      });
+      return;
+    }
+
+    const updateData: Partial<ImprovementIdea> = {
+      status: 'approved',
+      reviewedDate: new Date(),
+      reviewedBy: req.user.id,
+      reviewComments,
+    };
+
+    // Optionally assign responsible user during approval
+    if (responsibleUser !== undefined) {
+      updateData.responsibleUser = responsibleUser || null;
+    }
+
+    // Optionally add implementation notes during approval
+    if (implementationNotes !== undefined) {
+      updateData.implementationNotes = implementationNotes || null;
+    }
+
+    const success = await ImprovementIdeaModel.update(id, updateData);
+
+    if (!success) {
+      res.status(500).json({ error: 'Failed to approve improvement idea' });
+      return;
+    }
+
+    const updatedIdea = await ImprovementIdeaModel.findById(id);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.IMPROVEMENT_IDEA,
+      entityType: 'ImprovementIdea',
+      entityId: id,
+      entityIdentifier: oldIdea.ideaNumber,
+      oldValues: { status: oldIdea.status },
+      newValues: { status: 'approved', reviewedBy: req.user.id, reviewComments },
+    });
+
+    res.json({ 
+      message: 'Improvement idea approved successfully', 
+      data: updatedIdea 
+    });
+  } catch (error) {
+    console.error('Approve improvement idea error:', error);
+    res.status(500).json({ error: 'Failed to approve improvement idea' });
+  }
+};
+
+/**
+ * Reject improvement idea
+ * Only managers and admins can reject ideas
+ */
+export const rejectImprovementIdea = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const id = parseInt(req.params.id, 10);
+    const { reviewComments } = req.body;
+
+    // Review comments are required for rejection
+    if (!reviewComments || reviewComments.trim() === '') {
+      res.status(400).json({ error: 'Review comments are required when rejecting an idea' });
+      return;
+    }
+
+    const oldIdea = await ImprovementIdeaModel.findById(id);
+
+    if (!oldIdea) {
+      res.status(404).json({ error: 'Improvement idea not found' });
+      return;
+    }
+
+    // Validate workflow transition
+    if (oldIdea.status !== 'submitted' && oldIdea.status !== 'under_review') {
+      res.status(400).json({ 
+        error: `Cannot reject idea with status '${oldIdea.status}'. Only ideas with status 'submitted' or 'under_review' can be rejected.` 
+      });
+      return;
+    }
+
+    const updateData: Partial<ImprovementIdea> = {
+      status: 'rejected',
+      reviewedDate: new Date(),
+      reviewedBy: req.user.id,
+      reviewComments,
+    };
+
+    const success = await ImprovementIdeaModel.update(id, updateData);
+
+    if (!success) {
+      res.status(500).json({ error: 'Failed to reject improvement idea' });
+      return;
+    }
+
+    const updatedIdea = await ImprovementIdeaModel.findById(id);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.IMPROVEMENT_IDEA,
+      entityType: 'ImprovementIdea',
+      entityId: id,
+      entityIdentifier: oldIdea.ideaNumber,
+      oldValues: { status: oldIdea.status },
+      newValues: { status: 'rejected', reviewedBy: req.user.id, reviewComments },
+    });
+
+    res.json({ 
+      message: 'Improvement idea rejected successfully', 
+      data: updatedIdea 
+    });
+  } catch (error) {
+    console.error('Reject improvement idea error:', error);
+    res.status(500).json({ error: 'Failed to reject improvement idea' });
+  }
+};
+
+/**
  * Get improvement idea statistics
  */
 export const getImprovementIdeaStatistics = async (_req: AuthRequest, res: Response): Promise<void> => {

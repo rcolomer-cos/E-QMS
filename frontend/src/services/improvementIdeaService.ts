@@ -153,6 +153,36 @@ export const updateImprovementIdeaStatus = async (
 };
 
 /**
+ * Approve improvement idea
+ */
+export const approveImprovementIdea = async (
+  id: number,
+  reviewComments?: string,
+  responsibleUser?: number,
+  implementationNotes?: string
+): Promise<ImprovementIdea> => {
+  const response = await api.post(`/api/improvement-ideas/${id}/approve`, {
+    reviewComments,
+    responsibleUser,
+    implementationNotes,
+  });
+  return response.data.data;
+};
+
+/**
+ * Reject improvement idea
+ */
+export const rejectImprovementIdea = async (
+  id: number,
+  reviewComments: string
+): Promise<ImprovementIdea> => {
+  const response = await api.post(`/api/improvement-ideas/${id}/reject`, {
+    reviewComments,
+  });
+  return response.data.data;
+};
+
+/**
  * Delete improvement idea
  */
 export const deleteImprovementIdea = async (id: number): Promise<void> => {
