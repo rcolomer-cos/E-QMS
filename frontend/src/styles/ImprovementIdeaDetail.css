@@ -298,6 +298,56 @@
   border-left: 4px solid #c62828;
 }
 
+/* Approve and Reject buttons */
+.btn-approve {
+  padding: 8px 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-approve:hover {
+  background-color: #388e3c;
+}
+
+.btn-reject {
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-reject:hover {
+  background-color: #c62828;
+}
+
+/* Modal info text */
+.modal-info {
+  margin: 10px 0 20px 0;
+  padding: 12px;
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
+  color: #0d47a1;
+  font-size: 14px;
+}
+
+.modal-warning {
+  background-color: #fff3e0;
+  border-left-color: #ff9800;
+  color: #e65100;
+}
+
 @media (max-width: 768px) {
   .detail-header {
     flex-direction: column;

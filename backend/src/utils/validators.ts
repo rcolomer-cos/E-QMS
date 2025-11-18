@@ -1800,3 +1800,29 @@ export const validateImprovementIdeaStatus = [
     .withMessage('Review comments must not exceed 2000 characters'),
 ];
 
+export const validateImprovementIdeaApproval = [
+  body('reviewComments')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Review comments must not exceed 2000 characters'),
+  body('responsibleUser')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Responsible user must be a valid user ID'),
+  body('implementationNotes')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Implementation notes must not exceed 2000 characters'),
+];
+
+export const validateImprovementIdeaRejection = [
+  body('reviewComments')
+    .notEmpty()
+    .withMessage('Review comments are required when rejecting an idea')
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Review comments must not exceed 2000 characters'),
+];
+

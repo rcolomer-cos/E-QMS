@@ -7,13 +7,17 @@ import {
   updateImprovementIdeaStatus,
   deleteImprovementIdea,
   getImprovementIdeaStatistics,
+  approveImprovementIdea,
+  rejectImprovementIdea,
 } from '../controllers/improvementIdeaController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { 
   validateId, 
   validateImprovementIdea, 
   validateImprovementIdeaUpdate, 
-  validateImprovementIdeaStatus 
+  validateImprovementIdeaStatus,
+  validateImprovementIdeaApproval,
+  validateImprovementIdeaRejection,
 } from '../utils/validators';
 import { createLimiter } from '../middleware/rateLimiter';
 import { UserRole } from '../types';
@@ -34,6 +38,12 @@ router.get('/', getImprovementIdeas);
 
 // Get improvement idea by ID - Accessible to all authenticated users
 router.get('/:id', validateId, getImprovementIdeaById);
+
+// Approve improvement idea - Requires ADMIN or MANAGER role
+router.post('/:id/approve', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), validateImprovementIdeaApproval, approveImprovementIdea);
+
+// Reject improvement idea - Requires ADMIN or MANAGER role
+router.post('/:id/reject', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), validateImprovementIdeaRejection, rejectImprovementIdea);
 
 // Update improvement idea status - Requires ADMIN or MANAGER role
 router.put('/:id/status', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), validateImprovementIdeaStatus, updateImprovementIdeaStatus);

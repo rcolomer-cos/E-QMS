@@ -5,6 +5,8 @@ import {
   updateImprovementIdea,
   updateImprovementIdeaStatus,
   deleteImprovementIdea,
+  approveImprovementIdea,
+  rejectImprovementIdea,
   getStatusColor,
   getStatusDisplayName,
 } from '../services/improvementIdeaService';
@@ -21,6 +23,8 @@ function ImprovementIdeaDetail() {
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -35,6 +39,16 @@ function ImprovementIdeaDetail() {
 
   const [statusFormData, setStatusFormData] = useState({
     status: '' as ImprovementIdea['status'],
+    reviewComments: '',
+  });
+
+  const [approvalFormData, setApprovalFormData] = useState({
+    reviewComments: '',
+    responsibleUser: '',
+    implementationNotes: '',
+  });
+
+  const [rejectionFormData, setRejectionFormData] = useState({
     reviewComments: '',
   });
 
@@ -112,6 +126,38 @@ function ImprovementIdeaDetail() {
     }
   };
 
+  const handleApprove = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await approveImprovementIdea(
+        parseInt(id!, 10),
+        approvalFormData.reviewComments || undefined,
+        approvalFormData.responsibleUser ? parseInt(approvalFormData.responsibleUser, 10) : undefined,
+        approvalFormData.implementationNotes || undefined
+      );
+      setShowApproveModal(false);
+      setApprovalFormData({ reviewComments: '', responsibleUser: '', implementationNotes: '' });
+      loadIdea();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to approve improvement idea');
+    }
+  };
+
+  const handleReject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await rejectImprovementIdea(
+        parseInt(id!, 10),
+        rejectionFormData.reviewComments
+      );
+      setShowRejectModal(false);
+      setRejectionFormData({ reviewComments: '' });
+      loadIdea();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to reject improvement idea');
+    }
+  };
+
   const canEdit = user && idea && (
     user.id === idea.submittedBy ||
     user.role === 'admin' ||
@@ -121,6 +167,10 @@ function ImprovementIdeaDetail() {
   const canChangeStatus = user && (
     user.role === 'admin' ||
     user.role === 'manager'
+  );
+
+  const canApproveReject = canChangeStatus && idea && (
+    idea.status === 'submitted' || idea.status === 'under_review'
   );
 
   if (loading) {
@@ -147,6 +197,16 @@ function ImprovementIdeaDetail() {
           </span>
         </div>
         <div className="header-actions">
+          {canApproveReject && (
+            <>
+              <button onClick={() => setShowApproveModal(true)} className="btn-approve">
+                Approve
+              </button>
+              <button onClick={() => setShowRejectModal(true)} className="btn-reject">
+                Reject
+              </button>
+            </>
+          )}
           {canEdit && !isEditing && (
             <button onClick={() => setIsEditing(true)} className="btn-edit">
               Edit
@@ -423,6 +483,100 @@ function ImprovementIdeaDetail() {
                 </button>
                 <button type="submit" className="btn-submit">
                   Update Status
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Modal */}
+      {showApproveModal && (
+        <div className="modal-overlay" onClick={() => setShowApproveModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Approve Improvement Idea</h2>
+            <p className="modal-info">
+              This action will approve the improvement idea and mark it as ready for implementation.
+            </p>
+            <form onSubmit={handleApprove}>
+              <div className="form-group">
+                <label htmlFor="approveReviewComments">Review Comments</label>
+                <textarea
+                  id="approveReviewComments"
+                  value={approvalFormData.reviewComments}
+                  onChange={(e) => setApprovalFormData({ ...approvalFormData, reviewComments: e.target.value })}
+                  maxLength={2000}
+                  rows={4}
+                  placeholder="Optional: Add comments about the approval decision..."
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="approveResponsibleUser">Assign Responsible User (Optional)</label>
+                <input
+                  type="number"
+                  id="approveResponsibleUser"
+                  value={approvalFormData.responsibleUser}
+                  onChange={(e) => setApprovalFormData({ ...approvalFormData, responsibleUser: e.target.value })}
+                  placeholder="User ID"
+                  min="1"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="approveImplementationNotes">Implementation Notes (Optional)</label>
+                <textarea
+                  id="approveImplementationNotes"
+                  value={approvalFormData.implementationNotes}
+                  onChange={(e) => setApprovalFormData({ ...approvalFormData, implementationNotes: e.target.value })}
+                  maxLength={2000}
+                  rows={3}
+                  placeholder="Optional: Add notes for implementation..."
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowApproveModal(false)} className="btn-cancel">
+                  Cancel
+                </button>
+                <button type="submit" className="btn-approve">
+                  Approve
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Reject Improvement Idea</h2>
+            <p className="modal-info modal-warning">
+              This action will reject the improvement idea. Please provide a reason for rejection.
+            </p>
+            <form onSubmit={handleReject}>
+              <div className="form-group">
+                <label htmlFor="rejectReviewComments">Review Comments *</label>
+                <textarea
+                  id="rejectReviewComments"
+                  value={rejectionFormData.reviewComments}
+                  onChange={(e) => setRejectionFormData({ ...rejectionFormData, reviewComments: e.target.value })}
+                  maxLength={2000}
+                  rows={5}
+                  placeholder="Required: Explain why this idea is being rejected..."
+                  required
+                />
+                <small>Review comments are required when rejecting an idea.</small>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowRejectModal(false)} className="btn-cancel">
+                  Cancel
+                </button>
+                <button type="submit" className="btn-reject">
+                  Reject
                 </button>
               </div>
             </form>
