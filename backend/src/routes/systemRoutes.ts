@@ -4,7 +4,14 @@ import {
   checkInitialization,
   createFirstSuperUser,
   getSystemStatus,
+  createBackup,
+  listBackups,
+  restoreBackup,
+  verifyBackup,
+  deleteBackup,
 } from '../controllers/systemController';
+import { authenticateToken, authorizeRoles } from '../middleware/auth';
+import { UserRole } from '../types';
 
 const router = express.Router();
 
@@ -39,5 +46,61 @@ router.post(
  * @access  Public
  */
 router.get('/status', getSystemStatus);
+
+/**
+ * @route   POST /api/system/backup
+ * @desc    Create a database backup
+ * @access  Private (Admin only)
+ */
+router.post('/backup', authenticateToken, authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), createBackup);
+
+/**
+ * @route   GET /api/system/backups
+ * @desc    List available backup files
+ * @access  Private (Admin only)
+ */
+router.get('/backups', authenticateToken, authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), listBackups);
+
+/**
+ * @route   POST /api/system/backup/restore
+ * @desc    Restore database from backup
+ * @access  Private (Admin only)
+ */
+router.post(
+  '/backup/restore',
+  authenticateToken,
+  authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER),
+  [
+    body('backupFile').trim().notEmpty().withMessage('Backup file path is required'),
+    body('replaceExisting').optional().isBoolean().withMessage('Replace existing must be a boolean'),
+  ],
+  restoreBackup
+);
+
+/**
+ * @route   POST /api/system/backup/verify
+ * @desc    Verify a backup file
+ * @access  Private (Admin only)
+ */
+router.post(
+  '/backup/verify',
+  authenticateToken,
+  authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER),
+  [body('backupFile').trim().notEmpty().withMessage('Backup file path is required')],
+  verifyBackup
+);
+
+/**
+ * @route   DELETE /api/system/backup
+ * @desc    Delete a backup file
+ * @access  Private (Admin only)
+ */
+router.delete(
+  '/backup',
+  authenticateToken,
+  authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER),
+  [body('fileName').trim().notEmpty().withMessage('File name is required')],
+  deleteBackup
+);
 
 export default router;
