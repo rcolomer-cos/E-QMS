@@ -19,6 +19,7 @@ export interface NCR {
   verifiedBy?: number;
   verifiedDate?: Date;
   closedDate?: Date;
+  inspectionRecordId?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -38,10 +39,11 @@ export class NCRModel {
       .input('severity', sql.NVarChar, ncr.severity)
       .input('detectedDate', sql.DateTime, ncr.detectedDate)
       .input('reportedBy', sql.Int, ncr.reportedBy)
+      .input('inspectionRecordId', sql.Int, ncr.inspectionRecordId)
       .query(`
-        INSERT INTO NCRs (ncrNumber, title, description, source, category, status, severity, detectedDate, reportedBy)
+        INSERT INTO NCRs (ncrNumber, title, description, source, category, status, severity, detectedDate, reportedBy, inspectionRecordId)
         OUTPUT INSERTED.id
-        VALUES (@ncrNumber, @title, @description, @source, @category, @status, @severity, @detectedDate, @reportedBy)
+        VALUES (@ncrNumber, @title, @description, @source, @category, @status, @severity, @detectedDate, @reportedBy, @inspectionRecordId)
       `);
 
     return result.recordset[0].id;
@@ -98,5 +100,15 @@ export class NCRModel {
   static async delete(id: number): Promise<void> {
     const pool = await getConnection();
     await pool.request().input('id', sql.Int, id).query('DELETE FROM NCRs WHERE id = @id');
+  }
+
+  static async findByInspectionRecordId(inspectionRecordId: number): Promise<NCR[]> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input('inspectionRecordId', sql.Int, inspectionRecordId)
+      .query('SELECT * FROM NCRs WHERE inspectionRecordId = @inspectionRecordId ORDER BY detectedDate DESC');
+
+    return result.recordset;
   }
 }

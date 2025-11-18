@@ -85,3 +85,20 @@ export const updateInspectionRecord = async (id: number, record: Partial<Inspect
 export const deleteInspectionRecord = async (id: number): Promise<void> => {
   await api.delete(`/inspection-records/${id}`);
 };
+
+export interface CreateNCRFromInspectionData {
+  title?: string;
+  description?: string;
+  source?: string;
+  category?: string;
+  severity?: string;
+  assignedTo?: number;
+}
+
+export const createNCRFromInspection = async (
+  inspectionRecordId: number, 
+  data?: CreateNCRFromInspectionData
+): Promise<{ id: number; ncrNumber: string; message: string }> => {
+  const response = await api.post(`/inspection-records/${inspectionRecordId}/create-ncr`, data || {});
+  return response.data;
+};

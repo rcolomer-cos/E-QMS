@@ -8,6 +8,7 @@ import {
   assignNCR,
   deleteNCR,
   getNCRClassificationOptions,
+  getNCRsByInspectionRecord,
 } from '../controllers/ncrController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { 
@@ -27,6 +28,9 @@ router.use(authenticateToken);
 
 // Get NCR classification options - Accessible to all authenticated users
 router.get('/classification-options', getNCRClassificationOptions);
+
+// Get NCRs by Inspection Record - Accessible to all authenticated users
+router.get('/by-inspection/:inspectionRecordId', validateId, getNCRsByInspectionRecord);
 
 // Create NCR - Requires ADMIN, MANAGER, or AUDITOR role
 router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCR, createNCR);

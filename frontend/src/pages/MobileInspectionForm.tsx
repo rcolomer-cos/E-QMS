@@ -404,6 +404,17 @@ function MobileInspectionForm() {
         clearDraft();
       }
 
+      // If inspection failed, offer to create NCR
+      if ((formData.result === 'failed' || !formData.passed) && recordId) {
+        const createNCR = window.confirm(
+          'This inspection failed. Would you like to create a Non-Conformance Report (NCR)?'
+        );
+        if (createNCR) {
+          navigate(`/inspection-records/${recordId}`);
+          return;
+        }
+      }
+
       setTimeout(() => {
         navigate('/inspection-records');
       }, 1500);

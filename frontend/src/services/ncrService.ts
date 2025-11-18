@@ -101,3 +101,11 @@ export const assignNCR = async (id: number, assignedTo: number): Promise<void> =
 export const deleteNCR = async (id: number): Promise<void> => {
   await api.delete(`/ncrs/${id}`);
 };
+
+/**
+ * Get NCRs linked to a specific inspection record
+ */
+export const getNCRsByInspectionRecord = async (inspectionRecordId: number): Promise<{ data: NCR[]; count: number }> => {
+  const response = await api.get<{ data: NCR[]; count: number }>(`/ncrs/by-inspection/${inspectionRecordId}`);
+  return response.data;
+};
