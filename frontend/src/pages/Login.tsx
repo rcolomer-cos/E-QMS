@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { login, getRememberMe } from '../services/authService';
 import { useToast } from '../contexts/ToastContext';
 import { getInitStatus } from '../services/systemService';
@@ -7,6 +8,7 @@ import { useBranding } from '../contexts/BrandingContext';
 import '../styles/Login.css';
 
 function Login() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState<boolean>(getRememberMe());
@@ -42,8 +44,8 @@ function Login() {
       console.log('Calling login API...');
       const result = await login({ email, password, rememberMe });
       console.log('Login successful:', result);
-      const name = result?.user?.firstName || result?.user?.email || 'Welcome';
-      toast.success(`Welcome, ${name}!`);
+      const name = result?.user?.firstName || result?.user?.email || t('dashboard.welcome');
+      toast.success(`${t('dashboard.welcome')}, ${name}!`);
       const from = (location.state as any)?.from;
       if (from && typeof from === 'object' && 'pathname' in from) {
         const dest = `${from.pathname || '/'}${from.search || ''}${from.hash || ''}`;
@@ -61,9 +63,9 @@ function Login() {
         (typeof data === 'string' && data) ||
         data?.error ||
         data?.message ||
-        (status === 429 ? 'Too many attempts. Please try again later.' : undefined) ||
+        (status === 429 ? t('auth.tooManyAttempts') : undefined) ||
         err.message ||
-        'Invalid credentials. Please try again.';
+        t('auth.invalidCredentials');
       const errorMessage = derived;
       setError(errorMessage);
       // Show toast for quick visual feedback
@@ -88,22 +90,22 @@ function Login() {
             />
           </div>
         ) : null}
-        <h1>{branding?.companyName || 'E-QMS'}</h1>
-        <h2>Quality Management System</h2>
+        <h1>{branding?.companyName || t('branding.companyName')}</h1>
+        <h2>{t('branding.tagline')}</h2>
         {branding?.tagline ? (
           <p className="subtitle">{branding.tagline}</p>
         ) : (
-          <p className="subtitle">ISO 9001:2015 Compliant</p>
+          <p className="subtitle">{t('branding.isoCompliant')}</p>
         )}
         {(location.state as any)?.from?.pathname && (
           <p className="redirect-hint">
-            You'll be redirected back after login
+            {t('auth.redirectHint')}
           </p>
         )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               type="email"
@@ -114,7 +116,7 @@ function Login() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               id="password"
               type="password"
@@ -131,14 +133,14 @@ function Login() {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
               />
-              <span>Remember me</span>
+              <span>{t('auth.rememberMe')}</span>
             </label>
           </div>
 
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? `${t('common.loading')}` : t('auth.login')}
           </button>
         </form>
       </div>

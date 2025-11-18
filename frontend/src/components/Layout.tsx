@@ -1,9 +1,11 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { logout, getCurrentUser } from '../services/authService';
 import { useBranding } from '../contexts/BrandingContext';
 import '../styles/Layout.css';
 
 function Layout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const user = getCurrentUser();
   const roleNames: string[] = ((user?.roles?.map(r => r.name)) || (user?.role ? [user.role as string] : [])) as string[];
@@ -51,31 +53,31 @@ function Layout() {
               <h1>{branding.companyName || 'E-QMS'}</h1>
             </>
           ) : (
-            <h1>{branding?.companyName || 'E-QMS'}</h1>
+            <h1>{branding?.companyName || t('branding.companyName')}</h1>
           )}
         </div>
         <ul className="navbar-menu">
-          <li><Link to="/">Dashboard</Link></li>
-          <li><Link to="/documents">Documents</Link></li>
-          <li><Link to="/processes/overview">Processes</Link></li>
-          <li><Link to="/pending-changes">Pending Changes</Link></li>
-          <li><Link to="/audits">Audits</Link></li>
-          <li><Link to="/ncr">NCR</Link></li>
-          <li><Link to="/capa">CAPA</Link></li>
-          <li><Link to="/risks">Risks</Link></li>
-          <li><Link to="/improvement-ideas">Improvements</Link></li>
-          <li><Link to="/equipment">Equipment</Link></li>
-          <li><Link to="/inspection-mobile">Mobile Inspection</Link></li>
-          <li><Link to="/training">Training</Link></li>
-          <li><Link to="/training-matrix">Training Matrix</Link></li>
+          <li><Link to="/">{t('navigation.dashboard')}</Link></li>
+          <li><Link to="/documents">{t('navigation.documents')}</Link></li>
+          <li><Link to="/processes/overview">{t('navigation.processes')}</Link></li>
+          <li><Link to="/pending-changes">{t('navigation.pendingChanges')}</Link></li>
+          <li><Link to="/audits">{t('navigation.audits')}</Link></li>
+          <li><Link to="/ncr">{t('navigation.ncr')}</Link></li>
+          <li><Link to="/capa">{t('navigation.capa')}</Link></li>
+          <li><Link to="/risks">{t('navigation.risks')}</Link></li>
+          <li><Link to="/improvement-ideas">{t('navigation.improvements')}</Link></li>
+          <li><Link to="/equipment">{t('navigation.equipment')}</Link></li>
+          <li><Link to="/inspection-mobile">{t('navigation.mobileInspection')}</Link></li>
+          <li><Link to="/training">{t('navigation.training')}</Link></li>
+          <li><Link to="/training-matrix">{t('navigation.trainingMatrix')}</Link></li>
           {canSeeRoleRequirements && (
-            <li><Link to="/role-training-requirements">Role Requirements</Link></li>
+            <li><Link to="/role-training-requirements">{t('navigation.roleRequirements')}</Link></li>
           )}
           {canSeeExternalAudit && (
-            <li><Link to="/external-audit-support">External Audit</Link></li>
+            <li><Link to="/external-audit-support">{t('navigation.externalAudit')}</Link></li>
           )}
           {canSeeSettings && (
-            <li><Link to="/settings">Settings</Link></li>
+            <li><Link to="/settings">{t('navigation.settings')}</Link></li>
           )}
         </ul>
         <div className="navbar-user">
@@ -87,7 +89,7 @@ function Layout() {
             </span>
             <span className="user-role">{highestRoleTitle}</span>
           </span>
-          <button onClick={handleLogout}>Logout</button>
+          <button onClick={handleLogout}>{t('auth.logout')}</button>
         </div>
       </nav>
       <main className="main-content">

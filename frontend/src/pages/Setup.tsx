@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   getInitStatus,
   createFirstSuperuser,
@@ -7,6 +8,7 @@ import {
 import '../styles/Login.css';
 
 function Setup() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +35,7 @@ function Setup() {
         }
         setNeedsSetup(true);
       } catch (e) {
-        setStatusError('Unable to check system status. Please try again later.');
+        setStatusError(t('messages.serverError'));
       } finally {
         setLoading(false);
       }
@@ -49,7 +51,7 @@ function Setup() {
       await createFirstSuperuser({ email, password, firstName, lastName });
       navigate('/login', { replace: true });
     } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Failed to create superuser. Check inputs and try again.';
+      const msg = err?.response?.data?.error || t('messages.createError');
       setError(msg);
       const details = err?.response?.data?.details;
       setErrorDetails(Array.isArray(details) ? details : null);
@@ -61,7 +63,7 @@ function Setup() {
   if (loading) {
     return (
       <div className="login-container">
-        <div className="login-box"><p>Checking system status…</p></div>
+        <div className="login-box"><p>{t('common.loading')}</p></div>
       </div>
     );
   }
@@ -81,25 +83,24 @@ function Setup() {
   return (
     <div className="login-container">
       <div className="login-box">
-        <h1>E-QMS</h1>
-        <h2>Initial Setup</h2>
-        <p className="subtitle">Create the first superuser account</p>
+        <h1>{t('branding.companyName')}</h1>
+        <h2>{t('setup.title')}</h2>
+        <p className="subtitle">{t('setup.setupInstructions')}</p>
 
         {!databaseReady && (
           <div className="error-message" style={{ marginBottom: 12 }}>
-            Database is not fully initialized. Please run the database setup first.
+            {t('messages.loadError')}
             {missingTables && missingTables.length > 0 && (
               <>
-                <br />Missing tables: {missingTables.join(', ')}
+                <br />{missingTables.join(', ')}
               </>
             )}
-            <br />See SETUP_GUIDE.md (Database Setup) and re-try.
           </div>
         )}
 
         <form onSubmit={onSubmit}>
           <div className="form-group">
-            <label htmlFor="firstName">First Name</label>
+            <label htmlFor="firstName">{t('users.firstName')}</label>
             <input
               id="firstName"
               type="text"
@@ -110,7 +111,7 @@ function Setup() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="lastName">Last Name</label>
+            <label htmlFor="lastName">{t('users.lastName')}</label>
             <input
               id="lastName"
               type="text"
@@ -121,7 +122,7 @@ function Setup() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               type="email"
@@ -129,12 +130,12 @@ function Setup() {
               onChange={(e) => setEmail(e.target.value)}
               required
               pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
-              title="Enter a valid email like user@example.com"
+              title={t('forms.invalidEmail')}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               id="password"
               type="password"
@@ -142,7 +143,7 @@ function Setup() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <small>Password must be at least 8 characters and strong.</small>
+            <small>{t('systemSettings.passwordPolicy')}</small>
           </div>
 
           {error && (
@@ -159,7 +160,7 @@ function Setup() {
           )}
 
           <button type="submit" disabled={submitting || !databaseReady}>
-            {submitting ? 'Creating…' : 'Create Superuser'}
+            {submitting ? t('common.loading') : t('setup.createAdmin')}
           </button>
         </form>
       </div>
