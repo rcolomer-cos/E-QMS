@@ -8,7 +8,7 @@ export interface ReminderResult {
   itemsProcessed: number;
   itemsNotified: number;
   error?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface ReminderConfig {
