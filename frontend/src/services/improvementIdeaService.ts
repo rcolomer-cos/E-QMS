@@ -189,10 +189,27 @@ export const deleteImprovementIdea = async (id: number): Promise<void> => {
   await api.delete(`/api/improvement-ideas/${id}`);
 };
 
+export interface ImprovementIdeaStatisticsFilters {
+  startDate?: string;
+  endDate?: string;
+  department?: string;
+  category?: string;
+}
+
 /**
- * Get improvement idea statistics
+ * Get improvement idea statistics with optional filters
  */
-export const getImprovementIdeaStatistics = async (): Promise<ImprovementIdeaStatistics> => {
-  const response = await api.get('/api/improvement-ideas/statistics');
+export const getImprovementIdeaStatistics = async (filters?: ImprovementIdeaStatisticsFilters): Promise<ImprovementIdeaStatistics> => {
+  const params = new URLSearchParams();
+  
+  if (filters?.startDate) params.append('startDate', filters.startDate);
+  if (filters?.endDate) params.append('endDate', filters.endDate);
+  if (filters?.department) params.append('department', filters.department);
+  if (filters?.category) params.append('category', filters.category);
+
+  const queryString = params.toString();
+  const url = `/api/improvement-ideas/statistics${queryString ? '?' + queryString : ''}`;
+  
+  const response = await api.get(url);
   return response.data;
 };

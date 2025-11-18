@@ -323,12 +323,40 @@ export class ImprovementIdeaModel {
   }
 
   /**
-   * Get statistics for improvement ideas
+   * Get statistics for improvement ideas with optional filtering
    */
-  static async getStatistics(): Promise<any> {
+  static async getStatistics(filters?: {
+    startDate?: Date;
+    endDate?: Date;
+    department?: string;
+    category?: string;
+  }): Promise<any> {
     const pool = await getConnection();
 
-    const result = await pool.request().query(`
+    // Build WHERE clause for main stats query
+    let whereConditions: string[] = [];
+    const request = pool.request();
+
+    if (filters?.startDate) {
+      whereConditions.push('submittedDate >= @startDate');
+      request.input('startDate', sql.DateTime2, filters.startDate);
+    }
+    if (filters?.endDate) {
+      whereConditions.push('submittedDate <= @endDate');
+      request.input('endDate', sql.DateTime2, filters.endDate);
+    }
+    if (filters?.department) {
+      whereConditions.push('department = @department');
+      request.input('department', sql.NVarChar, filters.department);
+    }
+    if (filters?.category) {
+      whereConditions.push('category = @category');
+      request.input('category', sql.NVarChar, filters.category);
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    const result = await request.query(`
       SELECT 
         COUNT(*) as totalIdeas,
         SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted,
@@ -339,19 +367,88 @@ export class ImprovementIdeaModel {
         SUM(CASE WHEN status = 'implemented' THEN 1 ELSE 0 END) as implemented,
         SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed
       FROM ImprovementIdeas
+      ${whereClause}
     `);
 
-    const categoryResult = await pool.request().query(`
+    // Category stats - exclude category filter for breakdown
+    const categoryRequest = pool.request();
+    let categoryWhereConditions: string[] = [];
+    
+    if (filters?.startDate) {
+      categoryWhereConditions.push('submittedDate >= @startDate');
+      categoryRequest.input('startDate', sql.DateTime2, filters.startDate);
+    }
+    if (filters?.endDate) {
+      categoryWhereConditions.push('submittedDate <= @endDate');
+      categoryRequest.input('endDate', sql.DateTime2, filters.endDate);
+    }
+    if (filters?.department) {
+      categoryWhereConditions.push('department = @department');
+      categoryRequest.input('department', sql.NVarChar, filters.department);
+    }
+
+    const categoryWhereClause = categoryWhereConditions.length > 0 ? `WHERE ${categoryWhereConditions.join(' AND ')}` : '';
+
+    const categoryResult = await categoryRequest.query(`
       SELECT category, COUNT(*) as count
       FROM ImprovementIdeas
+      ${categoryWhereClause}
       GROUP BY category
+      ORDER BY count DESC
     `);
 
-    const impactAreaResult = await pool.request().query(`
+    // Impact area stats
+    const impactRequest = pool.request();
+    let impactWhereConditions: string[] = ['impactArea IS NOT NULL'];
+    
+    if (filters?.startDate) {
+      impactWhereConditions.push('submittedDate >= @startDate');
+      impactRequest.input('startDate', sql.DateTime2, filters.startDate);
+    }
+    if (filters?.endDate) {
+      impactWhereConditions.push('submittedDate <= @endDate');
+      impactRequest.input('endDate', sql.DateTime2, filters.endDate);
+    }
+    if (filters?.department) {
+      impactWhereConditions.push('department = @department');
+      impactRequest.input('department', sql.NVarChar, filters.department);
+    }
+    if (filters?.category) {
+      impactWhereConditions.push('category = @category');
+      impactRequest.input('category', sql.NVarChar, filters.category);
+    }
+
+    const impactAreaResult = await impactRequest.query(`
       SELECT impactArea, COUNT(*) as count
       FROM ImprovementIdeas
-      WHERE impactArea IS NOT NULL
+      WHERE ${impactWhereConditions.join(' AND ')}
       GROUP BY impactArea
+      ORDER BY count DESC
+    `);
+
+    // Department stats - exclude department filter for breakdown
+    const deptRequest = pool.request();
+    let deptWhereConditions: string[] = ['department IS NOT NULL'];
+    
+    if (filters?.startDate) {
+      deptWhereConditions.push('submittedDate >= @startDate');
+      deptRequest.input('startDate', sql.DateTime2, filters.startDate);
+    }
+    if (filters?.endDate) {
+      deptWhereConditions.push('submittedDate <= @endDate');
+      deptRequest.input('endDate', sql.DateTime2, filters.endDate);
+    }
+    if (filters?.category) {
+      deptWhereConditions.push('category = @category');
+      deptRequest.input('category', sql.NVarChar, filters.category);
+    }
+
+    const departmentResult = await deptRequest.query(`
+      SELECT department, COUNT(*) as count
+      FROM ImprovementIdeas
+      WHERE ${deptWhereConditions.join(' AND ')}
+      GROUP BY department
+      ORDER BY count DESC
     `);
 
     const byCategory: Record<string, number> = {};
@@ -364,10 +461,16 @@ export class ImprovementIdeaModel {
       byImpactArea[row.impactArea] = row.count;
     });
 
+    const byDepartment: Record<string, number> = {};
+    departmentResult.recordset.forEach((row: any) => {
+      byDepartment[row.department] = row.count;
+    });
+
     return {
       ...result.recordset[0],
       byCategory,
       byImpactArea,
+      byDepartment,
     };
   }
 }

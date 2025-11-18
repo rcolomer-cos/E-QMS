@@ -42,6 +42,7 @@ import MobileInspectionForm from './pages/MobileInspectionForm';
 import ChartDemo from './pages/ChartDemo';
 import ImprovementIdeas from './pages/ImprovementIdeas';
 import ImprovementIdeaDetail from './pages/ImprovementIdeaDetail';
+import ImprovementStatusDashboard from './pages/ImprovementStatusDashboard';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -99,6 +100,7 @@ function App() {
         <Route path="supplier-performance" element={<SupplierPerformanceDashboard />} />
         <Route path="approved-supplier-list" element={<ApprovedSupplierList />} />
         <Route path="improvement-ideas" element={<ImprovementIdeas />} />
+        <Route path="improvement-ideas/dashboard" element={<ImprovementStatusDashboard />} />
         <Route path="improvement-ideas/:id" element={<ImprovementIdeaDetail />} />
         <Route path="chart-demo" element={<ChartDemo />} />
       </Route>
