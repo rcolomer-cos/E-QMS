@@ -39,6 +39,7 @@ import ApprovedSupplierList from './pages/ApprovedSupplierList';
 import InspectionSchedule from './pages/InspectionSchedule';
 import InspectionPlanning from './pages/InspectionPlanning';
 import MobileInspectionForm from './pages/MobileInspectionForm';
+import ChartDemo from './pages/ChartDemo';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -95,6 +96,7 @@ function App() {
         <Route path="risks/:id" element={<RiskDetail />} />
         <Route path="supplier-performance" element={<SupplierPerformanceDashboard />} />
         <Route path="approved-supplier-list" element={<ApprovedSupplierList />} />
+        <Route path="chart-demo" element={<ChartDemo />} />
       </Route>
     </Routes>
   );
