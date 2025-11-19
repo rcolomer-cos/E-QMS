@@ -148,3 +148,15 @@ export const getDocumentProcesses = async (id: number): Promise<any[]> => {
   const response = await api.get(`/documents/${id}/processes`);
   return response.data;
 };
+
+export interface RecentDocument extends Document {
+  creatorFirstName?: string;
+  creatorLastName?: string;
+  creatorEmail?: string;
+  lastModified: string;
+}
+
+export const getRecentDocuments = async (limit: number = 10): Promise<RecentDocument[]> => {
+  const response = await api.get(`/documents/recent?limit=${limit}`);
+  return response.data;
+};
