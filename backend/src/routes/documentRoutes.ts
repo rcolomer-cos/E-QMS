@@ -16,6 +16,9 @@ import {
   rejectDocument,
   requestChangesDocument,
   getDocumentProcesses,
+  getDocumentGroups,
+  assignGroupsToDocument,
+  removeGroupsFromDocument,
 } from '../controllers/documentController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { flexibleAuth } from '../middleware/flexibleAuth';
@@ -91,5 +94,14 @@ router.post('/:id/export-pdf', authenticateToken, validateId, checkDocumentPermi
 
 // Get processes linked to document
 router.get('/:id/processes', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), checkDocumentPermission(DocumentAction.VIEW), getDocumentProcesses);
+
+// Get groups assigned to document
+router.get('/:id/groups', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), checkDocumentPermission(DocumentAction.VIEW), getDocumentGroups);
+
+// Assign groups to document - requires EDIT permission
+router.post('/:id/groups', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), assignGroupsToDocument);
+
+// Remove groups from document - requires EDIT permission
+router.delete('/:id/groups', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), removeGroupsFromDocument);
 
 export default router;

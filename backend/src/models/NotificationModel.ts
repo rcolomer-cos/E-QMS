@@ -3,7 +3,7 @@ import { getConnection, sql } from '../config/database';
 export interface Notification {
   id?: number;
   userId: number;
-  type: 'document_approved' | 'document_rejected' | 'document_changes_requested';
+  type: 'document_approved' | 'document_rejected' | 'document_changes_requested' | 'document_created' | 'document_updated';
   title: string;
   message: string;
   documentId?: number;

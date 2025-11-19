@@ -52,6 +52,8 @@ import BackupManagement from './pages/BackupManagement';
 import SystemSettings from './pages/SystemSettings';
 import ApiKeys from './pages/ApiKeys';
 import CompanyBranding from './pages/CompanyBranding';
+import GroupManagement from './pages/GroupManagement';
+import GroupDetail from './pages/GroupDetail';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -91,6 +93,8 @@ function App() {
         <Route path="training-matrix" element={<TrainingMatrix />} />
         <Route path="role-training-requirements" element={<RoleTrainingRequirements />} />
         <Route path="users" element={<Users />} />
+        <Route path="groups" element={<GroupManagement />} />
+        <Route path="groups/:id" element={<GroupDetail />} />
         <Route path="departments" element={<Departments />} />
         <Route path="processes" element={<Processes />} />
         <Route path="processes/overview" element={<ProcessOverview />} />
