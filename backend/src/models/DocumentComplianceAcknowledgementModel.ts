@@ -231,10 +231,10 @@ export class DocumentComplianceAcknowledgementModel {
       `);
 
     const acknowledgedUsers = acknowledgedResult.recordset;
-    const acknowledgedUserIds = new Set(acknowledgedUsers.map((u: any) => u.userId));
+    const acknowledgedUserIds = new Set(acknowledgedUsers.map((u) => u.userId));
 
     // Identify pending users
-    const pendingUsers = allUsers.filter((u: any) => !acknowledgedUserIds.has(u.id));
+    const pendingUsers = allUsers.filter((u) => !acknowledgedUserIds.has(u.id));
 
     return {
       documentId: document.id,
@@ -252,7 +252,7 @@ export class DocumentComplianceAcknowledgementModel {
   /**
    * Get all documents requiring acknowledgement for a user
    */
-  static async getPendingDocumentsForUser(userId: number): Promise<any[]> {
+  static async getPendingDocumentsForUser(userId: number): Promise<unknown[]> {
     const pool = await getConnection();
     const result = await pool
       .request()
@@ -288,7 +288,7 @@ export class DocumentComplianceAcknowledgementModel {
   /**
    * Get all compliance-required documents for a user with their status
    */
-  static async getComplianceDocumentsForUser(userId: number): Promise<any[]> {
+  static async getComplianceDocumentsForUser(userId: number): Promise<unknown[]> {
     const pool = await getConnection();
     const result = await pool
       .request()
