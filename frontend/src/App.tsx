@@ -56,6 +56,7 @@ import CompanyBranding from './pages/CompanyBranding';
 import GroupManagement from './pages/GroupManagement';
 import GroupDetail from './pages/GroupDetail';
 import OrganizationalChart from './pages/OrganizationalChart';
+import Tags from './pages/Tags';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -81,6 +82,7 @@ function App() {
         <Route path="documents" element={<Documents />} />
         <Route path="documents/:id" element={<DocumentView />} />
         <Route path="documents/:id/edit" element={<DocumentEditor />} />
+        <Route path="tags" element={<Tags />} />
         <Route path="pending-changes" element={<PendingChanges />} />
         <Route path="audits" element={<Audits />} />
         <Route path="audits/:id/execute" element={<AuditExecution />} />

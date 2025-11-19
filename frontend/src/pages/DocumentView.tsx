@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getDocumentById, getDocumentVersionHistory, getDocumentRevisionHistory, uploadDocumentFile, downloadDocumentFile, getDocumentProcesses } from '../services/documentService';
 import { Document, DocumentRevision } from '../types';
 import FileUpload from '../components/FileUpload';
+import TagSelector from '../components/TagSelector';
 import '../styles/DocumentView.css';
 
 function DocumentView() {
@@ -208,6 +209,11 @@ function DocumentView() {
               </div>
             </section>
           )}
+
+          {/* Tags Section */}
+          <section className="document-section">
+            <TagSelector documentId={document.id!} canEdit={true} />
+          </section>
 
           {/* Dates Section */}
           <section className="document-section">
