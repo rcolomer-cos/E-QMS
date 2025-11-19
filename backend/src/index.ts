@@ -51,6 +51,7 @@ import webhookRoutes from './routes/webhookRoutes';
 import companyBrandingRoutes from './routes/companyBrandingRoutes';
 import groupRoutes from './routes/groupRoutes';
 import swotRoutes from './routes/swotRoutes';
+import documentComplianceRoutes from './routes/documentComplianceRoutes';
 
 // Import scheduler service
 // TEMPORARILY DISABLED FOR DEBUGGING
@@ -131,6 +132,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/company-branding', companyBrandingRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/swot', swotRoutes);
+app.use('/api/documents/compliance', documentComplianceRoutes);
 
 // 404 handler
 app.use((_req, res) => {

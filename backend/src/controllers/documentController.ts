@@ -661,6 +661,12 @@ export const approveDocument = async (req: AuthRequest, res: Response): Promise<
       actorName: `${req.user.firstName} ${req.user.lastName}`,
     });
 
+    // If document requires compliance, notify users in assigned groups
+    if (document.complianceRequired) {
+      const actorName = `${req.user.firstName} ${req.user.lastName}`;
+      await NotificationService.notifyComplianceDocumentAdded(documentId, actorName);
+    }
+
     // Log audit entry
     await logUpdate({
       req,

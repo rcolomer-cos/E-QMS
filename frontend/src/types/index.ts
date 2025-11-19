@@ -58,6 +58,7 @@ export interface Document {
   filePath?: string;
   fileName?: string;
   fileSize?: number;
+  complianceRequired?: boolean;
   createdBy: number;
   approvedBy?: number;
   approvedAt?: string;
