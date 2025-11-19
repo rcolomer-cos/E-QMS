@@ -7,6 +7,8 @@ import {
   updateDepartment,
   deleteDepartment,
   getOrganizationalHierarchy,
+  getOrgChartData,
+  updateOrgChartData,
 } from '../controllers/departmentController';
 import { validateDepartment, validateDepartmentUpdate, validateId } from '../utils/validators';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
@@ -19,6 +21,10 @@ router.use(authenticateToken);
 
 // Organizational hierarchy endpoint (must be before /:id to avoid conflicts)
 router.get('/hierarchy/full', getOrganizationalHierarchy); // All authenticated users can view hierarchy
+
+// Organizational chart flow data endpoints
+router.get('/orgchart/data', getOrgChartData); // All authenticated users can view org chart
+router.put('/orgchart/data', authorizeRoles(UserRole.MANAGER, UserRole.ADMIN, UserRole.SUPERUSER), updateOrgChartData); // Manager+ can edit
 
 // Department CRUD operations
 router.get('/', getAllDepartments); // All authenticated users can view departments

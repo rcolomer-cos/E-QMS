@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { DepartmentModel, CreateDepartmentData } from '../models/DepartmentModel';
 import { ProcessModel } from '../models/ProcessModel';
 import { ProcessOwnerModel } from '../models/ProcessOwnerModel';
+import { SystemSettingsModel } from '../models/SystemSettingsModel';
 import { AuthRequest } from '../types';
 import { validationResult } from 'express-validator';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
@@ -268,5 +269,83 @@ export const getOrganizationalHierarchy = async (_req: AuthRequest, res: Respons
   } catch (error) {
     console.error('Get organizational hierarchy error:', error);
     res.status(500).json({ error: 'Failed to fetch organizational hierarchy' });
+  }
+};
+
+/**
+ * Get organizational chart flow data (ReactFlow JSON) for all departments.
+ * Returns a JSON structure { orgChartData: string | null }
+ * All authenticated users can view.
+ */
+export const getOrgChartData = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // Store org chart data in system settings
+    const setting = await SystemSettingsModel.findByKey('organizational_chart_data');
+    const orgChartData = setting?.settingValue || null;
+    res.json({ orgChartData });
+  } catch (error) {
+    console.error('Get org chart data error:', error);
+    res.status(500).json({ error: 'Failed to fetch organizational chart data' });
+  }
+};
+
+/**
+ * Update organizational chart flow data.
+ * Only superuser (100) and management (>=70) roles can edit.
+ * Accepts body: { orgChartData: string }
+ */
+export const updateOrgChartData = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    // Authorization: must have one of superuser, admin, manager roles
+    const userRoles = (req.user.roles || []).map(r => r.toLowerCase());
+    const allowed = ['superuser','admin','manager'];
+    const hasAllowed = userRoles.some(r => allowed.includes(r));
+    if (!hasAllowed) {
+      res.status(403).json({ error: 'Insufficient permissions to update organizational chart' });
+      return;
+    }
+
+    const { orgChartData } = req.body;
+    if (typeof orgChartData !== 'string') {
+      res.status(400).json({ error: 'orgChartData must be a string' });
+      return;
+    }
+
+    // Store org chart data in system settings
+    const existingSetting = await SystemSettingsModel.findByKey('organizational_chart_data');
+    
+    if (existingSetting) {
+      await SystemSettingsModel.update('organizational_chart_data', orgChartData);
+    } else {
+      await SystemSettingsModel.create({
+        settingKey: 'organizational_chart_data',
+        settingValue: orgChartData,
+        settingType: 'json',
+        category: 'general',
+        displayName: 'Organizational Chart Data',
+        description: 'ReactFlow organizational chart structure',
+        isEditable: true,
+      });
+    }
+
+    // Audit log
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.SYSTEM,
+      entityType: 'SystemSetting',
+      entityId: 0,
+      entityIdentifier: 'organizational_chart_data',
+      newValues: { orgChartData },
+    });
+
+    res.json({ message: 'Organizational chart updated successfully' });
+  } catch (error) {
+    console.error('Update org chart data error:', error);
+    res.status(500).json({ error: 'Failed to update organizational chart data' });
   }
 };

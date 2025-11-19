@@ -1,20 +1,21 @@
 .org-chart-page {
-  padding: 2rem;
   background-color: #f8f9fa;
-  min-height: 100vh;
+  height: 100dvh; /* full viewport height */
+  display: flex;
+  flex-direction: column;
+  padding: 0; /* remove outer padding so chart can use full width */
+  overflow: hidden;
 }
 
 .page-header {
-  margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
   gap: 1rem;
   background-color: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .page-header div {
@@ -148,6 +149,67 @@
   overflow-x: auto;
   min-height: 500px;
 }
+
+/* Full viewport flow chart layout */
+.org-chart-full-wrapper {
+  flex: 1; /* take remaining vertical space */
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* allow children to shrink */
+}
+
+.org-chart-surface {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: none;
+  background: #fff;
+  position: relative;
+  margin: 0; /* remove gap */
+}
+
+/* Ensure ReactFlow root stretches */
+.org-chart-editor-container, .org-chart-viewer-container {
+  flex: 1;
+  height: 100%;
+}
+.org-chart-editor-container .react-flow, .org-chart-viewer-container .react-flow {
+  height: 100%;
+}
+
+.org-chart-loading {
+  padding: 2rem;
+  text-align: center;
+}
+
+.org-chart-saving-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  background: #3498db;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  pointer-events: none;
+}
+
+/* Footer instruction bar */
+.org-chart-footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #f0f7ff;
+  border-top: 1px solid #bbdefb;
+  font-size: 12px;
+  color: #1976d2;
+  min-height: 34px;
+}
+.org-chart-footer-bar strong { color:#0d47a1; }
+.org-chart-footer-bar span { white-space: nowrap; }
 
 /* Modal styles */
 .modal-overlay {

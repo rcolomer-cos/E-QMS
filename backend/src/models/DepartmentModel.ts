@@ -11,6 +11,7 @@ export interface Department {
   createdAt?: Date;
   updatedAt?: Date;
   createdBy?: number;
+  orgChartData?: string; // JSON string containing ReactFlow nodes and edges
 }
 
 export interface CreateDepartmentData {
@@ -159,6 +160,10 @@ export class DepartmentModel {
     if (updates.managerId !== undefined) {
       request.input('managerId', sql.Int, updates.managerId);
       fields.push('managerId = @managerId');
+    }
+    if (updates.orgChartData !== undefined) {
+      request.input('orgChartData', sql.NVarChar, updates.orgChartData);
+      fields.push('orgChartData = @orgChartData');
     }
 
     if (fields.length > 0) {

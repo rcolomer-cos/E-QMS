@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Tree, TreeNode } from 'react-organizational-chart';
+import { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
+// Process tree removed per requirement; keep only manual flowchart view
 import { getOrganizationalHierarchy } from '../services/organizationalChartService';
+import { getOrgChartData, updateOrgChartData } from '../services/departmentService';
+import OrgChartEditor from '../components/OrgChartEditor';
+import OrgChartViewer from '../components/OrgChartViewer';
+import { useAuth } from '../services/authService';
 import { 
   getDepartments, 
   updateDepartment, 
@@ -25,62 +29,7 @@ interface HierarchyData {
   orphanProcesses: Array<Process & { owners: ProcessOwner[] }>;
 }
 
-const StyledNode = styled.div<{ isDragging?: boolean; isOver?: boolean }>`
-  padding: 12px 20px;
-  border-radius: 8px;
-  display: inline-block;
-  border: 2px solid #3498db;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  min-width: 200px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  opacity: ${props => props.isDragging ? 0.5 : 1};
-  
-  ${props => props.isOver && `
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
-    transform: scale(1.02);
-  `}
-
-  &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
-  }
-
-  &.department {
-    background-color: #3498db;
-    color: white;
-    border-color: #2980b9;
-    font-weight: 600;
-  }
-
-  &.process {
-    background-color: #2ecc71;
-    color: white;
-    border-color: #27ae60;
-  }
-
-  &.user {
-    background-color: #e74c3c;
-    color: white;
-    border-color: #c0392b;
-    font-size: 0.9em;
-    padding: 8px 16px;
-  }
-
-  &.primary-owner {
-    background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%);
-    border-color: #d35400;
-    font-weight: 600;
-  }
-
-  &.manager {
-    background: linear-gradient(135deg, #3498db 0%, #9b59b6 100%);
-    border-color: #8e44ad;
-  }
-`;
+// StyledNode removed with process tree
 
 const ActionButtons = styled.div`
   display: flex;
@@ -118,6 +67,79 @@ const RoleBadge = styled.span`
 const OrganizationalChart = () => {
   const toast = useToast();
   const [hierarchyData, setHierarchyData] = useState<HierarchyData | null>(null);
+  // Org chart flow data state
+  const [orgChartData, setOrgChartData] = useState<string | null>(null);
+  const [orgLoading, setOrgLoading] = useState<boolean>(false);
+  const [orgSaving, setOrgSaving] = useState<boolean>(false);
+  // Flow mode always on now
+  const showFlowMode = true;
+  const { user } = useAuth();
+  const canEditOrgChart = useMemo(() => {
+    const names = user?.roleNames?.map(r => r.toLowerCase()) || [];
+    return names.includes('superuser') || names.includes('manager') || names.includes('admin');
+  }, [user]);
+
+  // Parse org chart data for editor
+  const parsedOrgChart = useMemo(() => {
+    if (!orgChartData) return { nodes: [], edges: [] };
+    try {
+      const parsed = JSON.parse(orgChartData);
+      if (parsed && Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
+        return parsed;
+      }
+      return { nodes: [], edges: [] };
+    } catch {
+      return { nodes: [], edges: [] };
+    }
+  }, [orgChartData]);
+
+  // Fetch org chart flow data
+  useEffect(() => {
+    const fetchOrgChart = async () => {
+      setOrgLoading(true);
+      try {
+        const data = await getOrgChartData();
+        setOrgChartData(data.orgChartData || null);
+      } catch (error: any) {
+        console.error('Failed to load org chart data', error);
+        toast.showError('Failed to load organizational chart');
+      } finally {
+        setOrgLoading(false);
+      }
+    };
+    fetchOrgChart();
+  }, [toast]);
+
+  const handleSaveOrgChart = async (flowData: { nodes: any[]; edges: any[] }) => {
+    setOrgSaving(true);
+    try {
+      const json = JSON.stringify(flowData);
+      await updateOrgChartData(json);
+      setOrgChartData(json);
+      toast.showSuccess('Organizational chart saved');
+    } catch (error: any) {
+      console.error('Save org chart error', error);
+      toast.showError(error?.response?.data?.error || 'Failed to save organizational chart');
+    } finally {
+      setOrgSaving(false);
+    }
+  };
+
+  // Existing hierarchy fetch (keep original behavior)
+  useEffect(() => {
+    const fetchHierarchy = async () => {
+      try {
+        const data = await getOrganizationalHierarchy();
+        setHierarchyData(data);
+      } catch (error: any) {
+        console.error('Failed to load hierarchy', error);
+        toast.showError('Failed to load hierarchy');
+      }
+    };
+    fetchHierarchy();
+  }, [toast]);
+
+  // Toggle UI & rendering logic injected before original return (search for return statement below)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editMode, setEditMode] = useState(false);
@@ -567,38 +589,10 @@ const OrganizationalChart = () => {
       <div className="page-header">
         <div>
           <h1>Organizational Chart</h1>
-          <p className="subtitle">View and manage your organizational structure</p>
+          <p className="subtitle">Manual people-centric flowchart (process tree removed)</p>
         </div>
         <div className="header-actions">
-          {isAdmin() && (
-            <>
-              <button
-                className={editMode ? 'btn-secondary' : 'btn-primary'}
-                onClick={() => setEditMode(!editMode)}
-              >
-                {editMode ? 'Exit Edit Mode' : 'Edit Mode'}
-              </button>
-              {editMode && (
-                <>
-                  <button
-                    className="btn-primary"
-                    onClick={() => setShowAddDepartmentModal(true)}
-                  >
-                    + Add Department
-                  </button>
-                  <button
-                    className="btn-primary"
-                    onClick={() => setShowAddProcessModal(true)}
-                  >
-                    + Add Process
-                  </button>
-                </>
-              )}
-            </>
-          )}
-          <button className="btn-primary" onClick={loadData}>
-            Refresh
-          </button>
+          {/* Removed tree/department/process management buttons */}
         </div>
       </div>
 
@@ -614,59 +608,35 @@ const OrganizationalChart = () => {
         </div>
       )}
 
-      <div className="chart-legend">
-        <div className="legend-item">
-          <span className="legend-box department"></span>
-          <span>Department</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-box process"></span>
-          <span>Process</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-box user"></span>
-          <span>User/Owner</span>
+      <div className="org-chart-full-wrapper">
+        <div className="org-chart-surface">
+          {orgLoading ? (
+            <div className="org-chart-loading">Loading organizational chart...</div>
+          ) : canEditOrgChart ? (
+            <OrgChartEditor
+              initialData={parsedOrgChart}
+              onSave={handleSaveOrgChart}
+              readOnly={false}
+            />
+          ) : (
+            <OrgChartViewer data={orgChartData || ''} />
+          )}
+          {orgSaving && <div className="org-chart-saving-indicator">Saving...</div>}
         </div>
       </div>
 
-      <div className="chart-container">
-        <Tree
-          lineWidth="2px"
-          lineColor="#bdc3c7"
-          lineBorderRadius="10px"
-          label={
-            <StyledNode style={{ 
-              backgroundColor: '#34495e', 
-              color: 'white',
-              borderColor: '#2c3e50',
-              fontSize: '1.2em',
-              fontWeight: 'bold'
-            }}>
-              Organization
-            </StyledNode>
-          }
-        >
-          {hierarchyData.departments.map(dept => renderDepartmentNode(dept))}
-          {hierarchyData.orphanProcesses && hierarchyData.orphanProcesses.length > 0 && (
-            <TreeNode
-              label={
-                <StyledNode style={{ 
-                  backgroundColor: '#95a5a6', 
-                  color: 'white',
-                  borderColor: '#7f8c8d'
-                }}>
-                  Unassigned Processes
-                  {editMode && isAdmin() && <div style={{ fontSize: '0.75em', marginTop: '4px', opacity: 0.9 }}>
-                    Drag these to departments
-                  </div>}
-                </StyledNode>
-              }
-            >
-              {hierarchyData.orphanProcesses.map(process => renderProcessNode(process))}
-            </TreeNode>
-          )}
-        </Tree>
-      </div>
+      {canEditOrgChart && (
+        <div className="org-chart-footer-bar">
+          <strong>Instructions:</strong>
+          <span>Click "Add Person" then enter name & department</span>
+          <span>•</span>
+          <span>Drag nodes to reposition; connect if desired</span>
+          <span>•</span>
+          <span>Double-click a node to edit name & department</span>
+          <span>•</span>
+          <span>Scroll to zoom; drag background to pan</span>
+        </div>
+      )}
 
       {showEditModal && editingEntity && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>

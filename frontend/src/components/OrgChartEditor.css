@@ -1,0 +1,331 @@
+.org-chart-editor-wrapper {
+  display: flex;
+  flex-direction: row; /* place sidebar next to canvas */
+  width: 100%;
+  gap: 12px;
+  flex: 1;
+  min-height: 0; /* allow child to grow/shrink */
+}
+
+.org-chart-sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  max-width: 260px;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle {
+  margin-bottom: 12px;
+}
+
+.toggle-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-align: left;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-btn:hover {
+  background: #eeeeee;
+  border-color: #3498db;
+}
+
+.sidebar-section {
+  margin-bottom: 16px;
+}
+
+.sidebar-section:last-child {
+  margin-bottom: 0;
+}
+
+.sidebar-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.node-type-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.type-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+}
+
+.type-btn:hover {
+  border-color: #3498db;
+  background: #f0f7ff;
+}
+
+.type-btn.active {
+  border-color: #3498db;
+  background: #e3f2fd;
+  color: #3498db;
+}
+
+.type-preview {
+  width: 40px;
+  height: 30px;
+  border: 2px solid currentColor;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.type-preview-department {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.type-preview-role {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+.type-preview-person {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border-radius: 50%;
+}
+
+@media (min-width: 768px) {
+  .org-chart-sidebar:has(.sidebar-section ~ .sidebar-section) {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+  }
+
+  .sidebar-toggle {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+}
+
+.org-chart-editor-container {
+  flex: 1;
+  min-width: 0; /* allow flex to shrink */
+  height: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.org-chart-editor-container .react-flow {
+  flex: 1;
+}
+
+.org-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.org-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.org-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.org-btn-add {
+  background: #2ecc71;
+  color: white;
+}
+
+.org-btn-add:hover:not(:disabled) {
+  background: #27ae60;
+}
+
+.org-btn-save {
+  background: #3498db;
+  color: white;
+}
+
+.org-btn-save:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.org-btn-delete {
+  background: #ff9800;
+  color: white;
+}
+
+.org-btn-delete:hover:not(:disabled) {
+  background: #e68900;
+}
+
+.org-btn-clear {
+  background: #e74c3c;
+  color: white;
+}
+
+.org-btn-clear:hover:not(:disabled) {
+  background: #c0392b;
+}
+
+.org-chart-instructions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f0f7ff;
+  border: 1px solid #bbdefb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1976d2;
+}
+
+.org-chart-instructions strong {
+  font-weight: 600;
+  color: #0d47a1;
+}
+
+.org-chart-instructions span {
+  color: #1976d2;
+}
+
+/* Node Styles */
+.org-node {
+  padding: 12px 24px;
+  background: white;
+  border: 2px solid;
+  min-width: 140px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 8px;
+}
+
+.org-node:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.org-node-department {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border-color: #2980b9;
+  color: white;
+  font-weight: 600;
+}
+
+.org-node-role {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  border-color: #27ae60;
+  color: white;
+}
+
+.org-node-person {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border-color: #c0392b;
+  color: white;
+  border-radius: 50%;
+  min-width: 100px;
+  min-height: 100px;
+  padding: 20px;
+}
+
+.org-node-label {
+  font-size: 14px;
+  font-weight: 500;
+  word-wrap: break-word;
+}
+
+.org-node-subtext {
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.85;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.org-node-department .org-node-label {
+  font-weight: 600;
+}
+
+/* React Flow Customization */
+.react-flow__node.selected .org-node {
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+.react-flow__edge {
+  stroke: #95a5a6;
+  stroke-width: 2;
+}
+
+.react-flow__edge.animated {
+  stroke-dasharray: 5;
+  animation: dashdraw 0.5s linear infinite;
+}
+
+.react-flow__edge.selected {
+  stroke: #3498db;
+  stroke-width: 3;
+}
+
+@keyframes dashdraw {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.react-flow__handle {
+  width: 12px;
+  height: 12px;
+  background: #3498db;
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px #3498db;
+  transition: all 0.2s;
+}
+
+.react-flow__handle:hover {
+  background: #2ecc71;
+  box-shadow: 0 0 0 2px #2ecc71;
+  transform: scale(1.3);
+}

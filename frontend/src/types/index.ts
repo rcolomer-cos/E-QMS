@@ -218,6 +218,7 @@ export interface Department {
   active: boolean;
   createdAt?: string;
   updatedAt?: string;
+  orgChartData?: string | null; // ReactFlow JSON (nodes & edges) for organizational chart
 }
 
 export interface Process {
