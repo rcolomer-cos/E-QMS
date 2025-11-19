@@ -6,6 +6,7 @@ import {
   createDepartment,
   updateDepartment,
   deleteDepartment,
+  getOrganizationalHierarchy,
 } from '../controllers/departmentController';
 import { validateDepartment, validateDepartmentUpdate, validateId } from '../utils/validators';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
@@ -15,6 +16,9 @@ const router = Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Organizational hierarchy endpoint (must be before /:id to avoid conflicts)
+router.get('/hierarchy/full', getOrganizationalHierarchy); // All authenticated users can view hierarchy
 
 // Department CRUD operations
 router.get('/', getAllDepartments); // All authenticated users can view departments
