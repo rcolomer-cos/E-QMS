@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { logout, getCurrentUser } from '../services/authService';
 import { useBranding } from '../contexts/BrandingContext';
@@ -8,7 +8,6 @@ import '../styles/Layout.css';
 
 function Layout() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const user = getCurrentUser();
   const { isModuleEnabled } = useModuleVisibility();
   const roleNames: string[] = ((user?.roles?.map(r => r.name)) || (user?.role ? [user.role as string] : [])) as string[];
@@ -32,7 +31,7 @@ function Layout() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    // Don't manually navigate - logout() handles the redirect
   };
 
   // Check if a menu item should be visible

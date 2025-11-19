@@ -40,6 +40,10 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 let toastIdSeq = 1;
 
+// Track recently shown messages to prevent duplicates
+const recentMessages = new Map<string, number>();
+const DUPLICATE_WINDOW_MS = 2000; // Don't show same message within 2 seconds
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
@@ -49,6 +53,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const show = useCallback(
     (message: string, type: ToastType = 'info', duration = 3500) => {
+      // Check for duplicate messages within the time window
+      const now = Date.now();
+      const lastShown = recentMessages.get(message);
+      if (lastShown && now - lastShown < DUPLICATE_WINDOW_MS) {
+        return; // Skip duplicate
+      }
+      recentMessages.set(message, now);
+      
+      // Clean up old entries from the map
+      for (const [msg, timestamp] of recentMessages.entries()) {
+        if (now - timestamp > DUPLICATE_WINDOW_MS) {
+          recentMessages.delete(msg);
+        }
+      }
+      
       const id = toastIdSeq++;
       const item: ToastItem = { id, message, type, duration };
       setToasts((prev) => [...prev, item]);

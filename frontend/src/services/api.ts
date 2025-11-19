@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { handleSessionExpiry, isLogoutInProgress } from './logoutHandler';
 
 const api = axios.create({
   baseURL: '/api',
@@ -25,19 +26,17 @@ api.interceptors.response.use(
       // Do not force-redirect on any auth route or public system checks
       const isAuthRoute = !!reqUrl && reqUrl.includes('/auth/');
       const isPublicSystem = !!reqUrl && (reqUrl.includes('/system/init-status') || reqUrl.includes('/system/status'));
-      if (isAuthRoute || isPublicSystem) {
+      const currentPath = window.location.pathname;
+      const onPublicPage = currentPath === '/login' || currentPath === '/setup';
+      
+      if (isAuthRoute || isPublicSystem || onPublicPage) {
         return Promise.reject(error);
       }
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('rememberMe');
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('user');
-      try {
-        const msg = 'Your session expired. Please log in again.';
-        window.dispatchEvent(new CustomEvent('app:toast', { detail: { message: msg, type: 'warning' } }));
-      } catch {}
-      window.location.href = '/login';
+      
+      // Use centralized logout handler to prevent duplicates
+      if (!isLogoutInProgress()) {
+        handleSessionExpiry();
+      }
     }
 
     // Generic error toast for other statuses when not handled elsewhere

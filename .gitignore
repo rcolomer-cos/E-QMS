@@ -43,3 +43,6 @@ temp/
 
 # Uploads
 uploads/
+
+# Specific to DevExpress
+frontend/src/devextreme-license.ts

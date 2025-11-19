@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import api from './api';
 import { LoginCredentials, AuthResponse, User } from '../types';
+import { handleSessionExpiry, isLogoutInProgress, resetLogoutState } from './logoutHandler';
 
 interface LoginOptions extends LoginCredentials {
   rememberMe?: boolean;
 }
 
 export const login = async (credentials: LoginOptions): Promise<AuthResponse> => {
+  // Reset logout state when logging in
+  resetLogoutState();
+  
   const response = await api.post<AuthResponse>('/auth/login', credentials);
   const { token, user } = response.data;
 
@@ -38,15 +42,9 @@ export const login = async (credentials: LoginOptions): Promise<AuthResponse> =>
 };
 
 export const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  localStorage.removeItem('rememberMe');
-  sessionStorage.removeItem('token');
-  sessionStorage.removeItem('user');
-  try {
-    window.dispatchEvent(new CustomEvent('app:auth-changed', { detail: { isAuthenticated: false } }));
-  } catch {}
-  window.location.href = '/login';
+  if (!isLogoutInProgress()) {
+    handleSessionExpiry();
+  }
 };
 
 export const getCurrentUser = (): User | null => {
@@ -75,7 +73,16 @@ export const useAuth = () => {
 
   // Listen for same-tab auth changes (triggered by login/logout)
   useEffect(() => {
-    const handler = () => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ isAuthenticated: boolean }>;
+      const currentPath = window.location.pathname;
+      
+      // Only prevent updates during logout (when isAuthenticated becomes false)
+      // Allow updates during login (when isAuthenticated becomes true)
+      if ((currentPath === '/login' || currentPath === '/setup') && ce.detail?.isAuthenticated === false) {
+        return;
+      }
+      
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const storedUser = getCurrentUser();
       const authed = Boolean(token && storedUser);
@@ -88,6 +95,12 @@ export const useAuth = () => {
 
   // Validate token with backend once on mount; auto-logout if invalid/expired
   useEffect(() => {
+    // Don't validate if on login/setup pages to prevent jumping
+    const currentPath = window.location.pathname;
+    if (currentPath === '/login' || currentPath === '/setup') {
+      return;
+    }
+    
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
 
@@ -102,21 +115,8 @@ export const useAuth = () => {
         } catch {}
       })
       .catch((err) => {
-        if (err?.response?.status === 401) {
-          try {
-            window.dispatchEvent(
-              new CustomEvent('app:toast', {
-                detail: { message: 'Your session expired. Please log in again.', type: 'warning' },
-              })
-            );
-          } catch {}
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('rememberMe');
-          sessionStorage.removeItem('token');
-          sessionStorage.removeItem('user');
-          window.location.href = '/login';
-        }
+        // Let api.ts interceptor handle 401 errors - don't duplicate the logic
+        // The interceptor will call handleSessionExpiry() which handles everything
       });
   }, []);
 
