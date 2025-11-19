@@ -79,11 +79,13 @@ function SwotAnalysis() {
   };
 
   const isAdmin = (): boolean => {
-    return currentUser?.roles?.includes('admin') || currentUser?.roles?.includes('superuser') || false;
+    return currentUser?.role === 'admin' || currentUser?.role === 'superuser' || false;
   };
 
   const canModify = (): boolean => {
-    return isAdmin() || currentUser?.roles?.includes('manager') || false;
+    return currentUser?.role === 'admin' || 
+           currentUser?.role === 'manager' || 
+           currentUser?.role === 'superuser' || false;
   };
 
   const handleCreateOrUpdate = async (e: React.FormEvent) => {
