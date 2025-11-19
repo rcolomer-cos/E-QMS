@@ -4,9 +4,14 @@ import {
   createProcess,
   updateProcess,
   deleteProcess,
+  getProcessOwners,
+  assignProcessOwner,
+  removeProcessOwner,
   CreateProcessData,
 } from '../services/processService';
-import { Process } from '../types';
+import { Process, ProcessOwner } from '../types';
+import { getUsers } from '../services/userService';
+import { useAuth } from '../services/authService';
 import { useToast } from '../contexts/ToastContext';
 import '../styles/ProcessManagement.css';
 
@@ -15,6 +20,14 @@ const ProcessManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProcess, setEditingProcess] = useState<Process | null>(null);
+  const [showOwnersModal, setShowOwnersModal] = useState(false);
+  const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
+  const [processOwners, setProcessOwners] = useState<ProcessOwner[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<number | null>(null);
+  const [isPrimaryOwner, setIsPrimaryOwner] = useState(false);
+  const [ownerNotes, setOwnerNotes] = useState('');
+  const { user } = useAuth();
   const toast = useToast();
 
   const [formData, setFormData] = useState<CreateProcessData>({
@@ -25,9 +38,26 @@ const ProcessManagement = () => {
     displayOrder: undefined,
   });
 
+  // Check if user has admin/superuser role
+  const canManageOwners = user?.roles?.some((role) => 
+    role.name === 'admin' || role.name === 'superuser'
+  ) || user?.role === 'admin' || user?.role === 'superuser';
+
   useEffect(() => {
     loadProcesses();
+    if (canManageOwners) {
+      loadUsers();
+    }
   }, []);
+
+  const loadUsers = async () => {
+    try {
+      const users = await getUsers();
+      setAvailableUsers(users.filter(u => u.active));
+    } catch (err: any) {
+      console.error('Failed to load users:', err);
+    }
+  };
 
   const loadProcesses = async () => {
     try {
@@ -106,6 +136,72 @@ const ProcessManagement = () => {
       await loadProcesses();
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to delete process');
+    }
+  };
+
+  const handleOpenOwnersModal = async (process: Process) => {
+    setSelectedProcess(process);
+    try {
+      const owners = await getProcessOwners(process.id);
+      setProcessOwners(owners);
+      setShowOwnersModal(true);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to load process owners');
+    }
+  };
+
+  const handleCloseOwnersModal = () => {
+    setShowOwnersModal(false);
+    setSelectedProcess(null);
+    setProcessOwners([]);
+    setSelectedOwnerId(null);
+    setIsPrimaryOwner(false);
+    setOwnerNotes('');
+  };
+
+  const handleAssignOwner = async () => {
+    if (!selectedProcess || !selectedOwnerId) {
+      toast.error('Please select a user to assign');
+      return;
+    }
+
+    try {
+      await assignProcessOwner(selectedProcess.id, {
+        ownerId: selectedOwnerId,
+        isPrimaryOwner,
+        notes: ownerNotes || undefined,
+      });
+      toast.success('Process owner assigned successfully');
+      
+      // Reload owners
+      const owners = await getProcessOwners(selectedProcess.id);
+      setProcessOwners(owners);
+      
+      // Reset form
+      setSelectedOwnerId(null);
+      setIsPrimaryOwner(false);
+      setOwnerNotes('');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to assign process owner');
+    }
+  };
+
+  const handleRemoveOwner = async (ownerId: number, ownerName: string) => {
+    if (!selectedProcess) return;
+    
+    if (!window.confirm(`Remove ${ownerName} as owner of this process?`)) {
+      return;
+    }
+
+    try {
+      await removeProcessOwner(selectedProcess.id, ownerId);
+      toast.success('Process owner removed successfully');
+      
+      // Reload owners
+      const owners = await getProcessOwners(selectedProcess.id);
+      setProcessOwners(owners);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to remove process owner');
     }
   };
 
@@ -209,18 +305,27 @@ const ProcessManagement = () => {
                       </button>
                       <button
                         className="btn-icon"
+                        onClick={() => handleOpenOwnersModal(process)}
+                        title="Manage Owners"
+                      >
+                        👥
+                      </button>
+                      <button
+                        className="btn-icon"
                         onClick={() => handleOpenModal(process)}
                         title="Edit"
                       >
                         ✎
                       </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        onClick={() => handleDelete(process.id, process.name)}
-                        title="Delete"
-                      >
-                        🗑
-                      </button>
+                      {canManageOwners && (
+                        <button
+                          className="btn-icon btn-danger"
+                          onClick={() => handleDelete(process.id, process.name)}
+                          title="Delete"
+                        >
+                          🗑
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -327,6 +432,142 @@ const ProcessManagement = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showOwnersModal && selectedProcess && (
+        <div className="modal-overlay" onClick={handleCloseOwnersModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Process Owners: {selectedProcess.name}</h2>
+              <button className="close-btn" onClick={handleCloseOwnersModal}>
+                ×
+              </button>
+            </div>
+            <div style={{ padding: '1.5rem' }}>
+              {/* Current Owners */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>
+                  Current Owners
+                </h3>
+                {processOwners.length === 0 ? (
+                  <p style={{ color: '#999', fontSize: '0.9rem' }}>
+                    No owners assigned to this process yet.
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {processOwners.map((owner) => (
+                      <div
+                        key={owner.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.75rem',
+                          background: '#f9fafb',
+                          borderRadius: '6px',
+                          border: '1px solid #e5e7eb',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>
+                            {owner.ownerName}
+                            {owner.isPrimaryOwner && (
+                              <span
+                                style={{
+                                  marginLeft: '0.5rem',
+                                  fontSize: '0.75rem',
+                                  padding: '0.125rem 0.5rem',
+                                  background: '#667eea',
+                                  color: 'white',
+                                  borderRadius: '12px',
+                                }}
+                              >
+                                PRIMARY
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                            {owner.ownerEmail}
+                          </div>
+                          {owner.notes && (
+                            <div style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.25rem' }}>
+                              {owner.notes}
+                            </div>
+                          )}
+                        </div>
+                        {canManageOwners && (
+                          <button
+                            className="btn-icon btn-danger"
+                            onClick={() => handleRemoveOwner(owner.ownerId, owner.ownerName || '')}
+                            title="Remove owner"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Assign New Owner */}
+              {canManageOwners && (
+                <div>
+                  <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>
+                    Assign New Owner
+                  </h3>
+                  <div className="form-group">
+                    <label htmlFor="ownerSelect">Select User *</label>
+                    <select
+                      id="ownerSelect"
+                      value={selectedOwnerId || ''}
+                      onChange={(e) => setSelectedOwnerId(e.target.value ? Number(e.target.value) : null)}
+                    >
+                      <option value="">-- Select a user --</option>
+                      {availableUsers
+                        .filter((u) => !processOwners.some((po) => po.ownerId === u.id))
+                        .map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.firstName} {u.lastName} ({u.email})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={isPrimaryOwner}
+                        onChange={(e) => setIsPrimaryOwner(e.target.checked)}
+                      />
+                      <span>Primary Owner</span>
+                    </label>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="ownerNotes">Notes (optional)</label>
+                    <textarea
+                      id="ownerNotes"
+                      value={ownerNotes}
+                      onChange={(e) => setOwnerNotes(e.target.value)}
+                      rows={2}
+                      placeholder="Any additional notes about this assignment"
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleAssignOwner}
+                      disabled={!selectedOwnerId}
+                    >
+                      Assign Owner
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
