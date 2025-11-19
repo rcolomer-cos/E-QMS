@@ -51,13 +51,13 @@ router.put(
   updateSupplierApprovalStatus
 );
 
-// Reactivate supplier - ADMIN only
-router.put('/:id/reactivate', validateId, authorizeRoles(UserRole.ADMIN), reactivateSupplier);
+// Reactivate supplier - ADMIN, MANAGER, SUPERUSER
+router.put('/:id/reactivate', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), reactivateSupplier);
 
 // Update supplier - Requires ADMIN or MANAGER role
 router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), updateSupplier);
 
-// Deactivate supplier - Requires ADMIN role only
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deactivateSupplier);
+// Deactivate supplier - Requires ADMIN, MANAGER, or SUPERUSER role
+router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deactivateSupplier);
 
 export default router;

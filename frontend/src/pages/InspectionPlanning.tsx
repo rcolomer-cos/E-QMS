@@ -118,7 +118,7 @@ function InspectionPlanning() {
 
       setPlans(plansData.data);
       setEquipment(equipmentData);
-      setInspectors(usersData.filter((u) => ['Admin', 'Manager', 'Auditor'].includes(u.role)));
+      setInspectors(usersData.filter((u) => u.role && ['Admin', 'Manager', 'Auditor'].includes(u.role)));
       setInspectionTypes(types.length > 0 ? types : ['routine', 'safety', 'pre-use', 'quality', 'calibration', 'preventive']);
       setError('');
     } catch (err: any) {

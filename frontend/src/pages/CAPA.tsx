@@ -119,8 +119,8 @@ function CAPA() {
   };
 
   const canCreateCAPA = () => {
-    if (!currentUser) return false;
-    return ['admin', 'manager', 'auditor'].includes(currentUser.role.toLowerCase());
+    const role = currentUser?.role?.toLowerCase() || '';
+    return ['admin', 'manager', 'auditor'].includes(role);
   };
 
   if (showCreateForm) {

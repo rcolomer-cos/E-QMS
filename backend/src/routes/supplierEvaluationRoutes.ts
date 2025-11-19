@@ -67,7 +67,7 @@ router.put(
   updateSupplierEvaluation
 );
 
-// Delete supplier evaluation - Requires ADMIN role only
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteSupplierEvaluation);
+// Delete supplier evaluation - Requires ADMIN, MANAGER, or SUPERUSER role
+router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteSupplierEvaluation);
 
 export default router;

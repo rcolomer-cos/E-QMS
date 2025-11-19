@@ -181,7 +181,7 @@ const OrganizationalChart = () => {
   const isAdmin = () => {
     if (!currentUser) return false;
     const roles = currentUser.roleNames || [currentUser.role];
-    return roles.some(role => role === 'admin' || role === 'superuser');
+    return roles.some(role => role === 'admin' || role === 'superuser' || role === 'manager');
   };
 
   const handleNodeClick = (type: 'department' | 'process', data: any) => {

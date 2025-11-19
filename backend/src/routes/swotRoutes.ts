@@ -32,7 +32,7 @@ router.get('/:id', validateId, getSwotEntryById);
 // Update SWOT entry - Requires ADMIN or MANAGER role
 router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), validateSwotEntryUpdate, updateSwotEntry);
 
-// Delete SWOT entry - Requires ADMIN role only
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteSwotEntry);
+// Delete SWOT entry - Requires ADMIN, MANAGER, or SUPERUSER role
+router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteSwotEntry);
 
 export default router;

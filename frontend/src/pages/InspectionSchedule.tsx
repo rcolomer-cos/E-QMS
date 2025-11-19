@@ -64,7 +64,7 @@ function InspectionSchedule() {
       setUpcomingInspections(upcoming);
       setOverdueInspections(overdue);
       setAllInspections(allData.data);
-      setInspectors(usersData.filter((u) => ['Admin', 'Manager', 'Auditor'].includes(u.role)));
+      setInspectors(usersData.filter((u) => u.role && ['Admin', 'Manager', 'Auditor'].includes(u.role)));
       setInspectionTypes(types);
       setError('');
     } catch (err: any) {

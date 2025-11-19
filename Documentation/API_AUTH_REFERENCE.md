@@ -577,6 +577,16 @@ Authorization: Bearer <token>
 | Delete users              | ✓         | ✓     | ✗       | ✗       | ✗    | ✗      |
 | View all users            | ✓         | ✓     | ✗       | ✗       | ✗    | ✗      |
 | Generate passwords        | ✓         | ✓     | ✗       | ✗       | ✗    | ✗      |
+| Manage processes          | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Manage process owners     | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Manage tags               | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Delete risks              | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Delete NCRs               | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Delete improvement ideas  | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Delete SWOT entries       | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Delete suppliers          | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Edit organizational chart | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
+| Manage inspection plans   | ✓         | ✓     | ✓       | ✗       | ✗    | ✗      |
 
 ---
 

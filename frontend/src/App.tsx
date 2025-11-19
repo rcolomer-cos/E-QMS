@@ -49,11 +49,7 @@ import ChartDemo from './pages/ChartDemo';
 import ImprovementIdeas from './pages/ImprovementIdeas';
 import ImprovementIdeaDetail from './pages/ImprovementIdeaDetail';
 import ImprovementStatusDashboard from './pages/ImprovementStatusDashboard';
-import EmailTemplates from './pages/EmailTemplates';
-import BackupManagement from './pages/BackupManagement';
 import SystemSettings from './pages/SystemSettings';
-import ApiKeys from './pages/ApiKeys';
-import CompanyBranding from './pages/CompanyBranding';
 import GroupManagement from './pages/GroupManagement';
 import GroupDetail from './pages/GroupDetail';
 import OrganizationalChart from './pages/OrganizationalChart';
@@ -100,10 +96,12 @@ function App() {
         <Route path="training" element={<ProtectedModuleRoute moduleKey="training"><Training /></ProtectedModuleRoute>} />
         <Route path="training-matrix" element={<ProtectedModuleRoute moduleKey="training"><TrainingMatrix /></ProtectedModuleRoute>} />
         <Route path="role-training-requirements" element={<ProtectedModuleRoute moduleKey="training"><RoleTrainingRequirements /></ProtectedModuleRoute>} />
-        <Route path="users" element={<Users />} />
-        <Route path="groups" element={<GroupManagement />} />
         <Route path="groups/:id" element={<GroupDetail />} />
         <Route path="departments" element={<Departments />} />
+        
+        {/* Redirects for old routes to settings tabs */}
+        <Route path="users" element={<Navigate to="/settings?tab=users" replace />} />
+        <Route path="groups" element={<Navigate to="/settings?tab=groups" replace />} />
         <Route path="organizational-chart" element={<OrganizationalChart />} />
         <Route path="processes" element={<ProtectedModuleRoute moduleKey="processes"><Processes /></ProtectedModuleRoute>} />
         <Route path="processes/overview" element={<ProtectedModuleRoute moduleKey="processes"><ProcessOverview /></ProtectedModuleRoute>} />
@@ -129,14 +127,17 @@ function App() {
         <Route path="improvement-ideas" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementIdeas /></ProtectedModuleRoute>} />
         <Route path="improvement-ideas/dashboard" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementStatusDashboard /></ProtectedModuleRoute>} />
         <Route path="improvement-ideas/:id" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementIdeaDetail /></ProtectedModuleRoute>} />
-        <Route path="email-templates" element={<EmailTemplates />} />
-        <Route path="backup-management" element={<BackupManagement />} />
         <Route path="settings" element={<Settings />} />
         <Route path="system-settings" element={<SystemSettings />} />
-        <Route path="company-branding" element={<CompanyBranding />} />
-        <Route path="api-keys" element={<ApiKeys />} />
-        <Route path="data-import" element={<DataImport />} />
         <Route path="chart-demo" element={<ChartDemo />} />
+        
+        {/* Redirects for old routes to new tabbed system-settings */}
+        <Route path="company-branding" element={<Navigate to="/system-settings?tab=branding" replace />} />
+        <Route path="email-templates" element={<Navigate to="/system-settings?tab=email" replace />} />
+        <Route path="api-keys" element={<Navigate to="/system-settings?tab=api-keys" replace />} />
+        <Route path="backup-management" element={<Navigate to="/system-settings?tab=backup" replace />} />
+        <Route path="audit-logs" element={<Navigate to="/system-settings?tab=audit" replace />} />
+        <Route path="data-import" element={<Navigate to="/system-settings?tab=import" replace />} />
       </Route>
     </Routes>
   );

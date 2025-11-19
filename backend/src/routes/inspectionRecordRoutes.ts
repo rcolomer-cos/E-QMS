@@ -32,7 +32,7 @@ router.post('/:id/create-ncr', validateId, createLimiter, authorizeRoles(UserRol
 // Update Inspection Record - Requires ADMIN or MANAGER role
 router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), validateInspectionRecordUpdate, updateInspectionRecord);
 
-// Delete Inspection Record - Requires ADMIN role only
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteInspectionRecord);
+// Delete Inspection Record - Requires ADMIN, MANAGER, or SUPERUSER role
+router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteInspectionRecord);
 
 export default router;

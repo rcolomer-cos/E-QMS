@@ -186,7 +186,7 @@ function Risks() {
   const canModify = currentUser?.role === 'admin' || 
                     currentUser?.role === 'manager' || 
                     currentUser?.role === 'auditor';
-  const canDelete = currentUser?.role === 'admin';
+  const canDelete = currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'superuser';
 
   if (loading) {
     return <div className="loading">Loading risks...</div>;

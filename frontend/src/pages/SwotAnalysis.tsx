@@ -79,7 +79,7 @@ function SwotAnalysis() {
   };
 
   const isAdmin = (): boolean => {
-    return currentUser?.role === 'admin' || currentUser?.role === 'superuser' || false;
+    return currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'superuser' || false;
   };
 
   const canModify = (): boolean => {

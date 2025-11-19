@@ -147,13 +147,13 @@ export const menuStructure: MenuItem[] = [
       {
         id: 'users',
         label: 'navigation.users',
-        path: '/users',
+        path: '/settings?tab=users',
         requireAnyRole: ['admin', 'manager', 'superuser'],
       },
       {
         id: 'groups',
         label: 'navigation.groups',
-        path: '/groups',
+        path: '/settings?tab=groups',
         requireAnyRole: ['admin', 'manager', 'superuser'],
       },
       {
@@ -225,37 +225,44 @@ export const menuStructure: MenuItem[] = [
         id: 'system-settings',
         label: 'navigation.systemSettings',
         path: '/system-settings',
-      },
-      {
-        id: 'company-branding',
-        label: 'navigation.companyBranding',
-        path: '/company-branding',
-      },
-      {
-        id: 'email-templates',
-        label: 'navigation.emailTemplates',
-        path: '/email-templates',
-      },
-      {
-        id: 'api-keys',
-        label: 'navigation.apiKeys',
-        path: '/api-keys',
-      },
-      {
-        id: 'backup-management',
-        label: 'navigation.backupManagement',
-        path: '/backup-management',
-      },
-      {
-        id: 'audit-logs',
-        label: 'navigation.auditLogs',
-        path: '/audit-logs',
-      },
-      {
-        id: 'data-import',
-        label: 'navigation.dataImport',
-        path: '/data-import',
-        requiredRole: ['superuser'],
+        submenu: [
+          {
+            id: 'system-settings-general',
+            label: 'General Settings',
+            path: '/system-settings?tab=general',
+          },
+          {
+            id: 'company-branding',
+            label: 'navigation.companyBranding',
+            path: '/system-settings?tab=branding',
+          },
+          {
+            id: 'email-templates',
+            label: 'navigation.emailTemplates',
+            path: '/system-settings?tab=email',
+          },
+          {
+            id: 'api-keys',
+            label: 'navigation.apiKeys',
+            path: '/system-settings?tab=api-keys',
+          },
+          {
+            id: 'backup-management',
+            label: 'navigation.backupManagement',
+            path: '/system-settings?tab=backup',
+          },
+          {
+            id: 'audit-logs',
+            label: 'navigation.auditLogs',
+            path: '/system-settings?tab=audit',
+          },
+          {
+            id: 'data-import',
+            label: 'navigation.dataImport',
+            path: '/system-settings?tab=import',
+            requiredRole: ['superuser'],
+          },
+        ],
       },
     ],
   },

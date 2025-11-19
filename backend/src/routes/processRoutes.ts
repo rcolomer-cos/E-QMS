@@ -26,14 +26,14 @@ router.use(authenticateToken);
 router.get('/', getAllProcesses); // All authenticated users can view processes
 router.get('/:id', validateId, getProcessById); // All authenticated users can view processes
 router.get('/code/:code', getProcessByCode); // All authenticated users can view processes by code
-router.post('/', authorizeRoles(UserRole.SUPERUSER), validateProcess, createProcess); // Superuser only
-router.put('/:id', authorizeRoles(UserRole.SUPERUSER), validateId, validateProcessUpdate, updateProcess); // Superuser only
-router.delete('/:id', authorizeRoles(UserRole.SUPERUSER), validateId, deleteProcess); // Superuser only
+router.post('/', authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER), validateProcess, createProcess); // Superuser, Admin, Manager
+router.put('/:id', authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER), validateId, validateProcessUpdate, updateProcess); // Superuser, Admin, Manager
+router.delete('/:id', authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER), validateId, deleteProcess); // Superuser, Admin, Manager
 
 // Process owner management
 router.get('/:id/owners', validateId, getProcessOwners); // All authenticated users can view process owners
-router.post('/:id/owners', authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), validateId, validateProcessOwner, assignProcessOwner); // Admin/superuser only
-router.delete('/:id/owners/:ownerId', authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), validateId, removeProcessOwner); // Admin/superuser only
+router.post('/:id/owners', authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), validateId, validateProcessOwner, assignProcessOwner); // Admin/Manager/superuser only
+router.delete('/:id/owners/:ownerId', authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), validateId, removeProcessOwner); // Admin/Manager/superuser only
 
 // Process document linking
 router.get('/:id/documents', validateId, getProcessDocuments); // All authenticated users can view linked documents

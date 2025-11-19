@@ -114,9 +114,8 @@ export const useAuth = () => {
           storage.setItem('user', JSON.stringify(data));
         } catch {}
       })
-      .catch((err) => {
-        // Let api.ts interceptor handle 401 errors - don't duplicate the logic
-        // The interceptor will call handleSessionExpiry() which handles everything
+      .catch(() => {
+        // Let api.ts interceptor handle 401 errors - handled centrally
       });
   }, []);
 

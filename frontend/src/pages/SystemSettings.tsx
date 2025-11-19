@@ -1,17 +1,28 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   getSystemSettingsByCategory,
   batchUpdateSystemSettings,
   SystemSetting,
   SystemSettingsByCategory,
 } from '../services/systemService';
+import CompanyBranding from './CompanyBranding';
+import EmailTemplates from './EmailTemplates';
+import ApiKeys from './ApiKeys';
+import BackupManagement from './BackupManagement';
+import AuditLogs from './AuditLogs';
+import DataImport from './DataImport';
 import '../styles/SystemSettings.css';
 
 interface SettingFormState {
   [key: string]: string;
 }
 
+type TabKey = 'general' | 'branding' | 'email' | 'api-keys' | 'backup' | 'audit' | 'import';
+
 const SystemSettings = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<TabKey>((searchParams.get('tab') as TabKey) || 'general');
   const [settingsByCategory, setSettingsByCategory] = useState<SystemSettingsByCategory>({});
   const [formState, setFormState] = useState<SettingFormState>({});
   const [loading, setLoading] = useState(true);
@@ -37,8 +48,17 @@ const SystemSettings = () => {
   };
 
   useEffect(() => {
-    loadSettings();
-  }, []);
+    if (activeTab === 'general') {
+      loadSettings();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab') as TabKey;
+    if (tab && ['general', 'branding', 'email', 'api-keys', 'backup', 'audit', 'import'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const loadSettings = async () => {
     try {
@@ -206,11 +226,115 @@ const SystemSettings = () => {
     );
   };
 
-  if (loading) {
-    return <div className="loading">Loading system settings...</div>;
-  }
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+    setError('');
+    setSuccess('');
+  };
 
-  const categories = Object.keys(settingsByCategory);
+  const tabs = [
+    { key: 'general' as TabKey, label: 'General Settings', icon: '⚙️' },
+    { key: 'branding' as TabKey, label: 'Company Branding', icon: '🎨' },
+    { key: 'email' as TabKey, label: 'Email Templates', icon: '📧' },
+    { key: 'api-keys' as TabKey, label: 'API Keys', icon: '🔑' },
+    { key: 'backup' as TabKey, label: 'Backup Management', icon: '💾' },
+    { key: 'audit' as TabKey, label: 'Audit Logs', icon: '📋' },
+    { key: 'import' as TabKey, label: 'Data Import', icon: '📥' },
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'general':
+        if (loading) {
+          return <div className="loading">Loading system settings...</div>;
+        }
+
+        const categories = Object.keys(settingsByCategory);
+
+        return (
+          <div className="general-settings-content">
+            {error && (
+              <div className="alert alert-error">
+                <span className="alert-icon">⚠️</span>
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="alert alert-success">
+                <span className="alert-icon">✓</span>
+                {success}
+              </div>
+            )}
+
+            <div className="settings-container">
+              <div className="settings-sidebar">
+                <nav className="category-nav">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      className={`category-nav-item ${
+                        activeCategory === category ? 'active' : ''
+                      }`}
+                      onClick={() => setActiveCategory(category)}
+                    >
+                      {categoryLabels[category] || category}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              <div className="settings-content">
+                {categories
+                  .filter((cat) => cat === activeCategory)
+                  .map((category) =>
+                    renderCategory(category, settingsByCategory[category])
+                  )}
+
+                <div className="settings-actions">
+                  <button
+                    className="tw-btn tw-btn-secondary"
+                    onClick={handleReset}
+                    disabled={saving}
+                  >
+                    Reset Changes
+                  </button>
+                  <button
+                    className="tw-btn tw-btn-primary"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : 'Save Settings'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'branding':
+        return <CompanyBranding />;
+
+      case 'email':
+        return <EmailTemplates />;
+
+      case 'api-keys':
+        return <ApiKeys />;
+
+      case 'backup':
+        return <BackupManagement />;
+
+      case 'audit':
+        return <AuditLogs />;
+
+      case 'import':
+        return <DataImport />;
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="system-settings-page">
@@ -221,60 +345,22 @@ const SystemSettings = () => {
         </p>
       </div>
 
-      {error && (
-        <div className="alert alert-error">
-          <span className="alert-icon">⚠️</span>
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="alert alert-success">
-          <span className="alert-icon">✓</span>
-          {success}
-        </div>
-      )}
-
-      <div className="settings-container">
-        <div className="settings-sidebar">
-          <nav className="category-nav">
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={`category-nav-item ${
-                  activeCategory === category ? 'active' : ''
-                }`}
-                onClick={() => setActiveCategory(category)}
-              >
-                {categoryLabels[category] || category}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="settings-content">
-          {categories
-            .filter((cat) => cat === activeCategory)
-            .map((category) =>
-              renderCategory(category, settingsByCategory[category])
-            )}
-
-          <div className="settings-actions">
+      <div className="tabs-container">
+        <div className="tabs-header">
+          {tabs.map((tab) => (
             <button
-              className="tw-btn tw-btn-secondary"
-              onClick={handleReset}
-              disabled={saving}
+              key={tab.key}
+              className={`tab-button ${activeTab === tab.key ? 'active' : ''}`}
+              onClick={() => handleTabChange(tab.key)}
             >
-              Reset Changes
+              <span className="tab-icon">{tab.icon}</span>
+              <span className="tab-label">{tab.label}</span>
             </button>
-            <button
-              className="tw-btn tw-btn-primary"
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save Settings'}
-            </button>
-          </div>
+          ))}
+        </div>
+
+        <div className="tab-content">
+          {renderTabContent()}
         </div>
       </div>
     </div>

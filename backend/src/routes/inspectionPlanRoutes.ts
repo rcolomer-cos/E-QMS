@@ -80,7 +80,7 @@ router.put(
   updateInspectionPlan
 );
 
-// Delete inspection plan (Admin only)
-router.delete('/:id', authenticateToken, authorizeRoles(UserRole.ADMIN), deleteInspectionPlan);
+// Delete inspection plan (Admin, Manager, Superuser)
+router.delete('/:id', authenticateToken, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteInspectionPlan);
 
 export default router;

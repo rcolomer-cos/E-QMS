@@ -151,8 +151,8 @@ function NCRDetail() {
     return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
   };
 
-  const canEdit = currentUser && ['admin', 'manager', 'auditor'].includes(currentUser.role);
-  const canDelete = currentUser && ['admin', 'manager'].includes(currentUser.role);
+  const canEdit = !!(currentUser?.role && ['admin', 'manager', 'auditor'].includes(currentUser.role));
+  const canDelete = !!(currentUser?.role && ['admin', 'manager'].includes(currentUser.role));
 
   if (loading) {
     return <div className="loading">Loading NCR details...</div>;

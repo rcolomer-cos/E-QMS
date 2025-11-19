@@ -28,7 +28,7 @@ router.get('/:id', validateId, getServiceMaintenanceRecordById);
 // Update Service/Maintenance Record - Requires ADMIN or MANAGER role
 router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), validateServiceMaintenanceRecordUpdate, updateServiceMaintenanceRecord);
 
-// Delete Service/Maintenance Record - Requires ADMIN role only
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteServiceMaintenanceRecord);
+// Delete Service/Maintenance Record - Requires ADMIN, MANAGER, or SUPERUSER role
+router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteServiceMaintenanceRecord);
 
 export default router;

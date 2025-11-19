@@ -81,10 +81,14 @@
   display: inline-block;
 }
 
+.navbar-menu .has-submenu {
+  position: relative;
+}
+
 .navbar-menu .has-submenu .submenu {
   display: none;
   position: absolute;
-  top: 100%;
+  top: calc(100% - 4px);
   left: 0;
   background: #34495e;
   border-radius: 6px;
@@ -92,10 +96,29 @@
   padding: 0.5rem 0.25rem;
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
   z-index: 1000;
+  /* Add padding at the top to bridge the gap */
+  padding-top: 0.75rem;
+}
+
+/* Create an invisible bridge between parent and submenu */
+.navbar-menu .has-submenu::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 10px;
+  display: none;
+}
+
+.navbar-menu .has-submenu:hover::after,
+.navbar-menu .has-submenu:focus-within::after {
+  display: block;
 }
 
 .navbar-menu .has-submenu:hover > .submenu,
-.navbar-menu .has-submenu:focus-within > .submenu {
+.navbar-menu .has-submenu:focus-within > .submenu,
+.navbar-menu .submenu:hover {
   display: block;
 }
 

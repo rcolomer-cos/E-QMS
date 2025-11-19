@@ -41,7 +41,7 @@ router.put('/:id/status', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MA
 // Update risk - Requires ADMIN, MANAGER, or AUDITOR role
 router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateRiskUpdate, updateRisk);
 
-// Delete risk - Requires ADMIN role only
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteRisk);
+// Delete risk - Requires ADMIN, MANAGER, or SUPERUSER role
+router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteRisk);
 
 export default router;

@@ -38,10 +38,10 @@ const ProcessManagement = () => {
     displayOrder: undefined,
   });
 
-  // Check if user has admin/superuser role
+  // Check if user has admin/superuser/manager role
   const canManageOwners = user?.roles?.some((role) => 
-    role.name === 'admin' || role.name === 'superuser'
-  ) || user?.role === 'admin' || user?.role === 'superuser';
+    role.name === 'admin' || role.name === 'superuser' || role.name === 'manager'
+  ) || user?.role === 'admin' || user?.role === 'superuser' || user?.role === 'manager';
 
   useEffect(() => {
     loadProcesses();

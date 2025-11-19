@@ -121,8 +121,8 @@ const GroupDetail = () => {
     return (
       <div className="error">
         <p>{error || 'Group not found'}</p>
-        <button className="btn-primary" onClick={() => navigate('/groups')}>
-          Back to Groups
+        <button className="btn-primary" onClick={() => navigate('/settings?tab=groups')}>
+          ← Back to Groups
         </button>
       </div>
     );
@@ -132,7 +132,7 @@ const GroupDetail = () => {
     <div className="group-detail">
       <div className="page-header">
         <div>
-          <button className="btn-secondary back-button" onClick={() => navigate('/groups')}>
+          <button className="btn-secondary back-button" onClick={() => navigate('/settings?tab=groups')}>
             ← Back to Groups
           </button>
           <h1>{group.name}</h1>

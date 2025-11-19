@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getCurrentUser } from '../services/authService';
-import CompanyBranding from './CompanyBranding';
 import ProcessManagement from './ProcessManagement';
 import Users from './Users';
 import GroupManagement from './GroupManagement';
@@ -11,10 +10,10 @@ import '../styles/Settings.css';
 function Settings() {
   const user = getCurrentUser();
   const [searchParams, setSearchParams] = useSearchParams();
-  const allowedTabs = ['branding', 'processes', 'users', 'groups', 'modules'] as const;
+  const allowedTabs = ['processes', 'users', 'groups', 'modules'] as const;
   type TabKey = typeof allowedTabs[number];
-  const initialTab = (searchParams.get('tab') as TabKey) ?? 'branding';
-  const [activeTab, setActiveTab] = useState<TabKey>(allowedTabs.includes(initialTab as TabKey) ? (initialTab as TabKey) : 'branding');
+  const initialTab = (searchParams.get('tab') as TabKey) ?? 'processes';
+  const [activeTab, setActiveTab] = useState<TabKey>(allowedTabs.includes(initialTab as TabKey) ? (initialTab as TabKey) : 'processes');
 
   const roleNames: string[] = ((user?.roles?.map(r => r.name)) || (user?.role ? [user.role as string] : [])) as string[];
   const normalizeRole = (name: string) => {
@@ -26,7 +25,6 @@ function Settings() {
     return n;
   };
   const hasRole = (r: string) => roleNames.map(normalizeRole).includes(r.toLowerCase());
-  const canBranding = hasRole('admin') || hasRole('manager') || hasRole('superuser');
   const canProcesses = hasRole('admin') || hasRole('manager') || hasRole('superuser');
   const canUsers = hasRole('admin') || hasRole('superuser');
   const canGroups = hasRole('admin') || hasRole('superuser');
@@ -35,12 +33,11 @@ function Settings() {
   // Determine primary permission label per tab
   const bestRole = (roles: string[]) => roles.find((r) => hasRole(r)) || '';
   const tabBadges = useMemo(() => ({
-    branding: canBranding ? (bestRole(['superuser', 'admin', 'manager']) || 'allowed') : 'no access',
     processes: canProcesses ? (bestRole(['superuser', 'admin', 'manager']) || 'allowed') : 'no access',
     users: canUsers ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
     groups: canGroups ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
     modules: canModules ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
-  }), [canBranding, canProcesses, canUsers, canGroups, canModules]);
+  }), [canProcesses, canUsers, canGroups, canModules]);
 
   const badgeLabel = (key: TabKey) => {
     const v = (tabBadges[key] || '').toString();
@@ -73,14 +70,6 @@ function Settings() {
       {/* Tabs for key settings */}
       <div className="settings-tabs">
         <div className="tab-list" role="tablist" aria-label="Settings Tabs">
-          <button
-            role="tab"
-            aria-selected={activeTab === 'branding'}
-            className={`tab ${activeTab === 'branding' ? 'active' : ''}`}
-            onClick={() => setActiveTab('branding')}
-          >
-            Branding <span className="tab-badge">{badgeLabel('branding')}</span>
-          </button>
           <button
             role="tab"
             aria-selected={activeTab === 'processes'}
@@ -116,15 +105,6 @@ function Settings() {
         </div>
 
         <div className="tab-panels">
-          {activeTab === 'branding' && (
-            <div className="tab-panel" role="tabpanel">
-              {canBranding ? (
-                <CompanyBranding />
-              ) : (
-                <div className="no-results">You do not have permission to view Branding settings.</div>
-              )}
-            </div>
-          )}
           {activeTab === 'processes' && (
             <div className="tab-panel" role="tabpanel">
               {canProcesses ? (

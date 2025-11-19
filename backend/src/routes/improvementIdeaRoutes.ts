@@ -51,7 +51,7 @@ router.put('/:id/status', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MA
 // Update improvement idea - Users can update their own ideas, ADMIN and MANAGER can update any
 router.put('/:id', validateId, validateImprovementIdeaUpdate, updateImprovementIdea);
 
-// Delete improvement idea - Requires ADMIN role only
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteImprovementIdea);
+// Delete improvement idea - Requires ADMIN, MANAGER, or SUPERUSER role
+router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteImprovementIdea);
 
 export default router;

@@ -218,7 +218,7 @@ function ImprovementIdeaDetail() {
               Update Status
             </button>
           )}
-          {user?.role === 'admin' && (
+          {(user?.role === 'admin' || user?.role === 'manager' || user?.role === 'superuser') && (
             <button onClick={handleDelete} className="btn-delete">
               Delete
             </button>

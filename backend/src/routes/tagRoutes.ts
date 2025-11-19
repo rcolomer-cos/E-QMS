@@ -72,13 +72,13 @@ router.get('/usage', flexibleAuth, enforceReadOnly, checkResourceScope('document
 // Get tag by ID - all authenticated users can view
 router.get('/:id', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), getTagById);
 
-// Create tag - ADMIN only
-router.post('/', authenticateToken, createLimiter, validateTagCreation, authorizeRoles(UserRole.ADMIN), createTag);
+// Create tag - ADMIN, MANAGER, SUPERUSER
+router.post('/', authenticateToken, createLimiter, validateTagCreation, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), createTag);
 
-// Update tag - ADMIN only
-router.put('/:id', authenticateToken, validateId, validateTagUpdate, authorizeRoles(UserRole.ADMIN), updateTag);
+// Update tag - ADMIN, MANAGER, SUPERUSER
+router.put('/:id', authenticateToken, validateId, validateTagUpdate, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), updateTag);
 
-// Delete tag - ADMIN only
-router.delete('/:id', authenticateToken, validateId, authorizeRoles(UserRole.ADMIN), deleteTag);
+// Delete tag - ADMIN, MANAGER, SUPERUSER
+router.delete('/:id', authenticateToken, validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteTag);
 
 export default router;

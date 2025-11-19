@@ -245,9 +245,8 @@ function CAPADetail() {
 
   const canEdit = () => {
     if (!currentUser || !capa) return false;
-    // Admin, Manager, Auditor can edit, or the action owner
-    return ['admin', 'manager', 'auditor'].includes(currentUser.role.toLowerCase()) || 
-           currentUser.id === capa.actionOwner;
+    const role = currentUser.role?.toLowerCase() || '';
+    return ['admin', 'manager', 'auditor'].includes(role) || currentUser.id === capa.actionOwner;
   };
 
   const canComplete = () => {
@@ -258,16 +257,14 @@ function CAPADetail() {
 
   const canVerify = () => {
     if (!currentUser || !capa) return false;
-    // Admin, Manager, Auditor can verify (but not the action owner)
-    return capa.status === 'completed' && 
-           ['admin', 'manager', 'auditor'].includes(currentUser.role.toLowerCase()) &&
-           currentUser.id !== capa.actionOwner;
+    const role = currentUser.role?.toLowerCase() || '';
+    return capa.status === 'completed' && ['admin', 'manager', 'auditor'].includes(role) && currentUser.id !== capa.actionOwner;
   };
 
   const canChangeStatus = () => {
     if (!currentUser || !capa) return false;
-    // Admin, Manager, Auditor can change status
-    return ['admin', 'manager', 'auditor'].includes(currentUser.role.toLowerCase());
+    const role = currentUser.role?.toLowerCase() || '';
+    return ['admin', 'manager', 'auditor'].includes(role);
   };
 
   if (loading) {

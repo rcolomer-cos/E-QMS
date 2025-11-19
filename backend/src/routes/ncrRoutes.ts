@@ -54,7 +54,7 @@ router.put('/:id/assign', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MA
 // Update NCR - Requires ADMIN, MANAGER, or AUDITOR role
 router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCRUpdate, updateNCR);
 
-// Delete NCR - Requires ADMIN role only
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN), deleteNCR);
+// Delete NCR - Requires ADMIN, MANAGER, or SUPERUSER role
+router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteNCR);
 
 export default router;

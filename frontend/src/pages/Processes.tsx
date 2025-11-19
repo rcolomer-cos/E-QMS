@@ -234,7 +234,7 @@ const Processes = () => {
       <div className="page-header">
         <h1>Process Management</h1>
         <p className="subtitle">Manage organizational processes</p>
-        {currentUser?.role === 'admin' && (
+        {(currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'superuser') && (
           <button className="btn-add" onClick={() => handleOpenModal()}>
             Add Process
           </button>
@@ -272,7 +272,7 @@ const Processes = () => {
                 <td>{proc.description || 'N/A'}</td>
                 <td>{formatDate(proc.createdAt)}</td>
                 <td className="actions-cell">
-                  {currentUser?.role === 'admin' && (
+                  {(currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'superuser') && (
                     <button
                       onClick={() => handleOpenModal(proc)}
                       className="btn-edit"
@@ -288,7 +288,7 @@ const Processes = () => {
                   >
                     Owners
                   </button>
-                  {currentUser?.role === 'admin' && (
+                  {(currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'superuser') && (
                     <button
                       onClick={() => handleDelete(proc.id)}
                       className="btn-delete"

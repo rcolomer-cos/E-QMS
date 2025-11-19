@@ -21,9 +21,9 @@ function CreateDocumentModal({ onClose, onSuccess }: CreateDocumentModalProps) {
     description: '',
     documentType: 'procedure',
     category: '',
-    version: '1.0',
-    status: 'draft',
-    complianceRequired: false,
+    version: '1.0', // hidden default
+    status: 'draft', // hidden default
+    complianceRequired: false, // hidden default
   });
 
   useEffect(() => {
@@ -153,83 +153,6 @@ function CreateDocumentModal({ onClose, onSuccess }: CreateDocumentModalProps) {
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="version">{t('documents.version')}</label>
-              <input
-                type="text"
-                id="version"
-                name="version"
-                value={formData.version}
-                onChange={handleChange}
-                placeholder="1.0"
-                maxLength={50}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="status">{t('common.status')}</label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="draft">{t('documents.draft')}</option>
-                <option value="review">{t('improvements.underReview')}</option>
-                <option value="approved">{t('common.approved')}</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                name="complianceRequired"
-                checked={formData.complianceRequired}
-                onChange={handleChange}
-              />
-              {t('documents.complianceRequired')}
-            </label>
-            <p className="field-hint">{t('documents.complianceHint')}</p>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="effectiveDate">{t('documents.effectiveDate')}</label>
-              <input
-                type="date"
-                id="effectiveDate"
-                name="effectiveDate"
-                value={formData.effectiveDate || ''}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="reviewDate">{t('documents.reviewDate')}</label>
-              <input
-                type="date"
-                id="reviewDate"
-                name="reviewDate"
-                value={formData.reviewDate || ''}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="expiryDate">{t('documents.expiryDate')}</label>
-            <input
-              type="date"
-              id="expiryDate"
-              name="expiryDate"
-              value={formData.expiryDate || ''}
-              onChange={handleChange}
-            />
           </div>
 
           <div className="modal-footer">
