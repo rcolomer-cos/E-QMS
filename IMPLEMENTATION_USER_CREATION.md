@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of the comprehensive user creation feature for the E-QMS application, accessible from Settings > Users tab.
+This document describes the implementation of the comprehensive user creation feature for the E-QMS application, accessible from Settings > Users tab. This feature enables administrators and superusers to create new users with roles and group assignments through an intuitive dialog interface.
 
 ## Features Implemented
 
