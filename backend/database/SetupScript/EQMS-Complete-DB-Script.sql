@@ -6687,3 +6687,364 @@ BEGIN
     );
 END
 GO
+
+-- Migration: Add phone field to Users table
+-- Date: 2025-11-19
+-- Description: Add optional phone field to Users table for contact information
+
+USE EQMS;
+GO
+
+-- Check if phone column already exists
+IF NOT EXISTS (
+    SELECT 1 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_NAME = 'Users' 
+    AND COLUMN_NAME = 'phone'
+)
+BEGIN
+    ALTER TABLE Users
+    ADD phone NVARCHAR(50) NULL;
+    
+    PRINT '✓ Phone column added to Users table';
+END
+ELSE
+BEGIN
+    PRINT '○ Phone column already exists in Users table';
+END
+GO
+
+
+-- =============================================
+-- Add Compliance Required Field to Documents
+-- and Create Document Compliance Acknowledgements Table
+-- =============================================
+-- Supports ISO 9001 compliance requirements for user read & understand acknowledgements
+
+-- Add complianceRequired field to Documents table
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'Documents') AND name = 'complianceRequired')
+BEGIN
+    ALTER TABLE Documents
+    ADD complianceRequired BIT NOT NULL DEFAULT 0;
+    
+    -- Create index for filtering compliance-required documents
+    CREATE INDEX IX_Documents_ComplianceRequired ON Documents(complianceRequired);
+    
+    PRINT 'Added complianceRequired field to Documents table';
+END
+ELSE
+BEGIN
+    PRINT 'complianceRequired field already exists in Documents table';
+END
+GO
+
+-- Create DocumentComplianceAcknowledgements table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'DocumentComplianceAcknowledgements')
+BEGIN
+    CREATE TABLE DocumentComplianceAcknowledgements (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- Document and User Reference
+        documentId INT NOT NULL,
+        userId INT NOT NULL,
+        
+        -- Version Tracking
+        documentVersion NVARCHAR(50) NOT NULL, -- Version that was acknowledged
+        
+        -- Acknowledgement Details
+        acknowledgedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        ipAddress NVARCHAR(50), -- IP address for audit trail
+        userAgent NVARCHAR(500), -- Browser/client info for audit trail
+        
+        -- Audit Trail
+        createdAt DATETIME2 DEFAULT GETDATE(),
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_DocumentComplianceAck_Document FOREIGN KEY (documentId) REFERENCES Documents(id) ON DELETE CASCADE,
+        CONSTRAINT FK_DocumentComplianceAck_User FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
+        
+        -- Unique constraint: one acknowledgement per user per document version
+        CONSTRAINT UQ_DocumentComplianceAck_User_Document_Version UNIQUE (userId, documentId, documentVersion)
+    );
+
+    -- Indexes for Performance
+    
+    -- Query acknowledgements by document
+    CREATE INDEX IX_DocumentComplianceAck_DocumentId ON DocumentComplianceAcknowledgements(documentId);
+    
+    -- Query acknowledgements by user
+    CREATE INDEX IX_DocumentComplianceAck_UserId ON DocumentComplianceAcknowledgements(userId);
+    
+    -- Query by document and version
+    CREATE INDEX IX_DocumentComplianceAck_Document_Version ON DocumentComplianceAcknowledgements(documentId, documentVersion);
+    
+    -- Audit trail queries
+    CREATE INDEX IX_DocumentComplianceAck_AcknowledgedAt ON DocumentComplianceAcknowledgements(acknowledgedAt);
+    
+    -- Composite index for checking user compliance status
+    CREATE INDEX IX_DocumentComplianceAck_User_Document ON DocumentComplianceAcknowledgements(userId, documentId);
+
+    PRINT 'DocumentComplianceAcknowledgements table created successfully';
+END
+ELSE
+BEGIN
+    PRINT 'DocumentComplianceAcknowledgements table already exists';
+END
+GO
+
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.61' AND scriptName = '61_add_document_compliance.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.61',
+        'Add document compliance acknowledgement support',
+        '61_add_document_compliance.sql',
+        'SUCCESS',
+        'Added complianceRequired field to Documents table and created DocumentComplianceAcknowledgements table for tracking user read & understand confirmations'
+    );
+END
+GO
+
+-- Create module_visibility table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[module_visibility]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE module_visibility (
+        id INT PRIMARY KEY IDENTITY(1,1),
+        module_key NVARCHAR(50) NOT NULL UNIQUE,
+        module_name NVARCHAR(100) NOT NULL,
+        description NVARCHAR(500),
+        is_enabled BIT DEFAULT 1,
+        icon NVARCHAR(50),
+        display_order INT DEFAULT 0,
+        created_at DATETIME DEFAULT GETDATE(),
+        updated_at DATETIME DEFAULT GETDATE()
+    );
+
+    -- Create index on module_key
+    CREATE INDEX idx_module_visibility_key ON module_visibility(module_key);
+    
+    -- Create index on is_enabled for quick filtering
+    CREATE INDEX idx_module_visibility_enabled ON module_visibility(is_enabled);
+
+    PRINT 'Table module_visibility created successfully';
+END
+ELSE
+BEGIN
+    PRINT 'Table module_visibility already exists';
+END
+GO
+
+-- Insert default module visibility settings
+IF NOT EXISTS (SELECT * FROM module_visibility WHERE module_key = 'documents')
+BEGIN
+    INSERT INTO module_visibility (module_key, module_name, description, is_enabled, icon, display_order)
+    VALUES 
+    ('documents', 'Documents', 'Document management and control', 1, 'file-text', 1),
+    ('processes', 'Processes', 'Business process management', 1, 'workflow', 2),
+    ('audits', 'Audits', 'Internal and external audit management', 1, 'clipboard-check', 3),
+    ('ncr', 'NCR', 'Non-Conformance Reports', 1, 'alert-circle', 4),
+    ('capa', 'CAPA', 'Corrective and Preventive Actions', 1, 'target', 5),
+    ('training', 'Training', 'Training management and competency tracking', 1, 'book-open', 6),
+    ('risks', 'Risks', 'Risk assessment and management', 1, 'alert-triangle', 7),
+    ('equipment', 'Equipment', 'Equipment and asset management', 1, 'tool', 8),
+    ('inspection', 'Inspection', 'Mobile inspections and quality checks', 1, 'check-square', 9),
+    ('improvements', 'Improvement Ideas', 'Continuous improvement tracking', 1, 'lightbulb', 10);
+
+    PRINT 'Default module visibility settings inserted successfully';
+END
+ELSE
+BEGIN
+    PRINT 'Default module visibility settings already exist';
+END
+GO
+
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.62' AND scriptName = '62_add_module_visibility.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.62',
+        'Add module visibility settings',
+        '62_add_module_visibility.sql',
+        'SUCCESS',
+        'Added module_visibility table and default visibility settings for modules'
+    );
+END
+GO
+
+-- =============================================
+-- Migration: Create DataImportLogs Table
+-- Version: 004
+-- Description: Table for tracking data import operations
+-- =============================================
+
+USE eqms;
+GO
+
+PRINT 'Creating DataImportLogs table...';
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'DataImportLogs')
+BEGIN
+    CREATE TABLE DataImportLogs (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- Import Metadata
+        importType NVARCHAR(100) NOT NULL, -- Type of data imported (Users, Equipment, Training, Suppliers, Documents)
+        fileName NVARCHAR(500) NOT NULL, -- Original uploaded file name
+        fileSize INT, -- File size in bytes
+        
+        -- Import Status
+        status NVARCHAR(50) NOT NULL DEFAULT 'in_progress', -- 'in_progress', 'completed', 'failed', 'partial'
+        
+        -- Import Results
+        totalRows INT NOT NULL DEFAULT 0, -- Total rows in import file
+        successRows INT NOT NULL DEFAULT 0, -- Successfully imported rows
+        failedRows INT NOT NULL DEFAULT 0, -- Failed rows
+        errorDetails NVARCHAR(MAX), -- JSON array of errors with row numbers
+        
+        -- User Information
+        importedBy INT NOT NULL, -- User who performed the import
+        
+        -- Timestamps
+        startedAt DATETIME2 DEFAULT GETDATE(),
+        completedAt DATETIME2,
+        
+        -- Audit Trail
+        ipAddress NVARCHAR(50), -- IP address of user who performed import
+        userAgent NVARCHAR(500), -- Browser/client information
+        
+        CONSTRAINT FK_DataImportLogs_User FOREIGN KEY (importedBy) REFERENCES Users(id)
+    );
+
+    CREATE INDEX IX_DataImportLogs_ImportType ON DataImportLogs(importType);
+    CREATE INDEX IX_DataImportLogs_ImportedBy ON DataImportLogs(importedBy);
+    CREATE INDEX IX_DataImportLogs_Status ON DataImportLogs(status);
+    CREATE INDEX IX_DataImportLogs_StartedAt ON DataImportLogs(startedAt);
+
+    PRINT '✓ DataImportLogs table created';
+END
+ELSE
+BEGIN
+    PRINT '○ DataImportLogs table already exists';
+END
+GO
+
+-- Record migration
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.63' AND scriptName = '63_create_data_import_logs_table.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.63',
+        'Create DataImportLogs table for tracking data import operations',
+        '63_create_data_import_logs_table.sql',
+        'SUCCESS',
+        'Supports audit trail for Excel-based data imports'
+    );
+END
+GO
+
+PRINT 'DataImportLogs migration completed successfully';
+GO
+
+-- =============================================
+-- SWOT Analysis Table
+-- =============================================
+-- Stores SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis entries
+-- Supports strategic planning and management reviews within ISO 9001 framework
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'SwotEntries')
+BEGIN
+    CREATE TABLE SwotEntries (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- SWOT Entry Details
+        title NVARCHAR(500) NOT NULL, -- Entry title/summary
+        description NVARCHAR(2000), -- Detailed description
+        category NVARCHAR(50) NOT NULL, -- Category: Strength, Weakness, Opportunity, or Threat
+        
+        -- Metadata
+        owner INT, -- User responsible for this entry
+        priority NVARCHAR(50), -- Priority level (low, medium, high, critical)
+        reviewDate DATETIME2, -- Last review date
+        nextReviewDate DATETIME2, -- Next scheduled review date
+        
+        -- Status
+        status NVARCHAR(50) NOT NULL DEFAULT 'active', -- Status: active, archived, addressed
+        
+        -- Audit Trail
+        createdBy INT NOT NULL, -- User who created the entry
+        createdAt DATETIME2 DEFAULT GETDATE(),
+        updatedAt DATETIME2 DEFAULT GETDATE(),
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_SwotEntries_Owner FOREIGN KEY (owner) REFERENCES Users(id),
+        CONSTRAINT FK_SwotEntries_CreatedBy FOREIGN KEY (createdBy) REFERENCES Users(id),
+        
+        -- Constraints
+        CONSTRAINT CK_SwotEntries_Category CHECK (category IN (
+            'Strength',
+            'Weakness',
+            'Opportunity',
+            'Threat'
+        )),
+        CONSTRAINT CK_SwotEntries_Priority CHECK (priority IN (
+            'low',
+            'medium',
+            'high',
+            'critical'
+        ) OR priority IS NULL),
+        CONSTRAINT CK_SwotEntries_Status CHECK (status IN (
+            'active',
+            'archived',
+            'addressed'
+        ))
+    );
+
+    -- Indexes for Performance
+    
+    -- Category lookups (most common query pattern)
+    CREATE INDEX IX_SwotEntries_Category ON SwotEntries(category);
+    CREATE INDEX IX_SwotEntries_Status ON SwotEntries(status);
+    CREATE INDEX IX_SwotEntries_Category_Status ON SwotEntries(category, status);
+    
+    -- Priority tracking
+    CREATE INDEX IX_SwotEntries_Priority ON SwotEntries(priority);
+    
+    -- Date-based queries
+    CREATE INDEX IX_SwotEntries_ReviewDate ON SwotEntries(reviewDate);
+    CREATE INDEX IX_SwotEntries_NextReviewDate ON SwotEntries(nextReviewDate);
+    CREATE INDEX IX_SwotEntries_CreatedAt ON SwotEntries(createdAt DESC);
+    
+    -- Personnel tracking
+    CREATE INDEX IX_SwotEntries_Owner ON SwotEntries(owner);
+    CREATE INDEX IX_SwotEntries_CreatedBy ON SwotEntries(createdBy);
+    
+    -- Composite indexes for common queries
+    CREATE INDEX IX_SwotEntries_Status_Priority ON SwotEntries(status, priority);
+    CREATE INDEX IX_SwotEntries_Owner_Status ON SwotEntries(owner, status);
+    
+    -- Search optimization
+    CREATE INDEX IX_SwotEntries_Title ON SwotEntries(title);
+
+    PRINT 'SwotEntries table created successfully';
+END
+ELSE
+BEGIN
+    PRINT 'SwotEntries table already exists';
+END
+GO
+
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.64' AND scriptName = '64_swot.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.64',
+        'Create SwotEntries table for SWOT analysis',
+        '64_swot.sql',
+        'SUCCESS',
+        'SwotEntries table supports strategic planning and management reviews with categorization by Strengths, Weaknesses, Opportunities, and Threats'
+    );
+END
+GO

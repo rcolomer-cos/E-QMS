@@ -50,3 +50,17 @@ BEGIN
     PRINT 'Default module visibility settings already exist';
 END
 GO
+
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.62' AND scriptName = '62_add_module_visibility.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.62',
+        'Add module visibility settings',
+        '62_add_module_visibility.sql',
+        'SUCCESS',
+        'Added module_visibility table and default visibility settings for modules'
+    );
+END
+GO

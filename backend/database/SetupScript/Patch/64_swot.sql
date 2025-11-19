@@ -87,13 +87,13 @@ END
 GO
 
 -- Record schema version
-IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.60' AND scriptName = 'swot.sql')
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.64' AND scriptName = '64_swot.sql')
 BEGIN
     INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
     VALUES (
-        '1.0.60',
+        '1.0.64',
         'Create SwotEntries table for SWOT analysis',
-        'swot.sql',
+        '64_swot.sql',
         'SUCCESS',
         'SwotEntries table supports strategic planning and management reviews with categorization by Strengths, Weaknesses, Opportunities, and Threats'
     );

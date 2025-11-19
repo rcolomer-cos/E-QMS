@@ -76,13 +76,13 @@ END
 GO
 
 -- Record schema version
-IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.102' AND scriptName = '002_add_document_compliance.sql')
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.61' AND scriptName = '61_add_document_compliance.sql')
 BEGIN
     INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
     VALUES (
-        '1.0.102',
+        '1.0.61',
         'Add document compliance acknowledgement support',
-        '002_add_document_compliance.sql',
+        '61_add_document_compliance.sql',
         'SUCCESS',
         'Added complianceRequired field to Documents table and created DocumentComplianceAcknowledgements table for tracking user read & understand confirmations'
     );

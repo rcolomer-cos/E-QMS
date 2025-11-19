@@ -56,13 +56,13 @@ END
 GO
 
 -- Record migration
-IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.4' AND scriptName = '004_create_data_import_logs_table.sql')
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.63' AND scriptName = '63_create_data_import_logs_table.sql')
 BEGIN
     INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
     VALUES (
-        '1.0.4',
+        '1.0.63',
         'Create DataImportLogs table for tracking data import operations',
-        '004_create_data_import_logs_table.sql',
+        '63_create_data_import_logs_table.sql',
         'SUCCESS',
         'Supports audit trail for Excel-based data imports'
     );
