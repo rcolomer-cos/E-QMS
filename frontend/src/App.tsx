@@ -55,6 +55,7 @@ import ApiKeys from './pages/ApiKeys';
 import CompanyBranding from './pages/CompanyBranding';
 import GroupManagement from './pages/GroupManagement';
 import GroupDetail from './pages/GroupDetail';
+import OrganizationalChart from './pages/OrganizationalChart';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -98,6 +99,7 @@ function App() {
         <Route path="groups" element={<GroupManagement />} />
         <Route path="groups/:id" element={<GroupDetail />} />
         <Route path="departments" element={<Departments />} />
+        <Route path="organizational-chart" element={<OrganizationalChart />} />
         <Route path="processes" element={<Processes />} />
         <Route path="processes/overview" element={<ProcessOverview />} />
         <Route path="processes/:id/detail" element={<ProcessDetail />} />

@@ -60,6 +60,7 @@ function Layout() {
           <li><Link to="/">{t('navigation.dashboard')}</Link></li>
           <li><Link to="/documents">{t('navigation.documents')}</Link></li>
           <li><Link to="/processes/overview">{t('navigation.processes')}</Link></li>
+          <li><Link to="/organizational-chart">{t('navigation.orgChart')}</Link></li>
           <li><Link to="/pending-changes">{t('navigation.pendingChanges')}</Link></li>
           <li><Link to="/audits">{t('navigation.audits')}</Link></li>
           <li><Link to="/ncr">{t('navigation.ncr')}</Link></li>
