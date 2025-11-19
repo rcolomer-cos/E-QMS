@@ -53,6 +53,7 @@ import groupRoutes from './routes/groupRoutes';
 import swotRoutes from './routes/swotRoutes';
 import documentComplianceRoutes from './routes/documentComplianceRoutes';
 import moduleVisibilityRoutes from './routes/moduleVisibilityRoutes';
+import importRoutes from './routes/importRoutes';
 
 // Import scheduler service
 // TEMPORARILY DISABLED FOR DEBUGGING
@@ -135,6 +136,7 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/swot', swotRoutes);
 app.use('/api/documents/compliance', documentComplianceRoutes);
 app.use('/api/modules', moduleVisibilityRoutes);
+app.use('/api/imports', importRoutes);
 
 // 404 handler
 app.use((_req, res) => {
