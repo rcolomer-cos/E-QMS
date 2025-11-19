@@ -5,6 +5,7 @@ import { getDocuments, DocumentFilters } from '../services/documentService';
 import { useToast } from '../contexts/ToastContext';
 import { Document, Process } from '../types';
 import { getProcesses } from '../services/processService';
+import TagFilter from '../components/TagFilter';
 import '../styles/Documents.css';
 
 function Documents() {
@@ -21,6 +22,7 @@ function Documents() {
     documentType: '',
     processId: undefined,
     includeSubProcesses: true,
+    tagIds: [],
   });
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
@@ -99,6 +101,10 @@ function Documents() {
     setFilters({ ...filters, includeSubProcesses: checked });
   };
 
+  const handleTagsChange = (tagIds: number[]) => {
+    setFilters({ ...filters, tagIds });
+  };
+
   if (loading) {
     return <div className="loading">{t('common.loading')}</div>;
   }
@@ -114,6 +120,8 @@ function Documents() {
       </div>
 
       {error && <div className="error-message">{error}</div>}
+
+      <TagFilter selectedTagIds={filters.tagIds || []} onTagsChange={handleTagsChange} />
 
       <div className="filters-container">
         <div className="search-box">

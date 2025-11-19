@@ -8,6 +8,7 @@ export interface DocumentFilters {
   search?: string;
   processId?: number;
   includeSubProcesses?: boolean;
+  tagIds?: number[];
 }
 
 export const getDocuments = async (filters?: DocumentFilters): Promise<Document[]> => {
@@ -18,6 +19,9 @@ export const getDocuments = async (filters?: DocumentFilters): Promise<Document[
   if (filters?.documentType) params.append('documentType', filters.documentType);
   if (filters?.processId) params.append('processId', String(filters.processId));
   if (filters?.includeSubProcesses) params.append('includeSubProcesses', 'true');
+  if (filters?.tagIds && filters.tagIds.length > 0) {
+    params.append('tagIds', filters.tagIds.join(','));
+  }
   
   const response = await api.get(`/documents?${params.toString()}`);
   return response.data;
