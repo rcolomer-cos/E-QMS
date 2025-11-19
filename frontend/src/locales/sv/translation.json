@@ -57,7 +57,10 @@
     "rejected": "Avvisad",
     "completed": "Slutförd",
     "inProgress": "Pågående",
-    "notStarted": "Inte påbörjad"
+    "notStarted": "Inte påbörjad",
+    "today": "Idag",
+    "yesterday": "Igår",
+    "daysAgo": "dagar sedan"
   },
   "auth": {
     "login": "Logga in",
@@ -125,6 +128,18 @@
     "byStatus": "Efter status",
     "overTime": "Över tid"
   },
+  "landing": {
+    "welcome": "Välkommen",
+    "subtitle": "Ditt kvalitetsledningssystem i ett ögonkast",
+    "recentChanges": "Senaste dokumentändringar",
+    "viewAll": "Visa alla",
+    "noRecentDocuments": "Inga senaste dokumentändringar att visa",
+    "browseDocuments": "Bläddra bland alla dokument",
+    "quickActions": "Snabbåtgärder",
+    "viewDashboard": "Visa instrumentpanel",
+    "viewAudits": "Visa revisioner",
+    "viewNCRs": "Visa avvikelser"
+  },
   "documents": {
     "title": "Dokument",
     "allDocuments": "Alla dokument",
@@ -152,7 +167,13 @@
     "workInstruction": "Arbetsinstruktion",
     "form": "Formulär",
     "policy": "Policy",
-    "manual": "Manual"
+    "manual": "Manual",
+    "status": {
+      "draft": "Utkast",
+      "review": "Under granskning",
+      "approved": "Godkänd",
+      "obsolete": "Föråldrad"
+    }
   },
   "audits": {
     "title": "Revisioner",
