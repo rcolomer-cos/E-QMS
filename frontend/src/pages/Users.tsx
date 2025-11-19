@@ -3,6 +3,7 @@ import { getUsers, deleteUser, updateUserRole } from '../services/userService';
 import { useToast } from '../contexts/ToastContext';
 import { User } from '../types';
 import { getCurrentUser } from '../services/authService';
+import CreateUserDialog from '../components/CreateUserDialog';
 import '../styles/Users.css';
 
 const Users = () => {
@@ -12,6 +13,7 @@ const Users = () => {
   const [error, setError] = useState('');
   const [editingRole, setEditingRole] = useState<number | null>(null);
   const [newRole, setNewRole] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const currentUser = getCurrentUser();
 
   const roles = ['admin', 'manager', 'auditor', 'user', 'viewer'];
@@ -101,11 +103,24 @@ const Users = () => {
     return <div className="loading">Loading users...</div>;
   }
 
+  const handleUserCreated = () => {
+    loadUsers();
+    setShowCreateDialog(false);
+  };
+
   return (
     <div className="users-page">
       <div className="page-header">
-        <h1>User Management</h1>
-        <p className="subtitle">Manage system users and their roles</p>
+        <div>
+          <h1>User Management</h1>
+          <p className="subtitle">Manage system users and their roles</p>
+        </div>
+        <button
+          className="btn-create-user"
+          onClick={() => setShowCreateDialog(true)}
+        >
+          + Create User
+        </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -120,6 +135,7 @@ const Users = () => {
               <th>Name</th>
               <th>Department</th>
               <th>Role</th>
+              <th>Groups</th>
               <th>Status</th>
               <th>Created</th>
               <th>Actions</th>
@@ -162,9 +178,23 @@ const Users = () => {
                       </button>
                     </div>
                   ) : (
-                    <span className={getRoleBadgeClass(user.role)}>
-                      {user.role}
+                    <span className={getRoleBadgeClass(user.role || 'user')}>
+                      {user.role || 'user'}
                     </span>
+                  )}
+                </td>
+                <td>
+                  {user.groups && user.groups.length > 0 ? (
+                    <div className="user-groups">
+                      {user.groups.map((group, index) => (
+                        <span key={group.id} className="group-badge">
+                          {group.name}
+                          {index < user.groups!.length - 1 && ', '}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="no-groups">None</span>
                   )}
                 </td>
                 <td>
@@ -177,7 +207,7 @@ const Users = () => {
                   {currentUser?.id !== user.id && (
                     <>
                       <button
-                        onClick={() => startEditingRole(user.id, user.role)}
+                        onClick={() => startEditingRole(user.id, user.role || 'user')}
                         className="btn-edit"
                         title="Change Role"
                       >
@@ -201,6 +231,12 @@ const Users = () => {
           </tbody>
         </table>
       </div>
+
+      <CreateUserDialog
+        isOpen={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onUserCreated={handleUserCreated}
+      />
     </div>
   );
 };
