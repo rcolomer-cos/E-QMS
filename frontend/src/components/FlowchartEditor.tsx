@@ -29,31 +29,33 @@ interface FlowchartEditorProps {
 const RectangleNode = ({ data, isConnectable }: any) => {
   return (
     <div className="flowchart-node flowchart-node-rectangle">
-      <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Right} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Top} id="top" isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Left} id="left" isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Right} id="right" isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Bottom} id="bottom" isConnectable={isConnectable} />
       <div className="flowchart-node-label">{data.label}</div>
-      <Handle type="source" position={Position.Top} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Left} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Top} id="top-source" isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Left} id="left-source" isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Right} id="right-source" isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Bottom} id="bottom-source" isConnectable={isConnectable} />
     </div>
   );
 };
 
 const DiamondNode = ({ data, isConnectable }: any) => {
+  // Position handles at the visual corners of the rotated diamond (45 degrees)
+  // The diamond is rotated, so we need to place handles at approximately 35% and 65% positions
   return (
     <div className="flowchart-node flowchart-node-diamond">
-      <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Right} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Top} id="top" isConnectable={isConnectable} style={{ top: '0%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="target" position={Position.Left} id="left" isConnectable={isConnectable} style={{ left: '0%', top: '50%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="target" position={Position.Right} id="right" isConnectable={isConnectable} style={{ right: '0%', top: '50%', transform: 'translate(50%, -50%)' }} />
+      <Handle type="target" position={Position.Bottom} id="bottom" isConnectable={isConnectable} style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
       <div className="flowchart-node-label">{data.label}</div>
-      <Handle type="source" position={Position.Top} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Left} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Top} id="top-source" isConnectable={isConnectable} style={{ top: '0%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="source" position={Position.Left} id="left-source" isConnectable={isConnectable} style={{ left: '0%', top: '50%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="source" position={Position.Right} id="right-source" isConnectable={isConnectable} style={{ right: '0%', top: '50%', transform: 'translate(50%, -50%)' }} />
+      <Handle type="source" position={Position.Bottom} id="bottom-source" isConnectable={isConnectable} style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
     </div>
   );
 };
@@ -61,15 +63,15 @@ const DiamondNode = ({ data, isConnectable }: any) => {
 const CircleNode = ({ data, isConnectable }: any) => {
   return (
     <div className="flowchart-node flowchart-node-circle">
-      <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Right} isConnectable={isConnectable} />
-      <Handle type="target" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Top} id="top" isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Left} id="left" isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Right} id="right" isConnectable={isConnectable} />
+      <Handle type="target" position={Position.Bottom} id="bottom" isConnectable={isConnectable} />
       <div className="flowchart-node-label">{data.label}</div>
-      <Handle type="source" position={Position.Top} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Left} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
-      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Top} id="top-source" isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Left} id="left-source" isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Right} id="right-source" isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Bottom} id="bottom-source" isConnectable={isConnectable} />
     </div>
   );
 };
@@ -104,11 +106,33 @@ const FlowchartEditor: React.FC<FlowchartEditorProps> = ({
   const onConnect = useCallback(
     (params: Connection) => {
       if (!readOnly) {
-        setEdges((eds: Edge[]) => addEdge(params, eds));
+        setEdges((eds: Edge[]) => addEdge({ ...params, label: '' }, eds));
       }
     },
     [setEdges, readOnly]
   );
+
+  const onEdgeDoubleClick = useCallback((_event: React.MouseEvent, edge: Edge) => {
+    if (readOnly) return;
+    const currentLabel = edge.label || '';
+    const newLabel = prompt('Enter label for this connection:', String(currentLabel));
+    if (newLabel !== null) {
+      setEdges((eds: Edge[]) =>
+        eds.map((e) =>
+          e.id === edge.id
+            ? { 
+                ...e, 
+                label: newLabel,
+                labelStyle: { fill: '#333', fontWeight: 500, fontSize: '12px' },
+                labelBgStyle: { fill: 'white', fillOpacity: 0.9 },
+                labelBgPadding: [8, 4] as [number, number],
+                labelBgBorderRadius: 4,
+              }
+            : e
+        )
+      );
+    }
+  }, [readOnly, setEdges]);
 
   const handleSave = () => {
     onSave({ nodes, edges });
@@ -116,6 +140,7 @@ const FlowchartEditor: React.FC<FlowchartEditorProps> = ({
   };
 
   const [selectedShape, setSelectedShape] = useState<'default' | 'diamond' | 'circle'>('default');
+  const [isControlsExpanded, setIsControlsExpanded] = useState(false);
 
   const addNode = (shape?: 'default' | 'diamond' | 'circle') => {
     const shapeType = shape || selectedShape;
@@ -170,56 +195,70 @@ const FlowchartEditor: React.FC<FlowchartEditorProps> = ({
     <div className="flowchart-editor-wrapper">
       {!readOnly && (
         <div className="flowchart-sidebar">
-          <div className="sidebar-section">
-            <h3>Shape Type</h3>
-            <div className="shape-selector">
-              <button
-                className={`shape-btn ${selectedShape === 'default' ? 'active' : ''}`}
-                onClick={() => setSelectedShape('default')}
-                title="Rectangle"
-              >
-                <div className="shape-preview shape-preview-rect"></div>
-                Rectangle
-              </button>
-              <button
-                className={`shape-btn ${selectedShape === 'diamond' ? 'active' : ''}`}
-                onClick={() => setSelectedShape('diamond')}
-                title="Diamond (Decision)"
-              >
-                <div className="shape-preview shape-preview-diamond"></div>
-                Diamond
-              </button>
-              <button
-                className={`shape-btn ${selectedShape === 'circle' ? 'active' : ''}`}
-                onClick={() => setSelectedShape('circle')}
-                title="Circle (Start/End)"
-              >
-                <div className="shape-preview shape-preview-circle"></div>
-                Circle
-              </button>
-            </div>
+          <div className="sidebar-toggle">
+            <button 
+              className="toggle-btn" 
+              onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+              title={isControlsExpanded ? "Hide controls" : "Show controls"}
+            >
+              {isControlsExpanded ? '▼' : '▶'} Flowchart Controls
+            </button>
           </div>
 
-          <div className="sidebar-section">
-            <h3>Actions</h3>
-            <button onClick={() => addNode()} className="flowchart-btn flowchart-btn-add" title="Add selected shape">
-              ➕ Add Node
-            </button>
-            <button onClick={deleteNode} className="flowchart-btn flowchart-btn-delete" title="Delete selected node(s)">
-              🗑️ Delete
-            </button>
-            <button
-              onClick={handleSave}
-              className="flowchart-btn flowchart-btn-save"
-              disabled={!hasChanges}
-              title="Save flowchart changes"
-            >
-              💾 Save
-            </button>
-            <button onClick={clearFlowchart} className="flowchart-btn flowchart-btn-clear" title="Clear entire flowchart">
-              ❌ Clear All
-            </button>
-          </div>
+          {isControlsExpanded && (
+            <>
+              <div className="sidebar-section">
+                <h3>Shape Type</h3>
+                <div className="shape-selector">
+                  <button
+                    className={`shape-btn ${selectedShape === 'default' ? 'active' : ''}`}
+                    onClick={() => setSelectedShape('default')}
+                    title="Rectangle"
+                  >
+                    <div className="shape-preview shape-preview-rect"></div>
+                    Rectangle
+                  </button>
+                  <button
+                    className={`shape-btn ${selectedShape === 'diamond' ? 'active' : ''}`}
+                    onClick={() => setSelectedShape('diamond')}
+                    title="Diamond (Decision)"
+                  >
+                    <div className="shape-preview shape-preview-diamond"></div>
+                    Diamond
+                  </button>
+                  <button
+                    className={`shape-btn ${selectedShape === 'circle' ? 'active' : ''}`}
+                    onClick={() => setSelectedShape('circle')}
+                    title="Circle (Start/End)"
+                  >
+                    <div className="shape-preview shape-preview-circle"></div>
+                    Circle
+                  </button>
+                </div>
+              </div>
+
+              <div className="sidebar-section">
+                <h3>Actions</h3>
+                <button onClick={() => addNode()} className="flowchart-btn flowchart-btn-add" title="Add selected shape">
+                  ➕ Add Node
+                </button>
+                <button onClick={deleteNode} className="flowchart-btn flowchart-btn-delete" title="Delete selected node(s)">
+                  🗑️ Delete
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="flowchart-btn flowchart-btn-save"
+                  disabled={!hasChanges}
+                  title="Save flowchart changes"
+                >
+                  💾 Save
+                </button>
+                <button onClick={clearFlowchart} className="flowchart-btn flowchart-btn-clear" title="Clear entire flowchart">
+                  ❌ Clear All
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -231,6 +270,7 @@ const FlowchartEditor: React.FC<FlowchartEditorProps> = ({
         onEdgesChange={readOnly ? undefined : onEdgesChange}
         onConnect={onConnect}
         onNodeDoubleClick={onNodeDoubleClick}
+        onEdgeDoubleClick={onEdgeDoubleClick}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={fitViewOptions}
@@ -243,6 +283,8 @@ const FlowchartEditor: React.FC<FlowchartEditorProps> = ({
         zoomOnDoubleClick={false}
         minZoom={0.1}
         maxZoom={4}
+        connectionRadius={20}
+        snapToGrid={false}
       >
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         <Controls showInteractive={!readOnly} />
@@ -263,7 +305,7 @@ const FlowchartEditor: React.FC<FlowchartEditorProps> = ({
           <span>•</span>
           <span>Drag from connection points to link nodes</span>
           <span>•</span>
-          <span>Double-click to edit labels</span>
+          <span>Double-click nodes or connections to edit labels</span>
           <span>•</span>
           <span>Mouse wheel to zoom, drag to pan</span>
         </div>

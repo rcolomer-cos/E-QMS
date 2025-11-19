@@ -39,15 +39,15 @@ const RectangleViewerNode = ({ data }: any) => {
 const DiamondViewerNode = ({ data }: any) => {
   return (
     <div className="flowchart-node flowchart-node-diamond">
-      <Handle type="target" position={Position.Top} isConnectable={false} />
-      <Handle type="target" position={Position.Left} isConnectable={false} />
-      <Handle type="target" position={Position.Right} isConnectable={false} />
-      <Handle type="target" position={Position.Bottom} isConnectable={false} />
+      <Handle type="target" position={Position.Top} isConnectable={false} style={{ top: '0%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="target" position={Position.Left} isConnectable={false} style={{ left: '0%', top: '50%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="target" position={Position.Right} isConnectable={false} style={{ right: '0%', top: '50%', transform: 'translate(50%, -50%)' }} />
+      <Handle type="target" position={Position.Bottom} isConnectable={false} style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
       <div className="flowchart-node-label">{data.label}</div>
-      <Handle type="source" position={Position.Top} isConnectable={false} />
-      <Handle type="source" position={Position.Left} isConnectable={false} />
-      <Handle type="source" position={Position.Right} isConnectable={false} />
-      <Handle type="source" position={Position.Bottom} isConnectable={false} />
+      <Handle type="source" position={Position.Top} isConnectable={false} style={{ top: '0%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="source" position={Position.Left} isConnectable={false} style={{ left: '0%', top: '50%', transform: 'translate(-50%, -50%)' }} />
+      <Handle type="source" position={Position.Right} isConnectable={false} style={{ right: '0%', top: '50%', transform: 'translate(50%, -50%)' }} />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
     </div>
   );
 };

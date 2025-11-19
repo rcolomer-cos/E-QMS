@@ -98,17 +98,8 @@ function ProcessDetail() {
   const handleSaveFlowchart = async (flowchartData: { nodes: any[]; edges: any[] }) => {
     if (!id || !process) return;
     try {
+      // Only send fields that should be updated, exclude code (auto-generated)
       await updateProcess(parseInt(id, 10), {
-        name: process.name,
-        code: process.code,
-        description: process.description,
-        departmentId: process.departmentId,
-        processCategory: process.processCategory,
-        processType: process.processType,
-        parentProcessId: process.parentProcessId,
-        displayOrder: process.displayOrder,
-        objective: process.objective,
-        scope: process.scope,
         flowchartSvg: JSON.stringify(flowchartData)
       });
       await loadData();
