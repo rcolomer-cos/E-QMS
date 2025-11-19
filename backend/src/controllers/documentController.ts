@@ -7,6 +7,7 @@ import { NotificationService } from '../services/notificationService';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 import { DocumentContentModel } from '../models/DocumentContentModel';
 import { DocumentGroupModel } from '../models/DocumentGroupModel';
+import { TagModel } from '../models/TagModel';
 import PDFDocument from 'pdfkit';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -60,7 +61,14 @@ export const createDocument = async (req: AuthRequest, res: Response): Promise<v
 
 export const getDocuments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { status, category, documentType, processId, includeSubProcesses } = req.query as Record<string, string>;
+    const { status, category, documentType, processId, includeSubProcesses, tagIds } = req.query as Record<string, string>;
+
+    // Parse tagIds if provided (comma-separated string or array)
+    let parsedTagIds: number[] | undefined;
+    if (tagIds) {
+      const tagIdArray = typeof tagIds === 'string' ? tagIds.split(',') : tagIds;
+      parsedTagIds = tagIdArray.map((id: string) => parseInt(id, 10)).filter((id: number) => !isNaN(id));
+    }
 
     const documents = await DocumentModel.findAll({
       status: status as DocumentStatus | undefined,
@@ -68,6 +76,7 @@ export const getDocuments = async (req: AuthRequest, res: Response): Promise<voi
       documentType: documentType as string | undefined,
       processId: processId ? parseInt(processId, 10) : undefined,
       includeSubProcesses: includeSubProcesses === 'true',
+      tagIds: parsedTagIds,
     });
 
     res.json(documents);
@@ -936,5 +945,138 @@ export const removeGroupsFromDocument = async (req: AuthRequest, res: Response):
   } catch (error) {
     console.error('Remove groups from document error:', error);
     res.status(500).json({ error: 'Failed to remove groups from document' });
+  }
+};
+
+/**
+ * Get all tags assigned to a document
+ */
+export const getDocumentTags = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    const tags = await TagModel.findByDocumentId(documentId);
+
+    res.json(tags);
+  } catch (error) {
+    console.error('Get document tags error:', error);
+    res.status(500).json({ error: 'Failed to get document tags' });
+  }
+};
+
+/**
+ * Assign tags to a document
+ */
+export const assignTagsToDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { tagIds } = req.body;
+
+    if (!Array.isArray(tagIds) || tagIds.length === 0) {
+      res.status(400).json({ error: 'tagIds must be a non-empty array' });
+      return;
+    }
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    // Verify all tags exist
+    for (const tagId of tagIds) {
+      const tag = await TagModel.findById(tagId);
+      if (!tag) {
+        res.status(404).json({ error: `Tag with ID ${tagId} not found` });
+        return;
+      }
+    }
+
+    await TagModel.assignMultipleToDocument(documentId, tagIds, req.user.id);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: {},
+      newValues: { action: 'assign_tags', tagIds },
+    });
+
+    res.json({ message: 'Tags assigned to document successfully' });
+  } catch (error) {
+    console.error('Assign tags to document error:', error);
+    res.status(500).json({ error: 'Failed to assign tags to document' });
+  }
+};
+
+/**
+ * Remove tags from a document
+ */
+export const removeTagsFromDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { tagIds } = req.body;
+
+    if (!Array.isArray(tagIds) || tagIds.length === 0) {
+      res.status(400).json({ error: 'tagIds must be a non-empty array' });
+      return;
+    }
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    // Remove each tag from document
+    for (const tagId of tagIds) {
+      await TagModel.removeFromDocument(documentId, tagId);
+    }
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: {},
+      newValues: { action: 'remove_tags', tagIds },
+    });
+
+    res.json({ message: 'Tags removed from document successfully' });
+  } catch (error) {
+    console.error('Remove tags from document error:', error);
+    res.status(500).json({ error: 'Failed to remove tags from document' });
   }
 };

@@ -20,6 +20,9 @@ import {
   getDocumentGroups,
   assignGroupsToDocument,
   removeGroupsFromDocument,
+  getDocumentTags,
+  assignTagsToDocument,
+  removeTagsFromDocument,
 } from '../controllers/documentController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { flexibleAuth } from '../middleware/flexibleAuth';
@@ -107,5 +110,14 @@ router.post('/:id/groups', authenticateToken, createLimiter, validateId, checkDo
 
 // Remove groups from document - requires EDIT permission
 router.delete('/:id/groups', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), removeGroupsFromDocument);
+
+// Get tags assigned to document - requires VIEW permission
+router.get('/:id/tags', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), checkDocumentPermission(DocumentAction.VIEW), getDocumentTags);
+
+// Assign tags to document - requires EDIT permission
+router.post('/:id/tags', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), assignTagsToDocument);
+
+// Remove tags from document - requires EDIT permission
+router.delete('/:id/tags', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), removeTagsFromDocument);
 
 export default router;

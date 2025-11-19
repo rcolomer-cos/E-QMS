@@ -73,6 +73,7 @@ export class DocumentModel {
     documentType?: string;
     processId?: number;
     includeSubProcesses?: boolean;
+    tagIds?: number[];
   }): Promise<Document[]> {
     const pool = await getConnection();
     const request = pool.request();
@@ -89,6 +90,19 @@ export class DocumentModel {
     if (filters?.documentType) {
       request.input('documentType', sql.NVarChar, filters.documentType);
       query += ' AND d.documentType = @documentType';
+    }
+
+    // Filter by tags if provided
+    if (filters?.tagIds && filters.tagIds.length > 0) {
+      const tagParamNames = filters.tagIds.map((_, index) => `@tagId${index}`);
+      filters.tagIds.forEach((tagId, index) => {
+        request.input(`tagId${index}`, sql.Int, tagId);
+      });
+      query += ` AND d.id IN (
+        SELECT dt.documentId 
+        FROM DocumentTags dt 
+        WHERE dt.tagId IN (${tagParamNames.join(', ')})
+      )`;
     }
 
     // Filter by process linkage if provided
@@ -120,6 +134,17 @@ export class DocumentModel {
         if (filters?.documentType) {
           // already bound
           query += ' AND d.documentType = @documentType';
+        }
+        if (filters?.tagIds && filters.tagIds.length > 0) {
+          const tagParamNames = filters.tagIds.map((_, index) => `@tagId${index}`);
+          filters.tagIds.forEach((tagId, index) => {
+            request.input(`tagId${index}`, sql.Int, tagId);
+          });
+          query += ` AND d.id IN (
+            SELECT dt.documentId 
+            FROM DocumentTags dt 
+            WHERE dt.tagId IN (${tagParamNames.join(', ')})
+          )`;
         }
       } else {
         query += ' AND EXISTS (SELECT 1 FROM ProcessDocuments pd WHERE pd.documentId = d.id AND pd.processId = @processId)';
