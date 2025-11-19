@@ -17,7 +17,24 @@ interface ToastContextValue {
   info: (message: string, duration?: number) => void;
   warning: (message: string, duration?: number) => void;
   dismiss: (id: number) => void;
+  // Convenience methods for common CRUD operations
+  showSaveSuccess: (itemName?: string) => void;
+  showDeleteSuccess: (itemName?: string) => void;
+  showUpdateSuccess: (itemName?: string) => void;
+  showCreateSuccess: (itemName?: string) => void;
+  showError: (message?: string) => void;
 }
+
+// Default message templates
+export const DEFAULT_MESSAGES = {
+  SAVE_SUCCESS: 'Saved successfully',
+  DELETE_SUCCESS: 'Deleted successfully',
+  UPDATE_SUCCESS: 'Updated successfully',
+  CREATE_SUCCESS: 'Created successfully',
+  ERROR: 'Error processing request',
+  LOAD_ERROR: 'Failed to load data',
+  NETWORK_ERROR: 'Network error. Please check your connection.',
+};
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
@@ -51,6 +68,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       info: (m, d) => show(m, 'info', d),
       warning: (m, d) => show(m, 'warning', d),
       dismiss,
+      // Convenience methods with default templates
+      showSaveSuccess: (itemName?: string) => 
+        show(itemName ? `${itemName} ${DEFAULT_MESSAGES.SAVE_SUCCESS.toLowerCase()}` : DEFAULT_MESSAGES.SAVE_SUCCESS, 'success'),
+      showDeleteSuccess: (itemName?: string) => 
+        show(itemName ? `${itemName} ${DEFAULT_MESSAGES.DELETE_SUCCESS.toLowerCase()}` : DEFAULT_MESSAGES.DELETE_SUCCESS, 'success'),
+      showUpdateSuccess: (itemName?: string) => 
+        show(itemName ? `${itemName} ${DEFAULT_MESSAGES.UPDATE_SUCCESS.toLowerCase()}` : DEFAULT_MESSAGES.UPDATE_SUCCESS, 'success'),
+      showCreateSuccess: (itemName?: string) => 
+        show(itemName ? `${itemName} ${DEFAULT_MESSAGES.CREATE_SUCCESS.toLowerCase()}` : DEFAULT_MESSAGES.CREATE_SUCCESS, 'success'),
+      showError: (message?: string) => 
+        show(message || DEFAULT_MESSAGES.ERROR, 'error'),
     }),
     [toasts, show, dismiss]
   );

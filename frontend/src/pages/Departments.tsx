@@ -8,10 +8,12 @@ import {
   UpdateDepartmentData,
 } from '../services/departmentService';
 import { getUsers } from '../services/userService';
+import { useToast } from '../contexts/ToastContext';
 import { Department, User } from '../types';
 import '../styles/Departments.css';
 
 const Departments = () => {
+  const toast = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,9 @@ const Departments = () => {
       setUsers(usersData);
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load data');
+      const errorMsg = err.response?.data?.error || 'Failed to load data';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -89,13 +93,17 @@ const Departments = () => {
           managerId: formData.managerId,
         };
         await updateDepartment(editingDepartment.id, updateData);
+        toast.showUpdateSuccess('Department');
       } else {
         await createDepartment(formData);
+        toast.showCreateSuccess('Department');
       }
       handleCloseModal();
       await loadData();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save department');
+      const errorMsg = err.response?.data?.error || 'Failed to save department';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -106,9 +114,12 @@ const Departments = () => {
 
     try {
       await deleteDepartment(id);
+      toast.showDeleteSuccess('Department');
       await loadData();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete department');
+      const errorMsg = err.response?.data?.error || 'Failed to delete department';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 

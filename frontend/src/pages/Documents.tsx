@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getDocuments, DocumentFilters } from '../services/documentService';
+import { useToast } from '../contexts/ToastContext';
 import { Document, Process } from '../types';
 import { getProcesses } from '../services/processService';
 import '../styles/Documents.css';
 
 function Documents() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
@@ -43,7 +45,9 @@ function Documents() {
     } catch (err) {
       console.error('Failed to load documents:', err);
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || t('messages.loadError'));
+      const errorMsg = error.response?.data?.error || t('messages.loadError');
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
