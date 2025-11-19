@@ -2,12 +2,14 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { logout, getCurrentUser } from '../services/authService';
 import { useBranding } from '../contexts/BrandingContext';
+import { useModuleVisibility } from '../contexts/ModuleVisibilityContext';
 import '../styles/Layout.css';
 
 function Layout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const { isModuleEnabled } = useModuleVisibility();
   const roleNames: string[] = ((user?.roles?.map(r => r.name)) || (user?.role ? [user.role as string] : [])) as string[];
   const normalizeRole = (name: string) => {
     const n = (name || '').toLowerCase();
@@ -58,23 +60,45 @@ function Layout() {
         </div>
         <ul className="navbar-menu">
           <li><Link to="/">{t('navigation.dashboard')}</Link></li>
-          <li><Link to="/documents">{t('navigation.documents')}</Link></li>
-          <li><Link to="/processes/overview">{t('navigation.processes')}</Link></li>
+          {isModuleEnabled('documents') && (
+            <li><Link to="/documents">{t('navigation.documents')}</Link></li>
+          )}
+          {isModuleEnabled('processes') && (
+            <li><Link to="/processes/overview">{t('navigation.processes')}</Link></li>
+          )}
           <li><Link to="/organizational-chart">{t('navigation.orgChart')}</Link></li>
           <li><Link to="/pending-changes">{t('navigation.pendingChanges')}</Link></li>
-          <li><Link to="/audits">{t('navigation.audits')}</Link></li>
-          <li><Link to="/ncr">{t('navigation.ncr')}</Link></li>
-          <li><Link to="/capa">{t('navigation.capa')}</Link></li>
-          <li><Link to="/risks">{t('navigation.risks')}</Link></li>
-          <li><Link to="/improvement-ideas">{t('navigation.improvements')}</Link></li>
-          <li><Link to="/equipment">{t('navigation.equipment')}</Link></li>
-          <li><Link to="/inspection-mobile">{t('navigation.mobileInspection')}</Link></li>
-          <li><Link to="/training">{t('navigation.training')}</Link></li>
-          <li><Link to="/training-matrix">{t('navigation.trainingMatrix')}</Link></li>
-          {canSeeRoleRequirements && (
+          {isModuleEnabled('audits') && (
+            <li><Link to="/audits">{t('navigation.audits')}</Link></li>
+          )}
+          {isModuleEnabled('ncr') && (
+            <li><Link to="/ncr">{t('navigation.ncr')}</Link></li>
+          )}
+          {isModuleEnabled('capa') && (
+            <li><Link to="/capa">{t('navigation.capa')}</Link></li>
+          )}
+          {isModuleEnabled('risks') && (
+            <li><Link to="/risks">{t('navigation.risks')}</Link></li>
+          )}
+          {isModuleEnabled('improvements') && (
+            <li><Link to="/improvement-ideas">{t('navigation.improvements')}</Link></li>
+          )}
+          {isModuleEnabled('equipment') && (
+            <li><Link to="/equipment">{t('navigation.equipment')}</Link></li>
+          )}
+          {isModuleEnabled('inspection') && (
+            <li><Link to="/inspection-mobile">{t('navigation.mobileInspection')}</Link></li>
+          )}
+          {isModuleEnabled('training') && (
+            <>
+              <li><Link to="/training">{t('navigation.training')}</Link></li>
+              <li><Link to="/training-matrix">{t('navigation.trainingMatrix')}</Link></li>
+            </>
+          )}
+          {canSeeRoleRequirements && isModuleEnabled('training') && (
             <li><Link to="/role-training-requirements">{t('navigation.roleRequirements')}</Link></li>
           )}
-          {canSeeExternalAudit && (
+          {canSeeExternalAudit && isModuleEnabled('audits') && (
             <li><Link to="/external-audit-support">{t('navigation.externalAudit')}</Link></li>
           )}
           {canSeeSettings && (

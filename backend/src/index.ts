@@ -52,6 +52,7 @@ import companyBrandingRoutes from './routes/companyBrandingRoutes';
 import groupRoutes from './routes/groupRoutes';
 import swotRoutes from './routes/swotRoutes';
 import documentComplianceRoutes from './routes/documentComplianceRoutes';
+import moduleVisibilityRoutes from './routes/moduleVisibilityRoutes';
 
 // Import scheduler service
 // TEMPORARILY DISABLED FOR DEBUGGING
@@ -133,6 +134,7 @@ app.use('/api/company-branding', companyBrandingRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/swot', swotRoutes);
 app.use('/api/documents/compliance', documentComplianceRoutes);
+app.use('/api/modules', moduleVisibilityRoutes);
 
 // 404 handler
 app.use((_req, res) => {
