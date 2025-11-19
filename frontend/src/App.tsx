@@ -57,6 +57,7 @@ import GroupManagement from './pages/GroupManagement';
 import GroupDetail from './pages/GroupDetail';
 import OrganizationalChart from './pages/OrganizationalChart';
 import Tags from './pages/Tags';
+import SwotAnalysis from './pages/SwotAnalysis';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -120,6 +121,7 @@ function App() {
         <Route path="risks" element={<Risks />} />
         <Route path="risks/board" element={<RiskBoard />} />
         <Route path="risks/:id" element={<RiskDetail />} />
+        <Route path="swot-analysis" element={<SwotAnalysis />} />
         <Route path="supplier-performance" element={<SupplierPerformanceDashboard />} />
         <Route path="approved-supplier-list" element={<ApprovedSupplierList />} />
         <Route path="improvement-ideas" element={<ImprovementIdeas />} />

@@ -50,6 +50,7 @@ import syncRoutes from './routes/syncRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import companyBrandingRoutes from './routes/companyBrandingRoutes';
 import groupRoutes from './routes/groupRoutes';
+import swotRoutes from './routes/swotRoutes';
 
 // Import scheduler service
 // TEMPORARILY DISABLED FOR DEBUGGING
@@ -129,6 +130,7 @@ app.use('/api/sync', syncRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/company-branding', companyBrandingRoutes);
 app.use('/api/groups', groupRoutes);
+app.use('/api/swot', swotRoutes);
 
 // 404 handler
 app.use((_req, res) => {
