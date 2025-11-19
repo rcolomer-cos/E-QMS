@@ -5,12 +5,13 @@ import CompanyBranding from './CompanyBranding';
 import ProcessManagement from './ProcessManagement';
 import Users from './Users';
 import GroupManagement from './GroupManagement';
+import ModuleVisibilitySettings from '../components/ModuleVisibilitySettings';
 import '../styles/Settings.css';
 
 function Settings() {
   const user = getCurrentUser();
   const [searchParams, setSearchParams] = useSearchParams();
-  const allowedTabs = ['branding', 'processes', 'users', 'groups'] as const;
+  const allowedTabs = ['branding', 'processes', 'users', 'groups', 'modules'] as const;
   type TabKey = typeof allowedTabs[number];
   const initialTab = (searchParams.get('tab') as TabKey) ?? 'branding';
   const [activeTab, setActiveTab] = useState<TabKey>(allowedTabs.includes(initialTab as TabKey) ? (initialTab as TabKey) : 'branding');
@@ -29,6 +30,7 @@ function Settings() {
   const canProcesses = hasRole('admin') || hasRole('manager') || hasRole('superuser');
   const canUsers = hasRole('admin') || hasRole('superuser');
   const canGroups = hasRole('admin') || hasRole('superuser');
+  const canModules = hasRole('admin') || hasRole('superuser');
 
   // Determine primary permission label per tab
   const bestRole = (roles: string[]) => roles.find((r) => hasRole(r)) || '';
@@ -37,7 +39,8 @@ function Settings() {
     processes: canProcesses ? (bestRole(['superuser', 'admin', 'manager']) || 'allowed') : 'no access',
     users: canUsers ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
     groups: canGroups ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
-  }), [canBranding, canProcesses, canUsers, canGroups]);
+    modules: canModules ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
+  }), [canBranding, canProcesses, canUsers, canGroups, canModules]);
 
   const badgeLabel = (key: TabKey) => {
     const v = (tabBadges[key] || '').toString();
@@ -102,6 +105,14 @@ function Settings() {
           >
             Groups <span className="tab-badge">{badgeLabel('groups')}</span>
           </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'modules'}
+            className={`tab ${activeTab === 'modules' ? 'active' : ''}`}
+            onClick={() => setActiveTab('modules')}
+          >
+            Module Visibility <span className="tab-badge">{badgeLabel('modules')}</span>
+          </button>
         </div>
 
         <div className="tab-panels">
@@ -138,6 +149,15 @@ function Settings() {
                 <GroupManagement />
               ) : (
                 <div className="no-results">You do not have permission to manage Groups.</div>
+              )}
+            </div>
+          )}
+          {activeTab === 'modules' && (
+            <div className="tab-panel" role="tabpanel">
+              {canModules ? (
+                <ModuleVisibilitySettings />
+              ) : (
+                <div className="no-results">You do not have permission to manage Module Visibility.</div>
               )}
             </div>
           )}
