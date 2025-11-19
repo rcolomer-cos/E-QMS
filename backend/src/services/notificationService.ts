@@ -4,7 +4,7 @@ import { DocumentGroupModel } from '../models/DocumentGroupModel';
 
 export interface NotificationData {
   userId: number;
-  type: 'document_approved' | 'document_rejected' | 'document_changes_requested' | 'document_created' | 'document_updated';
+  type: 'document_approved' | 'document_rejected' | 'document_changes_requested' | 'document_created' | 'document_updated' | 'compliance_required' | 'compliance_document_updated';
   documentId: number;
   revisionId?: number;
   actorName: string; // Name of the person who triggered the notification
@@ -162,5 +162,83 @@ export class NotificationService {
    */
   static async notifyDocumentUpdated(documentId: number, actorName: string): Promise<void> {
     await this.notifyDocumentGroupMembers(documentId, actorName, true);
+  }
+
+  /**
+   * Send notification when a compliance-required document is added
+   */
+  static async notifyComplianceDocumentAdded(documentId: number, _actorName: string): Promise<void> {
+    try {
+      const document = await DocumentModel.findById(documentId);
+      if (!document) {
+        console.error('Document not found for compliance notification:', documentId);
+        return;
+      }
+
+      // Get all user IDs that have access through groups
+      const userIds = await DocumentGroupModel.getUserIdsForDocument(documentId);
+
+      if (userIds.length === 0) {
+        return;
+      }
+
+      // Create notifications for all users in the groups
+      for (const userId of userIds) {
+        const notification: Notification = {
+          userId,
+          type: 'compliance_required' as any,
+          title: 'Compliance Acknowledgement Required',
+          message: `The document "${document.title}" (v${document.version}) requires your acknowledgement. Please read and confirm your understanding.`,
+          documentId,
+        };
+
+        await NotificationModel.create(notification);
+      }
+
+      // TODO: Email notification support
+    } catch (error) {
+      console.error('Error sending compliance document notification:', error);
+    }
+  }
+
+  /**
+   * Send notification when a compliance-required document is updated
+   */
+  static async notifyComplianceDocumentUpdated(documentId: number, _actorName: string): Promise<void> {
+    try {
+      const document = await DocumentModel.findById(documentId);
+      if (!document) {
+        console.error('Document not found for compliance update notification:', documentId);
+        return;
+      }
+
+      if (!document.complianceRequired) {
+        return;
+      }
+
+      // Get all user IDs that have access through groups
+      const userIds = await DocumentGroupModel.getUserIdsForDocument(documentId);
+
+      if (userIds.length === 0) {
+        return;
+      }
+
+      // Create notifications for all users in the groups
+      for (const userId of userIds) {
+        const notification: Notification = {
+          userId,
+          type: 'compliance_document_updated' as any,
+          title: 'Compliance Document Updated - Re-acknowledgement Required',
+          message: `The compliance document "${document.title}" has been updated to version ${document.version}. You must re-acknowledge this document.`,
+          documentId,
+        };
+
+        await NotificationModel.create(notification);
+      }
+
+      // TODO: Email notification support
+    } catch (error) {
+      console.error('Error sending compliance document update notification:', error);
+    }
   }
 }

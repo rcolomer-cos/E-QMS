@@ -15,6 +15,7 @@ export interface Document {
   filePath?: string;
   fileName?: string;
   fileSize?: number;
+  complianceRequired?: boolean; // Flag for documents requiring user acknowledgement
   createdBy: number;
   approvedBy?: number;
   approvedAt?: Date;
@@ -42,6 +43,7 @@ export class DocumentModel {
       .input('filePath', sql.NVarChar, document.filePath)
       .input('fileName', sql.NVarChar, document.fileName)
       .input('fileSize', sql.Int, document.fileSize)
+      .input('complianceRequired', sql.Bit, document.complianceRequired || false)
       .input('createdBy', sql.Int, document.createdBy)
       .input('approvedBy', sql.Int, document.approvedBy)
       .input('approvedAt', sql.DateTime2, document.approvedAt)
@@ -49,9 +51,9 @@ export class DocumentModel {
       .input('reviewDate', sql.DateTime2, document.reviewDate)
       .input('expiryDate', sql.DateTime2, document.expiryDate)
       .query(`
-        INSERT INTO Documents (title, description, documentType, category, version, parentDocumentId, status, ownerId, filePath, fileName, fileSize, createdBy, approvedBy, approvedAt, effectiveDate, reviewDate, expiryDate)
+        INSERT INTO Documents (title, description, documentType, category, version, parentDocumentId, status, ownerId, filePath, fileName, fileSize, complianceRequired, createdBy, approvedBy, approvedAt, effectiveDate, reviewDate, expiryDate)
         OUTPUT INSERTED.id
-        VALUES (@title, @description, @documentType, @category, @version, @parentDocumentId, @status, @ownerId, @filePath, @fileName, @fileSize, @createdBy, @approvedBy, @approvedAt, @effectiveDate, @reviewDate, @expiryDate)
+        VALUES (@title, @description, @documentType, @category, @version, @parentDocumentId, @status, @ownerId, @filePath, @fileName, @fileSize, @complianceRequired, @createdBy, @approvedBy, @approvedAt, @effectiveDate, @reviewDate, @expiryDate)
       `);
 
     return result.recordset[0].id;
