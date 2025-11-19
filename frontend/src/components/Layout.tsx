@@ -104,6 +104,9 @@ function Layout() {
           {canSeeSettings && (
             <li><Link to="/settings">{t('navigation.settings')}</Link></li>
           )}
+          {hasRole('superuser') && (
+            <li><Link to="/data-import">{t('navigation.dataImport')}</Link></li>
+          )}
         </ul>
         <div className="navbar-user">
           <span className="user-info">

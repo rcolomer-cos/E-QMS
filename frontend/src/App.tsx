@@ -59,6 +59,7 @@ import GroupDetail from './pages/GroupDetail';
 import OrganizationalChart from './pages/OrganizationalChart';
 import Tags from './pages/Tags';
 import SwotAnalysis from './pages/SwotAnalysis';
+import DataImport from './pages/DataImport';
 import { useAuth } from './services/authService';
 
 function App() {
@@ -134,6 +135,7 @@ function App() {
         <Route path="system-settings" element={<SystemSettings />} />
         <Route path="company-branding" element={<CompanyBranding />} />
         <Route path="api-keys" element={<ApiKeys />} />
+        <Route path="data-import" element={<DataImport />} />
         <Route path="chart-demo" element={<ChartDemo />} />
       </Route>
     </Routes>

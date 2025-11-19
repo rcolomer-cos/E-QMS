@@ -96,7 +96,8 @@
     "trainingMatrix": "Utbildningsmatris",
     "roleRequirements": "Rollkrav",
     "externalAudit": "Extern revision",
-    "settings": "Inställningar"
+    "settings": "Inställningar",
+    "dataImport": "Dataimport"
   },
   "dashboard": {
     "title": "Instrumentpanel",

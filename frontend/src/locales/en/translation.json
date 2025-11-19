@@ -96,7 +96,8 @@
     "trainingMatrix": "Training Matrix",
     "roleRequirements": "Role Requirements",
     "externalAudit": "External Audit",
-    "settings": "Settings"
+    "settings": "Settings",
+    "dataImport": "Data Import"
   },
   "dashboard": {
     "title": "Dashboard",
