@@ -92,7 +92,11 @@
     "trainingMatrix": "Utbildningsmatris",
     "roleRequirements": "Rollkrav",
     "externalAudit": "Extern revision",
-    "settings": "Inställningar"
+    "settings": "Inställningar",
+    "quality": "Styrning",
+    "ncrCapa": "Avvikelse & CAPA",
+    "operations": "Operationer",
+    "admin": "Admin"
   },
   "dashboard": {
     "title": "Instrumentpanel",

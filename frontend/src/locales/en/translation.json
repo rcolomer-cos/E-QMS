@@ -92,7 +92,11 @@
     "trainingMatrix": "Training Matrix",
     "roleRequirements": "Role Requirements",
     "externalAudit": "External Audit",
-    "settings": "Settings"
+    "settings": "Settings",
+    "quality": "Quality",
+    "ncrCapa": "NCR & CAPA",
+    "operations": "Operations",
+    "admin": "Admin"
   },
   "dashboard": {
     "title": "Dashboard",
