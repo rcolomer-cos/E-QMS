@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createDocument,
   getDocuments,
+  getRecentDocuments,
   getPendingDocuments,
   getDocumentById,
   updateDocument,
@@ -45,6 +46,9 @@ router.get('/', flexibleAuth, enforceReadOnly, checkResourceScope('document'), l
 
 // Get pending documents (in review status) with enriched data
 router.get('/pending', flexibleAuth, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), getPendingDocuments);
+
+// Get recent documents with author information
+router.get('/recent', authenticateToken, getRecentDocuments);
 
 // Get document by ID - requires VIEW permission
 router.get('/:id', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), checkDocumentPermission(DocumentAction.VIEW), getDocumentById);

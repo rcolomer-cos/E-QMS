@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Setup from './pages/Setup';
+import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import Documents from './pages/Documents';
 import DocumentView from './pages/DocumentView';
@@ -74,7 +75,8 @@ function App() {
           isAuthenticated ? <Layout /> : <Navigate to="/login" replace state={{ from: location }} />
         }
       >
-        <Route index element={<Dashboard />} />
+        <Route index element={<LandingPage />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="documents" element={<Documents />} />
         <Route path="documents/:id" element={<DocumentView />} />
         <Route path="documents/:id/edit" element={<DocumentEditor />} />

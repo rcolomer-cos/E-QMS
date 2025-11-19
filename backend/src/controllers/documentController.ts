@@ -77,6 +77,66 @@ export const getDocuments = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+export const getRecentDocuments = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { limit = '10' } = req.query as Record<string, string>;
+    const limitNum = Math.min(parseInt(limit, 10) || 10, 50); // Max 50 items
+
+    const pool = await getConnection();
+    
+    // Get recent documents with author information
+    // Filter by user's group permissions if applicable
+    const result = await pool
+      .request()
+      .input('userId', req.user.id)
+      .input('limit', limitNum)
+      .query(`
+        SELECT TOP (@limit)
+          d.*,
+          creator.firstName AS creatorFirstName,
+          creator.lastName AS creatorLastName,
+          creator.email AS creatorEmail,
+          CASE 
+            WHEN d.updatedAt IS NOT NULL AND d.updatedAt > d.createdAt 
+            THEN d.updatedAt 
+            ELSE d.createdAt 
+          END AS lastModified
+        FROM Documents d
+        LEFT JOIN Users creator ON d.createdBy = creator.id
+        WHERE 
+          -- Include documents the user has access to via groups or if no groups assigned
+          (
+            EXISTS (
+              SELECT 1 FROM DocumentGroups dg
+              INNER JOIN GroupMembers gm ON dg.groupId = gm.groupId
+              WHERE dg.documentId = d.id AND gm.userId = @userId
+            )
+            OR NOT EXISTS (
+              SELECT 1 FROM DocumentGroups dg WHERE dg.documentId = d.id
+            )
+          )
+          -- Only show approved and review documents (not drafts or obsolete)
+          AND d.status IN ('approved', 'review')
+        ORDER BY 
+          CASE 
+            WHEN d.updatedAt IS NOT NULL AND d.updatedAt > d.createdAt 
+            THEN d.updatedAt 
+            ELSE d.createdAt 
+          END DESC
+      `);
+
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Get recent documents error:', error);
+    res.status(500).json({ error: 'Failed to get recent documents' });
+  }
+};
+
 export const getPendingDocuments = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const pool = await getConnection();
