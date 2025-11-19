@@ -15,6 +15,7 @@ import systemRoutes from './routes/systemRoutes';
 import userRoutes from './routes/userRoutes';
 import roleRoutes from './routes/roleRoutes';
 import documentRoutes from './routes/documentRoutes';
+import tagRoutes from './routes/tagRoutes';
 import auditRoutes from './routes/auditRoutes';
 import auditFindingRoutes from './routes/auditFindingRoutes';
 import equipmentRoutes from './routes/equipmentRoutes';
@@ -48,6 +49,11 @@ import apiKeyRoutes from './routes/apiKeyRoutes';
 import syncRoutes from './routes/syncRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import companyBrandingRoutes from './routes/companyBrandingRoutes';
+import groupRoutes from './routes/groupRoutes';
+import swotRoutes from './routes/swotRoutes';
+import documentComplianceRoutes from './routes/documentComplianceRoutes';
+import moduleVisibilityRoutes from './routes/moduleVisibilityRoutes';
+import importRoutes from './routes/importRoutes';
 
 // Import scheduler service
 // TEMPORARILY DISABLED FOR DEBUGGING
@@ -92,6 +98,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/tags', tagRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/audit-findings', auditFindingRoutes);
 app.use('/api/equipment', equipmentRoutes);
@@ -125,6 +132,11 @@ app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/sync', syncRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/company-branding', companyBrandingRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/swot', swotRoutes);
+app.use('/api/documents/compliance', documentComplianceRoutes);
+app.use('/api/modules', moduleVisibilityRoutes);
+app.use('/api/imports', importRoutes);
 
 // 404 handler
 app.use((_req, res) => {

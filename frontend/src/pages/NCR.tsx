@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getNCRs, createNCR, CreateNCRData } from '../services/ncrService';
 import { getUsers } from '../services/userService';
+import { useToast } from '../contexts/ToastContext';
 import { NCR as NCRType, User } from '../types';
 import NCRForm from '../components/NCRForm';
 import api from '../services/api';
@@ -9,6 +10,7 @@ import '../styles/NCR.css';
 
 function NCR() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [ncrs, setNcrs] = useState<NCRType[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,9 @@ function NCR() {
       setUsers(usersData);
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load data');
+      const errorMsg = err.response?.data?.error || 'Failed to load data';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -76,9 +80,12 @@ function NCR() {
       // Reload data and close modal
       await loadData();
       setShowModal(false);
+      toast.showCreateSuccess('NCR');
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create NCR');
+      const errorMsg = err.response?.data?.error || 'Failed to create NCR';
+      setError(errorMsg);
+      toast.error(errorMsg);
       throw err;
     }
   };

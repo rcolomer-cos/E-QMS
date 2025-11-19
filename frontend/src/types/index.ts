@@ -13,9 +13,11 @@ export interface User {
   firstName?: string;
   lastName?: string;
   department?: string;
+  phone?: string;
   active?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  groups?: Array<{ id: number; name: string }>;
 }
 
 export interface LoginCredentials {
@@ -56,6 +58,7 @@ export interface Document {
   filePath?: string;
   fileName?: string;
   fileSize?: number;
+  complianceRequired?: boolean;
   createdBy: number;
   approvedBy?: number;
   approvedAt?: string;

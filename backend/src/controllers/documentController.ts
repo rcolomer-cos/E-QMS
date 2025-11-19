@@ -6,6 +6,8 @@ import { getConnection } from '../config/database';
 import { NotificationService } from '../services/notificationService';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 import { DocumentContentModel } from '../models/DocumentContentModel';
+import { DocumentGroupModel } from '../models/DocumentGroupModel';
+import { TagModel } from '../models/TagModel';
 import PDFDocument from 'pdfkit';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -27,6 +29,15 @@ export const createDocument = async (req: AuthRequest, res: Response): Promise<v
     };
 
     const documentId = await DocumentModel.create(document);
+
+    // If groups are specified, assign them to the document
+    if (req.body.groupIds && Array.isArray(req.body.groupIds) && req.body.groupIds.length > 0) {
+      await DocumentGroupModel.assignGroupsToDocument(req.body.groupIds, documentId, req.user.id);
+      
+      // Notify all users in assigned groups
+      const actorName = `${req.user.firstName} ${req.user.lastName}`;
+      await NotificationService.notifyDocumentCreated(documentId, actorName);
+    }
 
     // Log audit entry
     await logCreate({
@@ -50,7 +61,14 @@ export const createDocument = async (req: AuthRequest, res: Response): Promise<v
 
 export const getDocuments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { status, category, documentType, processId, includeSubProcesses } = req.query as Record<string, string>;
+    const { status, category, documentType, processId, includeSubProcesses, tagIds } = req.query as Record<string, string>;
+
+    // Parse tagIds if provided (comma-separated string or array)
+    let parsedTagIds: number[] | undefined;
+    if (tagIds) {
+      const tagIdArray = typeof tagIds === 'string' ? tagIds.split(',') : tagIds;
+      parsedTagIds = tagIdArray.map((id: string) => parseInt(id, 10)).filter((id: number) => !isNaN(id));
+    }
 
     const documents = await DocumentModel.findAll({
       status: status as DocumentStatus | undefined,
@@ -58,12 +76,73 @@ export const getDocuments = async (req: AuthRequest, res: Response): Promise<voi
       documentType: documentType as string | undefined,
       processId: processId ? parseInt(processId, 10) : undefined,
       includeSubProcesses: includeSubProcesses === 'true',
+      tagIds: parsedTagIds,
     });
 
     res.json(documents);
   } catch (error) {
     console.error('Get documents error:', error);
     res.status(500).json({ error: 'Failed to get documents' });
+  }
+};
+
+export const getRecentDocuments = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { limit = '10' } = req.query as Record<string, string>;
+    const limitNum = Math.min(parseInt(limit, 10) || 10, 50); // Max 50 items
+
+    const pool = await getConnection();
+    
+    // Get recent documents with author information
+    // Filter by user's group permissions if applicable
+    const result = await pool
+      .request()
+      .input('userId', req.user.id)
+      .input('limit', limitNum)
+      .query(`
+        SELECT TOP (@limit)
+          d.*,
+          creator.firstName AS creatorFirstName,
+          creator.lastName AS creatorLastName,
+          creator.email AS creatorEmail,
+          CASE 
+            WHEN d.updatedAt IS NOT NULL AND d.updatedAt > d.createdAt 
+            THEN d.updatedAt 
+            ELSE d.createdAt 
+          END AS lastModified
+        FROM Documents d
+        LEFT JOIN Users creator ON d.createdBy = creator.id
+        WHERE 
+          -- Include documents the user has access to via groups or if no groups assigned
+          (
+            EXISTS (
+              SELECT 1 FROM DocumentGroups dg
+              INNER JOIN GroupMembers gm ON dg.groupId = gm.groupId
+              WHERE dg.documentId = d.id AND gm.userId = @userId
+            )
+            OR NOT EXISTS (
+              SELECT 1 FROM DocumentGroups dg WHERE dg.documentId = d.id
+            )
+          )
+          -- Only show approved and review documents (not drafts or obsolete)
+          AND d.status IN ('approved', 'review')
+        ORDER BY 
+          CASE 
+            WHEN d.updatedAt IS NOT NULL AND d.updatedAt > d.createdAt 
+            THEN d.updatedAt 
+            ELSE d.createdAt 
+          END DESC
+      `);
+
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Get recent documents error:', error);
+    res.status(500).json({ error: 'Failed to get recent documents' });
   }
 };
 
@@ -149,6 +228,30 @@ export const updateDocument = async (req: AuthRequest, res: Response): Promise<v
     const document = req.document;
     const updates = req.body;
     await DocumentModel.update(documentId, updates);
+
+    // If groups are being updated, handle group assignments
+    if (updates.groupIds && Array.isArray(updates.groupIds)) {
+      // Get current groups
+      const currentGroups = await DocumentGroupModel.findByDocumentId(documentId);
+      const currentGroupIds = currentGroups.map((g: any) => g.id);
+      
+      // Find groups to add and remove
+      const groupsToAdd = updates.groupIds.filter((id: number) => !currentGroupIds.includes(id));
+      const groupsToRemove = currentGroupIds.filter((id: number) => !updates.groupIds.includes(id));
+      
+      if (groupsToAdd.length > 0) {
+        await DocumentGroupModel.assignGroupsToDocument(groupsToAdd, documentId, req.user!.id);
+      }
+      if (groupsToRemove.length > 0) {
+        await DocumentGroupModel.removeGroupsFromDocument(groupsToRemove, documentId);
+      }
+      
+      // Notify all users in assigned groups about the update
+      if (groupsToAdd.length > 0 || updates.groupIds.length > 0) {
+        const actorName = req.user ? `${req.user.firstName} ${req.user.lastName}` : 'System';
+        await NotificationService.notifyDocumentUpdated(documentId, actorName);
+      }
+    }
 
     // Log audit entry
     await logUpdate({
@@ -558,6 +661,12 @@ export const approveDocument = async (req: AuthRequest, res: Response): Promise<
       actorName: `${req.user.firstName} ${req.user.lastName}`,
     });
 
+    // If document requires compliance, notify users in assigned groups
+    if (document.complianceRequired) {
+      const actorName = `${req.user.firstName} ${req.user.lastName}`;
+      await NotificationService.notifyComplianceDocumentAdded(documentId, actorName);
+    }
+
     // Log audit entry
     await logUpdate({
       req,
@@ -717,5 +826,263 @@ export const getDocumentProcesses = async (req: AuthRequest, res: Response): Pro
   } catch (error) {
     console.error('Get document processes error:', error);
     res.status(500).json({ error: 'Failed to fetch document processes' });
+  }
+};
+
+/**
+ * Get all groups assigned to a document
+ */
+export const getDocumentGroups = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    const groups = await DocumentGroupModel.findByDocumentId(documentId);
+
+    res.json(groups);
+  } catch (error) {
+    console.error('Get document groups error:', error);
+    res.status(500).json({ error: 'Failed to get document groups' });
+  }
+};
+
+/**
+ * Assign groups to a document
+ */
+export const assignGroupsToDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { groupIds } = req.body;
+
+    if (!Array.isArray(groupIds) || groupIds.length === 0) {
+      res.status(400).json({ error: 'groupIds must be a non-empty array' });
+      return;
+    }
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    await DocumentGroupModel.assignGroupsToDocument(groupIds, documentId, req.user.id);
+
+    // Notify all users in assigned groups
+    const actorName = `${req.user.firstName} ${req.user.lastName}`;
+    await NotificationService.notifyDocumentCreated(documentId, actorName);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: {},
+      newValues: { action: 'assign_groups', groupIds },
+    });
+
+    res.json({ message: 'Groups assigned to document successfully' });
+  } catch (error) {
+    console.error('Assign groups to document error:', error);
+    res.status(500).json({ error: 'Failed to assign groups to document' });
+  }
+};
+
+/**
+ * Remove groups from a document
+ */
+export const removeGroupsFromDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { groupIds } = req.body;
+
+    if (!Array.isArray(groupIds) || groupIds.length === 0) {
+      res.status(400).json({ error: 'groupIds must be a non-empty array' });
+      return;
+    }
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    await DocumentGroupModel.removeGroupsFromDocument(groupIds, documentId);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: {},
+      newValues: { action: 'remove_groups', groupIds },
+    });
+
+    res.json({ message: 'Groups removed from document successfully' });
+  } catch (error) {
+    console.error('Remove groups from document error:', error);
+    res.status(500).json({ error: 'Failed to remove groups from document' });
+  }
+};
+
+/**
+ * Get all tags assigned to a document
+ */
+export const getDocumentTags = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    const tags = await TagModel.findByDocumentId(documentId);
+
+    res.json(tags);
+  } catch (error) {
+    console.error('Get document tags error:', error);
+    res.status(500).json({ error: 'Failed to get document tags' });
+  }
+};
+
+/**
+ * Assign tags to a document
+ */
+export const assignTagsToDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { tagIds } = req.body;
+
+    if (!Array.isArray(tagIds) || tagIds.length === 0) {
+      res.status(400).json({ error: 'tagIds must be a non-empty array' });
+      return;
+    }
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    // Verify all tags exist
+    for (const tagId of tagIds) {
+      const tag = await TagModel.findById(tagId);
+      if (!tag) {
+        res.status(404).json({ error: `Tag with ID ${tagId} not found` });
+        return;
+      }
+    }
+
+    await TagModel.assignMultipleToDocument(documentId, tagIds, req.user.id);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: {},
+      newValues: { action: 'assign_tags', tagIds },
+    });
+
+    res.json({ message: 'Tags assigned to document successfully' });
+  } catch (error) {
+    console.error('Assign tags to document error:', error);
+    res.status(500).json({ error: 'Failed to assign tags to document' });
+  }
+};
+
+/**
+ * Remove tags from a document
+ */
+export const removeTagsFromDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { tagIds } = req.body;
+
+    if (!Array.isArray(tagIds) || tagIds.length === 0) {
+      res.status(400).json({ error: 'tagIds must be a non-empty array' });
+      return;
+    }
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    // Remove each tag from document
+    for (const tagId of tagIds) {
+      await TagModel.removeFromDocument(documentId, tagId);
+    }
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: {},
+      newValues: { action: 'remove_tags', tagIds },
+    });
+
+    res.json({ message: 'Tags removed from document successfully' });
+  } catch (error) {
+    console.error('Remove tags from document error:', error);
+    res.status(500).json({ error: 'Failed to remove tags from document' });
   }
 };

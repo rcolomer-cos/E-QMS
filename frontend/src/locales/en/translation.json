@@ -57,7 +57,10 @@
     "rejected": "Rejected",
     "completed": "Completed",
     "inProgress": "In Progress",
-    "notStarted": "Not Started"
+    "notStarted": "Not Started",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "days ago"
   },
   "auth": {
     "login": "Login",
@@ -80,6 +83,7 @@
     "dashboard": "Dashboard",
     "documents": "Documents",
     "processes": "Processes",
+    "orgChart": "Organizational Chart",
     "pendingChanges": "Pending Changes",
     "audits": "Audits",
     "ncr": "NCR",
@@ -93,10 +97,7 @@
     "roleRequirements": "Role Requirements",
     "externalAudit": "External Audit",
     "settings": "Settings",
-    "quality": "Quality",
-    "ncrCapa": "NCR & CAPA",
-    "operations": "Operations",
-    "admin": "Admin"
+    "dataImport": "Data Import"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -129,6 +130,18 @@
     "byStatus": "By Status",
     "overTime": "Over Time"
   },
+  "landing": {
+    "welcome": "Welcome",
+    "subtitle": "Your Quality Management System at a glance",
+    "recentChanges": "Recent Document Changes",
+    "viewAll": "View All",
+    "noRecentDocuments": "No recent document changes to display",
+    "browseDocuments": "Browse All Documents",
+    "quickActions": "Quick Actions",
+    "viewDashboard": "View Dashboard",
+    "viewAudits": "View Audits",
+    "viewNCRs": "View NCRs"
+  },
   "documents": {
     "title": "Documents",
     "allDocuments": "All Documents",
@@ -156,7 +169,13 @@
     "workInstruction": "Work Instruction",
     "form": "Form",
     "policy": "Policy",
-    "manual": "Manual"
+    "manual": "Manual",
+    "status": {
+      "draft": "Draft",
+      "review": "In Review",
+      "approved": "Approved",
+      "obsolete": "Obsolete"
+    }
   },
   "audits": {
     "title": "Audits",

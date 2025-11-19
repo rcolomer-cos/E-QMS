@@ -23,6 +23,7 @@ export enum AuditActionCategory {
   RISK = 'risk',
   SUPPLIER = 'supplier',
   IMPROVEMENT_IDEA = 'improvement_idea',
+  STRATEGIC_PLANNING = 'strategic_planning',
 }
 
 /**

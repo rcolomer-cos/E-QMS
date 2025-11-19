@@ -9,6 +9,7 @@ export interface User {
   firstName: string;
   lastName: string;
   department?: string;
+  phone?: string;
   active: boolean;
   lastLogin?: Date;
   failedLoginAttempts?: number;
@@ -28,6 +29,7 @@ export interface CreateUserData {
   firstName: string;
   lastName: string;
   department?: string;
+  phone?: string;
   roleIds: number[]; // Role IDs to assign
   createdBy: number;
   mustChangePassword?: boolean;
@@ -53,16 +55,17 @@ export class UserModel {
         .input('firstName', sql.NVarChar, userData.firstName)
         .input('lastName', sql.NVarChar, userData.lastName)
         .input('department', sql.NVarChar, userData.department)
+        .input('phone', sql.NVarChar, userData.phone)
         .input('createdBy', sql.Int, userData.createdBy && userData.createdBy > 0 ? userData.createdBy : null)
         .input('mustChangePassword', sql.Bit, userData.mustChangePassword || false)
         .query(`
           INSERT INTO Users (
-            email, password, firstName, lastName, department, 
+            email, password, firstName, lastName, department, phone,
             active, createdBy, mustChangePassword, passwordChangedAt
           )
           OUTPUT INSERTED.id
           VALUES (
-            @email, @password, @firstName, @lastName, @department, 
+            @email, @password, @firstName, @lastName, @department, @phone,
             1, @createdBy, @mustChangePassword, GETDATE()
           )
         `);

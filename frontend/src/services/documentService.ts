@@ -8,6 +8,7 @@ export interface DocumentFilters {
   search?: string;
   processId?: number;
   includeSubProcesses?: boolean;
+  tagIds?: number[];
 }
 
 export const getDocuments = async (filters?: DocumentFilters): Promise<Document[]> => {
@@ -18,6 +19,9 @@ export const getDocuments = async (filters?: DocumentFilters): Promise<Document[
   if (filters?.documentType) params.append('documentType', filters.documentType);
   if (filters?.processId) params.append('processId', String(filters.processId));
   if (filters?.includeSubProcesses) params.append('includeSubProcesses', 'true');
+  if (filters?.tagIds && filters.tagIds.length > 0) {
+    params.append('tagIds', filters.tagIds.join(','));
+  }
   
   const response = await api.get(`/documents?${params.toString()}`);
   return response.data;
@@ -147,4 +151,87 @@ export const exportDocumentPdf = async (id: number): Promise<Blob> => {
 export const getDocumentProcesses = async (id: number): Promise<any[]> => {
   const response = await api.get(`/documents/${id}/processes`);
   return response.data;
+};
+
+export interface RecentDocument extends Document {
+  creatorFirstName?: string;
+  creatorLastName?: string;
+  creatorEmail?: string;
+  lastModified: string;
+}
+
+export const getRecentDocuments = async (limit: number = 10): Promise<RecentDocument[]> => {
+  const response = await api.get(`/documents/recent?limit=${limit}`);
+  return response.data;
+};
+
+// Compliance Acknowledgement Functions
+
+export interface ComplianceStatus {
+  documentId: number;
+  userId: number;
+  isCompliant: boolean;
+  currentVersion: string;
+  acknowledgedVersion?: string;
+  acknowledgedAt?: Date;
+  requiresAcknowledgement: boolean;
+}
+
+export interface ComplianceReport {
+  documentId: number;
+  title: string;
+  version: string;
+  complianceRequired: boolean;
+  totalUsersRequired: number;
+  acknowledgedCount: number;
+  pendingCount: number;
+  acknowledgedUsers: Array<{
+    userId: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    acknowledgedAt: Date;
+  }>;
+  pendingUsers: Array<{
+    userId: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  }>;
+}
+
+export interface ComplianceDocument extends Document {
+  isAcknowledged: boolean;
+  acknowledgedAt?: Date;
+}
+
+export const acknowledgeDocument = async (documentId: number): Promise<void> => {
+  await api.post(`/documents/compliance/${documentId}/acknowledge`);
+};
+
+export const getComplianceStatus = async (documentId: number): Promise<ComplianceStatus> => {
+  const response = await api.get(`/documents/compliance/${documentId}/status`);
+  return response.data;
+};
+
+export const getDocumentComplianceReport = async (documentId: number): Promise<ComplianceReport> => {
+  const response = await api.get(`/documents/compliance/${documentId}/report`);
+  return response.data;
+};
+
+export const getPendingComplianceDocuments = async (): Promise<Document[]> => {
+  const response = await api.get('/documents/compliance/pending');
+  return response.data;
+};
+
+export const getComplianceDocuments = async (): Promise<ComplianceDocument[]> => {
+  const response = await api.get('/documents/compliance/all');
+  return response.data;
+};
+
+export const toggleComplianceRequired = async (
+  documentId: number,
+  complianceRequired: boolean
+): Promise<void> => {
+  await api.put(`/documents/compliance/${documentId}/toggle`, { complianceRequired });
 };

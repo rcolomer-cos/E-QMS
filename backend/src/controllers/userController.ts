@@ -12,13 +12,21 @@ import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../service
 export const getAllUsers = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const users = await UserModel.findAll();
+    const { UserGroupModel } = await import('../models/UserGroupModel');
     
-    // Remove password from response
-    const sanitizedUsers = users.map(user => {
+    // Remove password from response and add groups
+    const sanitizedUsers = await Promise.all(users.map(async (user) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    });
+      
+      // Get user groups
+      const groups = await UserGroupModel.findByUserId(user.id || 0);
+      
+      return {
+        ...userWithoutPassword,
+        groups: groups.map(g => ({ id: g.id, name: g.name })),
+      };
+    }));
 
     res.json(sanitizedUsers);
   } catch (error) {
@@ -67,7 +75,7 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const { email, password, firstName, lastName, department, roleIds } = req.body;
+    const { email, password, firstName, lastName, department, roleIds, groupIds, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await UserModel.findByEmail(email);
@@ -109,6 +117,16 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
 
     const userId = await UserModel.create(userData);
 
+    // Add user to groups if specified
+    if (groupIds && Array.isArray(groupIds) && groupIds.length > 0) {
+      const { UserGroupModel } = await import('../models/UserGroupModel');
+      await UserGroupModel.addUsersToGroup([userId], groupIds[0], req.user.id);
+      // Add to additional groups if more than one
+      for (let i = 1; i < groupIds.length; i++) {
+        await UserGroupModel.addUsersToGroup([userId], groupIds[i], req.user.id);
+      }
+    }
+
     // Log audit entry (without password)
     await logCreate({
       req,
@@ -116,7 +134,7 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
       entityType: 'User',
       entityId: userId,
       entityIdentifier: email,
-      newValues: { email, firstName, lastName, department, roleIds },
+      newValues: { email, firstName, lastName, department, phone, roleIds, groupIds },
     });
 
     res.status(201).json({

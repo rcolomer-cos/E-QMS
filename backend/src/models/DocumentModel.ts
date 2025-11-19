@@ -15,6 +15,7 @@ export interface Document {
   filePath?: string;
   fileName?: string;
   fileSize?: number;
+  complianceRequired?: boolean; // Flag for documents requiring user acknowledgement
   createdBy: number;
   approvedBy?: number;
   approvedAt?: Date;
@@ -42,6 +43,7 @@ export class DocumentModel {
       .input('filePath', sql.NVarChar, document.filePath)
       .input('fileName', sql.NVarChar, document.fileName)
       .input('fileSize', sql.Int, document.fileSize)
+      .input('complianceRequired', sql.Bit, document.complianceRequired || false)
       .input('createdBy', sql.Int, document.createdBy)
       .input('approvedBy', sql.Int, document.approvedBy)
       .input('approvedAt', sql.DateTime2, document.approvedAt)
@@ -49,9 +51,9 @@ export class DocumentModel {
       .input('reviewDate', sql.DateTime2, document.reviewDate)
       .input('expiryDate', sql.DateTime2, document.expiryDate)
       .query(`
-        INSERT INTO Documents (title, description, documentType, category, version, parentDocumentId, status, ownerId, filePath, fileName, fileSize, createdBy, approvedBy, approvedAt, effectiveDate, reviewDate, expiryDate)
+        INSERT INTO Documents (title, description, documentType, category, version, parentDocumentId, status, ownerId, filePath, fileName, fileSize, complianceRequired, createdBy, approvedBy, approvedAt, effectiveDate, reviewDate, expiryDate)
         OUTPUT INSERTED.id
-        VALUES (@title, @description, @documentType, @category, @version, @parentDocumentId, @status, @ownerId, @filePath, @fileName, @fileSize, @createdBy, @approvedBy, @approvedAt, @effectiveDate, @reviewDate, @expiryDate)
+        VALUES (@title, @description, @documentType, @category, @version, @parentDocumentId, @status, @ownerId, @filePath, @fileName, @fileSize, @complianceRequired, @createdBy, @approvedBy, @approvedAt, @effectiveDate, @reviewDate, @expiryDate)
       `);
 
     return result.recordset[0].id;
@@ -73,6 +75,7 @@ export class DocumentModel {
     documentType?: string;
     processId?: number;
     includeSubProcesses?: boolean;
+    tagIds?: number[];
   }): Promise<Document[]> {
     const pool = await getConnection();
     const request = pool.request();
@@ -89,6 +92,19 @@ export class DocumentModel {
     if (filters?.documentType) {
       request.input('documentType', sql.NVarChar, filters.documentType);
       query += ' AND d.documentType = @documentType';
+    }
+
+    // Filter by tags if provided
+    if (filters?.tagIds && filters.tagIds.length > 0) {
+      const tagParamNames = filters.tagIds.map((_, index) => `@tagId${index}`);
+      filters.tagIds.forEach((tagId, index) => {
+        request.input(`tagId${index}`, sql.Int, tagId);
+      });
+      query += ` AND d.id IN (
+        SELECT dt.documentId 
+        FROM DocumentTags dt 
+        WHERE dt.tagId IN (${tagParamNames.join(', ')})
+      )`;
     }
 
     // Filter by process linkage if provided
@@ -120,6 +136,17 @@ export class DocumentModel {
         if (filters?.documentType) {
           // already bound
           query += ' AND d.documentType = @documentType';
+        }
+        if (filters?.tagIds && filters.tagIds.length > 0) {
+          const tagParamNames = filters.tagIds.map((_, index) => `@tagId${index}`);
+          filters.tagIds.forEach((tagId, index) => {
+            request.input(`tagId${index}`, sql.Int, tagId);
+          });
+          query += ` AND d.id IN (
+            SELECT dt.documentId 
+            FROM DocumentTags dt 
+            WHERE dt.tagId IN (${tagParamNames.join(', ')})
+          )`;
         }
       } else {
         query += ' AND EXISTS (SELECT 1 FROM ProcessDocuments pd WHERE pd.documentId = d.id AND pd.processId = @processId)';

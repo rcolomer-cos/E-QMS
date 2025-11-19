@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getDocuments, DocumentFilters } from '../services/documentService';
+import { useToast } from '../contexts/ToastContext';
 import { Document, Process } from '../types';
 import { getProcesses } from '../services/processService';
+import TagFilter from '../components/TagFilter';
+import ComplianceStatusBadge from '../components/ComplianceStatusBadge';
 import '../styles/Documents.css';
 
 function Documents() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
@@ -19,6 +23,7 @@ function Documents() {
     documentType: '',
     processId: undefined,
     includeSubProcesses: true,
+    tagIds: [],
   });
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
@@ -43,7 +48,9 @@ function Documents() {
     } catch (err) {
       console.error('Failed to load documents:', err);
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || t('messages.loadError'));
+      const errorMsg = error.response?.data?.error || t('messages.loadError');
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -95,6 +102,10 @@ function Documents() {
     setFilters({ ...filters, includeSubProcesses: checked });
   };
 
+  const handleTagsChange = (tagIds: number[]) => {
+    setFilters({ ...filters, tagIds });
+  };
+
   if (loading) {
     return <div className="loading">{t('common.loading')}</div>;
   }
@@ -110,6 +121,8 @@ function Documents() {
       </div>
 
       {error && <div className="error-message">{error}</div>}
+
+      <TagFilter selectedTagIds={filters.tagIds || []} onTagsChange={handleTagsChange} />
 
       <div className="filters-container">
         <div className="search-box">
@@ -192,6 +205,7 @@ function Documents() {
               <th>{t('common.category')}</th>
               <th>{t('documents.version')}</th>
               <th>{t('common.status')}</th>
+              <th>Compliance</th>
               <th>{t('users.createdDate')}</th>
               <th>{t('common.actions')}</th>
             </tr>
@@ -199,7 +213,7 @@ function Documents() {
           <tbody>
             {filteredDocuments.length === 0 ? (
               <tr>
-                <td colSpan={7} className="no-data">
+                <td colSpan={8} className="no-data">
                   {searchTerm ? t('messages.noResults') : t('messages.noData')}
                 </td>
               </tr>
@@ -216,6 +230,11 @@ function Documents() {
                     <span className={`status-badge status-${doc.status}`}>
                       {doc.status}
                     </span>
+                  </td>
+                  <td>
+                    <ComplianceStatusBadge
+                      complianceRequired={doc.complianceRequired}
+                    />
                   </td>
                   <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
                   <td className="actions-cell">

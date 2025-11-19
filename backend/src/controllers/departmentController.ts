@@ -1,5 +1,7 @@
 import { Response } from 'express';
 import { DepartmentModel, CreateDepartmentData } from '../models/DepartmentModel';
+import { ProcessModel } from '../models/ProcessModel';
+import { ProcessOwnerModel } from '../models/ProcessOwnerModel';
 import { AuthRequest } from '../types';
 import { validationResult } from 'express-validator';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
@@ -220,5 +222,51 @@ export const deleteDepartment = async (req: AuthRequest, res: Response): Promise
   } catch (error) {
     console.error('Delete department error:', error);
     res.status(500).json({ error: 'Failed to delete department' });
+  }
+};
+
+/**
+ * Get organizational hierarchy with departments, processes, and assignments
+ */
+export const getOrganizationalHierarchy = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // Get all active departments with their managers
+    const departments = await DepartmentModel.findAll();
+    
+    // Get all active processes with their department associations
+    const processes = await ProcessModel.findAll();
+    
+    // Get all process ownership assignments
+    const processOwnerships: any[] = [];
+    for (const process of processes) {
+      if (process.id) {
+        const owners = await ProcessOwnerModel.findByProcessId(process.id);
+        processOwnerships.push(...owners);
+      }
+    }
+    
+    // Build hierarchical structure
+    const hierarchy = {
+      departments: departments.map(dept => ({
+        ...dept,
+        processes: processes
+          .filter(proc => proc.departmentId === dept.id)
+          .map(proc => ({
+            ...proc,
+            owners: processOwnerships.filter(po => po.processId === proc.id),
+          })),
+      })),
+      orphanProcesses: processes
+        .filter(proc => !proc.departmentId)
+        .map(proc => ({
+          ...proc,
+          owners: processOwnerships.filter(po => po.processId === proc.id),
+        })),
+    };
+    
+    res.json(hierarchy);
+  } catch (error) {
+    console.error('Get organizational hierarchy error:', error);
+    res.status(500).json({ error: 'Failed to fetch organizational hierarchy' });
   }
 };

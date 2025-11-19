@@ -3,6 +3,9 @@
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 2rem;
 }
 
@@ -14,6 +17,29 @@
 .subtitle {
   color: #7f8c8d;
   font-size: 1rem;
+}
+
+.btn-create-user {
+  padding: 0.75rem 1.5rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+}
+
+.btn-create-user:hover {
+  background-color: #2980b9;
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-create-user:active {
+  transform: translateY(0);
 }
 
 .error-message {
@@ -193,6 +219,28 @@
 
 .btn-cancel:hover {
   background-color: #7f8c8d;
+}
+
+.user-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.group-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background-color: #f0f0f0;
+  color: #555;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.no-groups {
+  color: #95a5a6;
+  font-style: italic;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {

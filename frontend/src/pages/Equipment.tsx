@@ -11,12 +11,14 @@ import {
   EquipmentMetrics,
 } from '../services/equipmentService';
 import { getUsers } from '../services/userService';
+import { useToast } from '../contexts/ToastContext';
 import { User } from '../types';
 import '../styles/Equipment.css';
 
 type ViewMode = 'list' | 'view' | 'add' | 'edit';
 
 function EquipmentPage() {
+  const toast = useToast();
   const [equipment, setEquipment] = useState<EquipmentType[]>([]);
   const [filteredEquipment, setFilteredEquipment] = useState<EquipmentType[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -77,7 +79,9 @@ function EquipmentPage() {
       setMetrics(metricsData);
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load data');
+      const errorMsg = err.response?.data?.error || 'Failed to load data';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -141,7 +145,9 @@ function EquipmentPage() {
       setSelectedEquipment(equipmentData);
       setViewMode('view');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load equipment details');
+      const errorMsg = err.response?.data?.error || 'Failed to load equipment details';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -186,7 +192,9 @@ function EquipmentPage() {
       });
       setShowModal(true);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load equipment details');
+      const errorMsg = err.response?.data?.error || 'Failed to load equipment details';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -197,10 +205,13 @@ function EquipmentPage() {
 
     try {
       await deleteEquipment(id);
+      toast.showDeleteSuccess('Equipment');
       await loadData();
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete equipment');
+      const errorMsg = err.response?.data?.error || 'Failed to delete equipment';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -229,14 +240,18 @@ function EquipmentPage() {
     try {
       if (editingEquipment) {
         await updateEquipment(editingEquipment.id!, formData);
+        toast.showUpdateSuccess('Equipment');
       } else {
         await createEquipment(formData as any);
+        toast.showCreateSuccess('Equipment');
       }
       handleCloseModal();
       await loadData();
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save equipment');
+      const errorMsg = err.response?.data?.error || 'Failed to save equipment';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -258,9 +273,12 @@ function EquipmentPage() {
       }
       // Reload the equipment list
       await loadData();
+      toast.success('QR code regenerated successfully');
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to regenerate QR code');
+      const errorMsg = err.response?.data?.error || 'Failed to regenerate QR code';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 

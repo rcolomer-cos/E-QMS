@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createDocument,
   getDocuments,
+  getRecentDocuments,
   getPendingDocuments,
   getDocumentById,
   updateDocument,
@@ -16,6 +17,12 @@ import {
   rejectDocument,
   requestChangesDocument,
   getDocumentProcesses,
+  getDocumentGroups,
+  assignGroupsToDocument,
+  removeGroupsFromDocument,
+  getDocumentTags,
+  assignTagsToDocument,
+  removeTagsFromDocument,
 } from '../controllers/documentController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { flexibleAuth } from '../middleware/flexibleAuth';
@@ -42,6 +49,9 @@ router.get('/', flexibleAuth, enforceReadOnly, checkResourceScope('document'), l
 
 // Get pending documents (in review status) with enriched data
 router.get('/pending', flexibleAuth, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), getPendingDocuments);
+
+// Get recent documents with author information
+router.get('/recent', authenticateToken, getRecentDocuments);
 
 // Get document by ID - requires VIEW permission
 router.get('/:id', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), checkDocumentPermission(DocumentAction.VIEW), getDocumentById);
@@ -91,5 +101,23 @@ router.post('/:id/export-pdf', authenticateToken, validateId, checkDocumentPermi
 
 // Get processes linked to document
 router.get('/:id/processes', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), checkDocumentPermission(DocumentAction.VIEW), getDocumentProcesses);
+
+// Get groups assigned to document
+router.get('/:id/groups', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), checkDocumentPermission(DocumentAction.VIEW), getDocumentGroups);
+
+// Assign groups to document - requires EDIT permission
+router.post('/:id/groups', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), assignGroupsToDocument);
+
+// Remove groups from document - requires EDIT permission
+router.delete('/:id/groups', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), removeGroupsFromDocument);
+
+// Get tags assigned to document - requires VIEW permission
+router.get('/:id/tags', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), checkDocumentPermission(DocumentAction.VIEW), getDocumentTags);
+
+// Assign tags to document - requires EDIT permission
+router.post('/:id/tags', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), assignTagsToDocument);
+
+// Remove tags from document - requires EDIT permission
+router.delete('/:id/tags', authenticateToken, createLimiter, validateId, checkDocumentPermission(DocumentAction.EDIT), removeTagsFromDocument);
 
 export default router;
