@@ -6,6 +6,7 @@ import { useToast } from '../contexts/ToastContext';
 import { Document, Process } from '../types';
 import { getProcesses } from '../services/processService';
 import TagFilter from '../components/TagFilter';
+import ComplianceStatusBadge from '../components/ComplianceStatusBadge';
 import '../styles/Documents.css';
 
 function Documents() {
@@ -204,6 +205,7 @@ function Documents() {
               <th>{t('common.category')}</th>
               <th>{t('documents.version')}</th>
               <th>{t('common.status')}</th>
+              <th>Compliance</th>
               <th>{t('users.createdDate')}</th>
               <th>{t('common.actions')}</th>
             </tr>
@@ -211,7 +213,7 @@ function Documents() {
           <tbody>
             {filteredDocuments.length === 0 ? (
               <tr>
-                <td colSpan={7} className="no-data">
+                <td colSpan={8} className="no-data">
                   {searchTerm ? t('messages.noResults') : t('messages.noData')}
                 </td>
               </tr>
@@ -228,6 +230,11 @@ function Documents() {
                     <span className={`status-badge status-${doc.status}`}>
                       {doc.status}
                     </span>
+                  </td>
+                  <td>
+                    <ComplianceStatusBadge
+                      complianceRequired={doc.complianceRequired}
+                    />
                   </td>
                   <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
                   <td className="actions-cell">

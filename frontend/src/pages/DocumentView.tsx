@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getDocumentById, getDocumentVersionHistory, getDocumentRevisionHistory, uploadDocumentFile, downloadDocumentFile, getDocumentProcesses } from '../services/documentService';
+import { getDocumentById, getDocumentVersionHistory, getDocumentRevisionHistory, uploadDocumentFile, downloadDocumentFile, getDocumentProcesses, getComplianceStatus } from '../services/documentService';
 import { Document, DocumentRevision } from '../types';
 import FileUpload from '../components/FileUpload';
 import TagSelector from '../components/TagSelector';
+import ComplianceAcknowledgementModal from '../components/ComplianceAcknowledgementModal';
+import ComplianceStatusBadge from '../components/ComplianceStatusBadge';
 import '../styles/DocumentView.css';
 
 function DocumentView() {
@@ -19,6 +21,11 @@ function DocumentView() {
   const [showRevisionHistory, setShowRevisionHistory] = useState(false);
   const [showLinkedProcesses, setShowLinkedProcesses] = useState(false);
   const [showUploadSection, setShowUploadSection] = useState(false);
+  const [showComplianceModal, setShowComplianceModal] = useState(false);
+  const [complianceStatus, setComplianceStatus] = useState<{
+    isCompliant: boolean;
+    requiresAcknowledgement: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -40,6 +47,22 @@ function DocumentView() {
       setRevisionHistory(revisions);
       setLinkedProcesses(processes);
       setError('');
+
+      // Check compliance status if document requires it
+      if (docData.complianceRequired && docData.status === 'approved') {
+        try {
+          const status = await getComplianceStatus(documentId);
+          setComplianceStatus(status);
+          
+          // Show modal if acknowledgement is required and not yet acknowledged
+          if (status.requiresAcknowledgement && !status.isCompliant) {
+            setShowComplianceModal(true);
+          }
+        } catch (err) {
+          // If user doesn't have access, compliance check will fail - that's ok
+          console.log('Compliance status check skipped');
+        }
+      }
     } catch (err) {
       console.error('Failed to load document:', err);
       const error = err as { response?: { data?: { error?: string } } };
@@ -186,6 +209,16 @@ function DocumentView() {
                 <label>Owner ID</label>
                 <span>{document.ownerId || 'N/A'}</span>
               </div>
+              {document.complianceRequired && (
+                <div className="info-item">
+                  <label>Compliance Status</label>
+                  <ComplianceStatusBadge
+                    complianceRequired={document.complianceRequired}
+                    isAcknowledged={complianceStatus?.isCompliant}
+                    size="medium"
+                  />
+                </div>
+              )}
             </div>
           </section>
 
@@ -467,6 +500,24 @@ function DocumentView() {
           </section>
         </div>
       </div>
+
+      {/* Compliance Acknowledgement Modal */}
+      {document.complianceRequired && (
+        <ComplianceAcknowledgementModal
+          open={showComplianceModal}
+          documentId={document.id}
+          documentTitle={document.title}
+          documentVersion={document.version}
+          onAcknowledge={() => {
+            setShowComplianceModal(false);
+            // Reload to update compliance status
+            if (id) {
+              loadDocument(parseInt(id, 10));
+            }
+          }}
+          onClose={undefined} // Make it required - user must acknowledge
+        />
+      )}
     </div>
   );
 }
