@@ -59,58 +59,137 @@ function Layout() {
           )}
         </div>
         <ul className="navbar-menu">
+          {/* Dashboard - Always visible */}
           <li><Link to="/">{t('navigation.dashboard')}</Link></li>
-          {isModuleEnabled('documents') && (
-            <li><Link to="/documents">{t('navigation.documents')}</Link></li>
+
+          {/* Quality System */}
+          {(isModuleEnabled('documents') || isModuleEnabled('processes')) && (
+            <li className="has-submenu">
+              <span className="menu-label">{t('navigation.qualitySystem')}</span>
+              <ul className="submenu">
+                {isModuleEnabled('documents') && (
+                  <li><Link to="/documents">{t('navigation.documents')}</Link></li>
+                )}
+                {isModuleEnabled('processes') && (
+                  <li><Link to="/processes/overview">{t('navigation.processes')}</Link></li>
+                )}
+                <li><Link to="/pending-changes">{t('navigation.pendingChanges')}</Link></li>
+              </ul>
+            </li>
           )}
-          {isModuleEnabled('processes') && (
-            <li><Link to="/processes/overview">{t('navigation.processes')}</Link></li>
+
+          {/* Operations & Quality Control */}
+          {(isModuleEnabled('audits') || isModuleEnabled('ncr') || isModuleEnabled('capa') || isModuleEnabled('inspection')) && (
+            <li className="has-submenu">
+              <span className="menu-label">{t('navigation.operations')}</span>
+              <ul className="submenu">
+                {isModuleEnabled('audits') && (
+                  <li><Link to="/audits">{t('navigation.audits')}</Link></li>
+                )}
+                {canSeeExternalAudit && isModuleEnabled('audits') && (
+                  <li><Link to="/external-audit-support">{t('navigation.externalAudit')}</Link></li>
+                )}
+                {isModuleEnabled('ncr') && (
+                  <li><Link to="/ncr">{t('navigation.ncr')}</Link></li>
+                )}
+                {isModuleEnabled('capa') && (
+                  <li><Link to="/capa">{t('navigation.capa')}</Link></li>
+                )}
+                {isModuleEnabled('inspection') && (
+                  <li><Link to="/inspection-mobile">{t('navigation.mobileInspection')}</Link></li>
+                )}
+              </ul>
+            </li>
           )}
-          <li><Link to="/organizational-chart">{t('navigation.orgChart')}</Link></li>
-          <li><Link to="/pending-changes">{t('navigation.pendingChanges')}</Link></li>
-          {isModuleEnabled('audits') && (
-            <li><Link to="/audits">{t('navigation.audits')}</Link></li>
-          )}
-          {isModuleEnabled('ncr') && (
-            <li><Link to="/ncr">{t('navigation.ncr')}</Link></li>
-          )}
-          {isModuleEnabled('capa') && (
-            <li><Link to="/capa">{t('navigation.capa')}</Link></li>
-          )}
-          {isModuleEnabled('risks') && (
-            <li><Link to="/risks">{t('navigation.risks')}</Link></li>
-          )}
-          {isModuleEnabled('improvements') && (
-            <li><Link to="/improvement-ideas">{t('navigation.improvements')}</Link></li>
-          )}
+
+          {/* Equipment & Assets */}
           {isModuleEnabled('equipment') && (
-            <li><Link to="/equipment">{t('navigation.equipment')}</Link></li>
+            <li className="has-submenu">
+              <span className="menu-label">{t('navigation.equipmentAssets')}</span>
+              <ul className="submenu">
+                <li><Link to="/equipment">{t('navigation.equipment')}</Link></li>
+                <li><Link to="/calibration-records">{t('navigation.calibrationRecords')}</Link></li>
+                <li><Link to="/service-records">{t('navigation.serviceRecords')}</Link></li>
+                {isModuleEnabled('inspection') && (
+                  <li><Link to="/inspection-records">{t('navigation.inspectionRecords')}</Link></li>
+                )}
+              </ul>
+            </li>
           )}
-          {isModuleEnabled('inspection') && (
-            <li><Link to="/inspection-mobile">{t('navigation.mobileInspection')}</Link></li>
+
+          {/* People & Organization */}
+          <li className="has-submenu">
+            <span className="menu-label">{t('navigation.peopleOrganization')}</span>
+            <ul className="submenu">
+              <li><Link to="/organizational-chart">{t('navigation.orgChart')}</Link></li>
+              {isModuleEnabled('training') && (
+                <>
+                  <li><Link to="/training">{t('navigation.training')}</Link></li>
+                  <li><Link to="/training-matrix">{t('navigation.trainingMatrix')}</Link></li>
+                  {canSeeRoleRequirements && (
+                    <li><Link to="/role-training-requirements">{t('navigation.roleRequirements')}</Link></li>
+                  )}
+                </>
+              )}
+              {isAdminOrManagerOrSuper && (
+                <>
+                  <li><Link to="/users">{t('navigation.users')}</Link></li>
+                  <li><Link to="/groups">{t('navigation.groups')}</Link></li>
+                  <li><Link to="/departments">{t('navigation.departments')}</Link></li>
+                </>
+              )}
+            </ul>
+          </li>
+
+          {/* Analysis & Improvement */}
+          {(isModuleEnabled('risks') || isModuleEnabled('improvements')) && (
+            <li className="has-submenu">
+              <span className="menu-label">{t('navigation.analysis')}</span>
+              <ul className="submenu">
+                {isModuleEnabled('risks') && (
+                  <>
+                    <li><Link to="/risks">{t('navigation.risks')}</Link></li>
+                    <li><Link to="/risks/board">{t('navigation.riskBoard')}</Link></li>
+                  </>
+                )}
+                {isModuleEnabled('improvements') && (
+                  <>
+                    <li><Link to="/improvement-ideas">{t('navigation.improvements')}</Link></li>
+                    <li><Link to="/swot-analysis">{t('navigation.swotAnalysis')}</Link></li>
+                  </>
+                )}
+              </ul>
+            </li>
           )}
-          {isModuleEnabled('training') && (
-            <>
-              <li><Link to="/training">{t('navigation.training')}</Link></li>
-              <li><Link to="/training-matrix">{t('navigation.trainingMatrix')}</Link></li>
-            </>
+
+          {/* Suppliers (if visible) */}
+          {isAdminOrManagerOrSuper && (
+            <li className="has-submenu">
+              <span className="menu-label">{t('navigation.suppliers')}</span>
+              <ul className="submenu">
+                <li><Link to="/supplier-performance">{t('navigation.supplierPerformance')}</Link></li>
+                <li><Link to="/approved-supplier-list">{t('navigation.approvedSuppliers')}</Link></li>
+              </ul>
+            </li>
           )}
-          {canSeeRoleRequirements && isModuleEnabled('training') && (
-            <li><Link to="/role-training-requirements">{t('navigation.roleRequirements')}</Link></li>
-          )}
-          {canSeeExternalAudit && isModuleEnabled('audits') && (
-            <li><Link to="/external-audit-support">{t('navigation.externalAudit')}</Link></li>
-          )}
+
+          {/* Administration */}
           {canSeeSettings && (
             <li className="has-submenu">
               <span className="menu-label">{t('navigation.admin')}</span>
               <ul className="submenu">
                 <li><Link to="/settings">{t('navigation.settings')}</Link></li>
+                <li><Link to="/system-settings">{t('navigation.systemSettings')}</Link></li>
+                <li><Link to="/company-branding">{t('navigation.companyBranding')}</Link></li>
+                <li><Link to="/email-templates">{t('navigation.emailTemplates')}</Link></li>
+                <li><Link to="/api-keys">{t('navigation.apiKeys')}</Link></li>
+                <li><Link to="/backup-management">{t('navigation.backupManagement')}</Link></li>
+                <li><Link to="/audit-logs">{t('navigation.auditLogs')}</Link></li>
+                {hasRole('superuser') && (
+                  <li><Link to="/data-import">{t('navigation.dataImport')}</Link></li>
+                )}
               </ul>
             </li>
-          )}
-          {hasRole('superuser') && (
-            <li><Link to="/data-import">{t('navigation.dataImport')}</Link></li>
           )}
         </ul>
         <div className="navbar-user">

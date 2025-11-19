@@ -54,8 +54,10 @@
 }
 
 /* Dropdown menus */
-.navbar-menu li {
+.navbar-menu > li {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .navbar-menu .menu-label {
