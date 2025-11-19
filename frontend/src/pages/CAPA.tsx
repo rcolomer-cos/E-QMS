@@ -9,6 +9,7 @@ import {
   CAPA as CAPAType,
 } from '../services/capaService';
 import { getUsers } from '../services/userService';
+import { useToast } from '../contexts/ToastContext';
 import { User } from '../types';
 import CAPAForm from '../components/CAPAForm';
 
@@ -16,6 +17,7 @@ type ViewMode = 'all' | 'assigned' | 'overdue';
 
 function CAPA() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [capas, setCapas] = useState<CAPAType[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,9 @@ function CAPA() {
       const usersData = await getUsers();
       setUsers(usersData);
     } catch (err) {
-      setError('Failed to load CAPAs');
+      const errorMsg = 'Failed to load CAPAs';
+      setError(errorMsg);
+      toast.error(errorMsg);
       console.error('Error loading CAPAs:', err);
     } finally {
       setLoading(false);
@@ -73,11 +77,14 @@ function CAPA() {
   const handleCreateCAPA = async (data: CreateCAPAData) => {
     try {
       await createCAPA(data);
+      toast.showCreateSuccess('CAPA');
       setShowCreateForm(false);
       loadData();
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to create CAPA');
+      const errorMsg = error.response?.data?.error || 'Failed to create CAPA';
+      setError(errorMsg);
+      toast.error(errorMsg);
       throw err;
     }
   };

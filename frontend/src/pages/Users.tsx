@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { getUsers, deleteUser, updateUserRole } from '../services/userService';
+import { useToast } from '../contexts/ToastContext';
 import { User } from '../types';
 import { getCurrentUser } from '../services/authService';
 import '../styles/Users.css';
 
 const Users = () => {
+  const toast = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,7 +27,9 @@ const Users = () => {
       setUsers(data);
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load users');
+      const errorMsg = err.response?.data?.error || 'Failed to load users';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -38,9 +42,12 @@ const Users = () => {
 
     try {
       await deleteUser(userId);
+      toast.success('User deactivated successfully');
       await loadUsers();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to deactivate user');
+      const errorMsg = err.response?.data?.error || 'Failed to deactivate user';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -49,9 +56,12 @@ const Users = () => {
       await updateUserRole(userId, newRole);
       setEditingRole(null);
       setNewRole('');
+      toast.showUpdateSuccess('User role');
       await loadUsers();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to update role');
+      const errorMsg = err.response?.data?.error || 'Failed to update role';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 

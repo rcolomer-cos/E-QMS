@@ -13,6 +13,7 @@ import {
 } from '../services/capaService';
 import { getUsers } from '../services/userService';
 import { getAttachmentsByEntity, deleteAttachment, uploadAttachment, Attachment } from '../services/attachmentService';
+import { useToast } from '../contexts/ToastContext';
 import { User } from '../types';
 import AttachmentGallery from '../components/AttachmentGallery';
 import FileUpload from '../components/FileUpload';
@@ -21,6 +22,7 @@ import '../styles/CAPADetail.css';
 function CAPADetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   
   const [capa, setCapa] = useState<CAPAType | null>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -76,7 +78,9 @@ function CAPADetail() {
       setError('');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to load CAPA details');
+      const errorMsg = error.response?.data?.error || 'Failed to load CAPA details';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -88,10 +92,13 @@ function CAPADetail() {
     try {
       await updateCAPAStatus(capa.id, { status: newStatus });
       setCapa({ ...capa, status: newStatus });
+      toast.showUpdateSuccess('CAPA status');
       setError('');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to update status');
+      const errorMsg = error.response?.data?.error || 'Failed to update status';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -115,10 +122,13 @@ function CAPADetail() {
       await updateCAPA(capa.id, editData);
       await loadData();
       setIsEditing(false);
+      toast.showUpdateSuccess('CAPA');
       setError('');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to update CAPA');
+      const errorMsg = error.response?.data?.error || 'Failed to update CAPA';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -135,10 +145,13 @@ function CAPADetail() {
       setShowCompleteModal(false);
       setCompletionData({ rootCause: '', proposedAction: '' });
       await loadData();
+      toast.success('CAPA marked as completed');
       setError('');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to complete CAPA');
+      const errorMsg = error.response?.data?.error || 'Failed to complete CAPA';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -150,10 +163,13 @@ function CAPADetail() {
       setShowVerifyModal(false);
       setVerificationData({ effectiveness: '' });
       await loadData();
+      toast.success('CAPA verified successfully');
       setError('');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to verify CAPA');
+      const errorMsg = error.response?.data?.error || 'Failed to verify CAPA';
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -164,10 +180,13 @@ function CAPADetail() {
       await uploadAttachment(file, 'capa', capa.id, `CAPA proof of action: ${file.name}`);
       const attachmentsData = await getAttachmentsByEntity('capa', capa.id);
       setAttachments(attachmentsData.data);
+      toast.success('Attachment uploaded successfully');
       setError('');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to upload attachment');
+      const errorMsg = error.response?.data?.error || 'Failed to upload attachment';
+      setError(errorMsg);
+      toast.error(errorMsg);
       throw err;
     }
   };
@@ -176,10 +195,13 @@ function CAPADetail() {
     try {
       await deleteAttachment(attachmentId);
       setAttachments(attachments.filter((a) => a.id !== attachmentId));
+      toast.showDeleteSuccess('Attachment');
       setError('');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Failed to delete attachment');
+      const errorMsg = error.response?.data?.error || 'Failed to delete attachment';
+      setError(errorMsg);
+      toast.error(errorMsg);
       throw err;
     }
   };
