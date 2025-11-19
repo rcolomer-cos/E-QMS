@@ -56,8 +56,10 @@ export const validateDocument = [
     .withMessage('Document type is required and must not exceed 100 characters'),
   body('category')
     .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Category is required and must not exceed 100 characters'),
+    .notEmpty()
+    .withMessage('Process/Category is required')
+    .isLength({ max: 100 })
+    .withMessage('Process/Category must not exceed 100 characters'),
   body('version')
     .optional()
     .trim()

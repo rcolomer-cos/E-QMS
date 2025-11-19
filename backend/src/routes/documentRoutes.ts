@@ -41,8 +41,8 @@ import {
 
 const router = Router();
 
-// Create document - requires USER, MANAGER, or ADMIN role
-router.post('/', authenticateToken, createLimiter, validateDocument, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.USER), createDocument);
+// Create document - requires SUPERUSER, ADMIN, MANAGER, or USER role
+router.post('/', authenticateToken, createLimiter, validateDocument, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.USER), createDocument);
 
 // List documents - all authenticated users can list (filtering happens in controller if needed)
 router.get('/', flexibleAuth, enforceReadOnly, checkResourceScope('document'), logAuditorAccess('document'), getDocuments);

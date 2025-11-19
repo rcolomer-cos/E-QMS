@@ -81,3 +81,17 @@ GO
 
 PRINT 'Document tags tables setup completed';
 GO
+
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.59' AND scriptName = '59_create_document_tags_tables.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.59',
+        'Add document compliance acknowledgement support',
+        '59_create_document_tags_tables.sql',
+        'SUCCESS',
+        'Added complianceRequired field to Documents table and created DocumentComplianceAcknowledgements table for tracking user read & understand confirmations'
+    );
+END
+GO

@@ -100,3 +100,17 @@ GO
 
 PRINT 'Patch 58 completed successfully: User Groups tables created';
 GO
+
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.58' AND scriptName = '58_create_user_groups_tables.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.58',
+        'Add document compliance acknowledgement support',
+        '58_create_user_groups_tables.sql',
+        'SUCCESS',
+        'Added complianceRequired field to Documents table and created DocumentComplianceAcknowledgements table for tracking user read & understand confirmations'
+    );
+END
+GO

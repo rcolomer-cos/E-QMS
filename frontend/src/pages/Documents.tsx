@@ -7,6 +7,7 @@ import { Document, Process } from '../types';
 import { getProcesses } from '../services/processService';
 import TagFilter from '../components/TagFilter';
 import ComplianceStatusBadge from '../components/ComplianceStatusBadge';
+import CreateDocumentModal from '../components/CreateDocumentModal';
 import '../styles/Documents.css';
 
 function Documents() {
@@ -17,6 +18,7 @@ function Documents() {
   const [processes, setProcesses] = useState<Process[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [filters, setFilters] = useState<DocumentFilters>({
     status: '',
     category: '',
@@ -106,6 +108,15 @@ function Documents() {
     setFilters({ ...filters, tagIds });
   };
 
+  const handleCreateDocument = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleCreateSuccess = (documentId: number) => {
+    setShowCreateModal(false);
+    navigate(`/documents/${documentId}`);
+  };
+
   if (loading) {
     return <div className="loading">{t('common.loading')}</div>;
   }
@@ -117,8 +128,17 @@ function Documents() {
           <h1>{t('documents.title')}</h1>
           <p className="subtitle">{t('documents.allDocuments')}</p>
         </div>
-        <button className="tw-btn tw-btn-primary">{t('documents.createDocument')}</button>
+        <button className="tw-btn tw-btn-primary" onClick={handleCreateDocument}>
+          {t('documents.createDocument')}
+        </button>
       </div>
+
+      {showCreateModal && (
+        <CreateDocumentModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      )}
 
       {error && <div className="error-message">{error}</div>}
 

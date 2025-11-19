@@ -6688,6 +6688,221 @@ BEGIN
 END
 GO
 
+/*
+    Patch 58: Create User Groups Tables
+    Description: Add support for user groups for document access control and notifications
+    Author: Copilot
+    Date: 2025-11-19
+*/
+
+USE [eqms];
+GO
+
+-- Create Groups table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Groups')
+BEGIN
+    CREATE TABLE Groups (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        name NVARCHAR(100) NOT NULL UNIQUE,
+        description NVARCHAR(500),
+        active BIT DEFAULT 1,
+        createdBy INT NOT NULL,
+        createdAt DATETIME2 DEFAULT GETDATE(),
+        updatedAt DATETIME2 DEFAULT GETDATE(),
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_Groups_CreatedBy FOREIGN KEY (createdBy) REFERENCES Users(id)
+    );
+
+    -- Indexes for Performance
+    CREATE INDEX IX_Groups_Active ON Groups(active);
+    CREATE INDEX IX_Groups_Name ON Groups(name);
+
+    PRINT '✓ Groups table created';
+END
+ELSE
+BEGIN
+    PRINT '○ Groups table already exists';
+END
+GO
+
+-- Create UserGroups junction table (many-to-many between Users and Groups)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'UserGroups')
+BEGIN
+    CREATE TABLE UserGroups (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        userId INT NOT NULL,
+        groupId INT NOT NULL,
+        addedBy INT NOT NULL,
+        addedAt DATETIME2 DEFAULT GETDATE(),
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_UserGroups_User FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
+        CONSTRAINT FK_UserGroups_Group FOREIGN KEY (groupId) REFERENCES Groups(id) ON DELETE CASCADE,
+        CONSTRAINT FK_UserGroups_AddedBy FOREIGN KEY (addedBy) REFERENCES Users(id),
+        
+        -- Ensure unique user-group combinations
+        CONSTRAINT UQ_UserGroups_UserGroup UNIQUE (userId, groupId)
+    );
+
+    -- Indexes for Performance
+    CREATE INDEX IX_UserGroups_UserId ON UserGroups(userId);
+    CREATE INDEX IX_UserGroups_GroupId ON UserGroups(groupId);
+
+    PRINT '✓ UserGroups table created';
+END
+ELSE
+BEGIN
+    PRINT '○ UserGroups table already exists';
+END
+GO
+
+-- Create DocumentGroups junction table (many-to-many between Documents and Groups)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'DocumentGroups')
+BEGIN
+    CREATE TABLE DocumentGroups (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        documentId INT NOT NULL,
+        groupId INT NOT NULL,
+        assignedBy INT NOT NULL,
+        assignedAt DATETIME2 DEFAULT GETDATE(),
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_DocumentGroups_Document FOREIGN KEY (documentId) REFERENCES Documents(id) ON DELETE CASCADE,
+        CONSTRAINT FK_DocumentGroups_Group FOREIGN KEY (groupId) REFERENCES Groups(id) ON DELETE CASCADE,
+        CONSTRAINT FK_DocumentGroups_AssignedBy FOREIGN KEY (assignedBy) REFERENCES Users(id),
+        
+        -- Ensure unique document-group combinations
+        CONSTRAINT UQ_DocumentGroups_DocumentGroup UNIQUE (documentId, groupId)
+    );
+
+    -- Indexes for Performance
+    CREATE INDEX IX_DocumentGroups_DocumentId ON DocumentGroups(documentId);
+    CREATE INDEX IX_DocumentGroups_GroupId ON DocumentGroups(groupId);
+
+    PRINT '✓ DocumentGroups table created';
+END
+ELSE
+BEGIN
+    PRINT '○ DocumentGroups table already exists';
+END
+GO
+
+PRINT 'Patch 58 completed successfully: User Groups tables created';
+GO
+
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.58' AND scriptName = '58_create_user_groups_tables.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.58',
+        'Add document compliance acknowledgement support',
+        '58_create_user_groups_tables.sql',
+        'SUCCESS',
+        'Added complianceRequired field to Documents table and created DocumentComplianceAcknowledgements table for tracking user read & understand confirmations'
+    );
+END
+GO
+
+-- =============================================
+-- Script: 59_create_document_tags_tables.sql
+-- Description: Create tables for document tag management
+-- Author: GitHub Copilot
+-- Date: 2025-11-19
+-- =============================================
+
+-- Create Tags table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Tags' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE Tags (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- Tag Information
+        name NVARCHAR(100) NOT NULL,
+        description NVARCHAR(500) NULL,
+        
+        -- Color Configuration
+        backgroundColor NVARCHAR(7) NOT NULL DEFAULT '#3B82F6', -- Hex color for background (default blue)
+        fontColor NVARCHAR(7) NOT NULL DEFAULT '#FFFFFF', -- Hex color for font (default white)
+        
+        -- Audit Trail
+        createdBy INT NOT NULL,
+        createdAt DATETIME2 DEFAULT GETDATE(),
+        updatedBy INT NULL,
+        updatedAt DATETIME2 NULL,
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_Tags_CreatedBy FOREIGN KEY (createdBy) REFERENCES Users(id),
+        CONSTRAINT FK_Tags_UpdatedBy FOREIGN KEY (updatedBy) REFERENCES Users(id),
+        
+        -- Unique Constraint - prevent duplicate tag names (case-insensitive)
+        CONSTRAINT UQ_Tags_Name UNIQUE (name)
+    );
+    
+    -- Index for searching tags by name
+    CREATE INDEX IX_Tags_Name ON Tags(name);
+    
+    PRINT 'Tags table created successfully';
+END
+ELSE
+BEGIN
+    PRINT 'Tags table already exists';
+END
+GO
+
+-- Create DocumentTags junction table for many-to-many relationship
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'DocumentTags' AND schema_id = SCHEMA_ID('dbo'))
+BEGIN
+    CREATE TABLE DocumentTags (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- Relationship
+        documentId INT NOT NULL,
+        tagId INT NOT NULL,
+        
+        -- Audit Trail
+        assignedBy INT NOT NULL,
+        assignedAt DATETIME2 DEFAULT GETDATE(),
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_DocumentTags_Document FOREIGN KEY (documentId) REFERENCES Documents(id) ON DELETE CASCADE,
+        CONSTRAINT FK_DocumentTags_Tag FOREIGN KEY (tagId) REFERENCES Tags(id) ON DELETE CASCADE,
+        CONSTRAINT FK_DocumentTags_AssignedBy FOREIGN KEY (assignedBy) REFERENCES Users(id),
+        
+        -- Unique Constraint - prevent duplicate tag assignments to the same document
+        CONSTRAINT UQ_DocumentTags_DocumentId_TagId UNIQUE (documentId, tagId)
+    );
+    
+    -- Indexes for performance
+    CREATE INDEX IX_DocumentTags_DocumentId ON DocumentTags(documentId);
+    CREATE INDEX IX_DocumentTags_TagId ON DocumentTags(tagId);
+    
+    PRINT 'DocumentTags table created successfully';
+END
+ELSE
+BEGIN
+    PRINT 'DocumentTags table already exists';
+END
+GO
+
+PRINT 'Document tags tables setup completed';
+GO
+
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.59' AND scriptName = '59_create_document_tags_tables.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.59',
+        'Add document compliance acknowledgement support',
+        '59_create_document_tags_tables.sql',
+        'SUCCESS',
+        'Added complianceRequired field to Documents table and created DocumentComplianceAcknowledgements table for tracking user read & understand confirmations'
+    );
+END
+GO
+
 -- Migration: Add phone field to Users table
 -- Date: 2025-11-19
 -- Description: Add optional phone field to Users table for contact information
@@ -6714,6 +6929,19 @@ BEGIN
 END
 GO
 
+-- Record schema version
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.60' AND scriptName = '60_add_phone_to_users.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.60',
+        'Add phone field to Users table',
+        '60_add_phone_to_users.sql',
+        'SUCCESS',
+        'Added phone field to Users table for contact information'
+    );
+END
+GO
 
 -- =============================================
 -- Add Compliance Required Field to Documents

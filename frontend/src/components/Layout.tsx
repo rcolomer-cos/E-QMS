@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { logout, getCurrentUser } from '../services/authService';
 import { useBranding } from '../contexts/BrandingContext';
 import { useModuleVisibility } from '../contexts/ModuleVisibilityContext';
+import { menuStructure, MenuItem } from '../config/menuStructure';
 import '../styles/Layout.css';
 
 function Layout() {
@@ -21,10 +22,6 @@ function Layout() {
   };
   const roleNamesLower = roleNames.map(normalizeRole);
   const hasRole = (r: string) => roleNamesLower.includes(r.toLowerCase());
-  const isAdminOrManagerOrSuper = hasRole('admin') || hasRole('manager') || hasRole('superuser');
-  const canSeeRoleRequirements = isAdminOrManagerOrSuper;
-  const canSeeExternalAudit = isAdminOrManagerOrSuper || hasRole('auditor');
-  const canSeeSettings = isAdminOrManagerOrSuper;
 
   const rolePriority = ['superuser', 'admin', 'manager', 'auditor', 'user', 'viewer'];
   const highestRoleLower = rolePriority.find(r => hasRole(r)) || '';
@@ -36,6 +33,70 @@ function Layout() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  // Check if a menu item should be visible
+  const isMenuItemVisible = (item: MenuItem): boolean => {
+    // Check module requirement
+    if (item.requiredModule && !isModuleEnabled(item.requiredModule)) {
+      return false;
+    }
+
+    // Check required role (must have ALL specified roles)
+    if (item.requiredRole && item.requiredRole.length > 0) {
+      const hasAllRoles = item.requiredRole.every(role => hasRole(role));
+      if (!hasAllRoles) return false;
+    }
+
+    // Check requireAnyRole (must have AT LEAST ONE specified role)
+    if (item.requireAnyRole && item.requireAnyRole.length > 0) {
+      const hasAnyRole = item.requireAnyRole.some(role => hasRole(role));
+      if (!hasAnyRole) return false;
+    }
+
+    // Check hideForRoles
+    if (item.hideForRoles && item.hideForRoles.length > 0) {
+      const shouldHide = item.hideForRoles.some(role => hasRole(role));
+      if (shouldHide) return false;
+    }
+
+    return true;
+  };
+
+  // Check if a submenu has any visible items
+  const hasVisibleSubmenuItems = (items?: MenuItem[]): boolean => {
+    if (!items || items.length === 0) return false;
+    return items.some(item => isMenuItemVisible(item));
+  };
+
+  // Render a menu item
+  const renderMenuItem = (item: MenuItem) => {
+    if (!isMenuItemVisible(item)) return null;
+
+    // Item with submenu
+    if (item.submenu && item.submenu.length > 0) {
+      if (!hasVisibleSubmenuItems(item.submenu)) return null;
+
+      return (
+        <li key={item.id} className="has-submenu">
+          <span className="menu-label">{t(item.label)}</span>
+          <ul className="submenu">
+            {item.submenu.map(subItem => renderMenuItem(subItem))}
+          </ul>
+        </li>
+      );
+    }
+
+    // Regular item with link
+    if (item.path) {
+      return (
+        <li key={item.id}>
+          <Link to={item.path}>{t(item.label)}</Link>
+        </li>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -59,138 +120,7 @@ function Layout() {
           )}
         </div>
         <ul className="navbar-menu">
-          {/* Dashboard - Always visible */}
-          <li><Link to="/">{t('navigation.dashboard')}</Link></li>
-
-          {/* Quality System */}
-          {(isModuleEnabled('documents') || isModuleEnabled('processes')) && (
-            <li className="has-submenu">
-              <span className="menu-label">{t('navigation.qualitySystem')}</span>
-              <ul className="submenu">
-                {isModuleEnabled('documents') && (
-                  <li><Link to="/documents">{t('navigation.documents')}</Link></li>
-                )}
-                {isModuleEnabled('processes') && (
-                  <li><Link to="/processes/overview">{t('navigation.processes')}</Link></li>
-                )}
-                <li><Link to="/pending-changes">{t('navigation.pendingChanges')}</Link></li>
-              </ul>
-            </li>
-          )}
-
-          {/* Operations & Quality Control */}
-          {(isModuleEnabled('audits') || isModuleEnabled('ncr') || isModuleEnabled('capa') || isModuleEnabled('inspection')) && (
-            <li className="has-submenu">
-              <span className="menu-label">{t('navigation.operations')}</span>
-              <ul className="submenu">
-                {isModuleEnabled('audits') && (
-                  <li><Link to="/audits">{t('navigation.audits')}</Link></li>
-                )}
-                {canSeeExternalAudit && isModuleEnabled('audits') && (
-                  <li><Link to="/external-audit-support">{t('navigation.externalAudit')}</Link></li>
-                )}
-                {isModuleEnabled('ncr') && (
-                  <li><Link to="/ncr">{t('navigation.ncr')}</Link></li>
-                )}
-                {isModuleEnabled('capa') && (
-                  <li><Link to="/capa">{t('navigation.capa')}</Link></li>
-                )}
-                {isModuleEnabled('inspection') && (
-                  <li><Link to="/inspection-mobile">{t('navigation.mobileInspection')}</Link></li>
-                )}
-              </ul>
-            </li>
-          )}
-
-          {/* Equipment & Assets */}
-          {isModuleEnabled('equipment') && (
-            <li className="has-submenu">
-              <span className="menu-label">{t('navigation.equipmentAssets')}</span>
-              <ul className="submenu">
-                <li><Link to="/equipment">{t('navigation.equipment')}</Link></li>
-                <li><Link to="/calibration-records">{t('navigation.calibrationRecords')}</Link></li>
-                <li><Link to="/service-records">{t('navigation.serviceRecords')}</Link></li>
-                {isModuleEnabled('inspection') && (
-                  <li><Link to="/inspection-records">{t('navigation.inspectionRecords')}</Link></li>
-                )}
-              </ul>
-            </li>
-          )}
-
-          {/* People & Organization */}
-          <li className="has-submenu">
-            <span className="menu-label">{t('navigation.peopleOrganization')}</span>
-            <ul className="submenu">
-              <li><Link to="/organizational-chart">{t('navigation.orgChart')}</Link></li>
-              {isModuleEnabled('training') && (
-                <>
-                  <li><Link to="/training">{t('navigation.training')}</Link></li>
-                  <li><Link to="/training-matrix">{t('navigation.trainingMatrix')}</Link></li>
-                  {canSeeRoleRequirements && (
-                    <li><Link to="/role-training-requirements">{t('navigation.roleRequirements')}</Link></li>
-                  )}
-                </>
-              )}
-              {isAdminOrManagerOrSuper && (
-                <>
-                  <li><Link to="/users">{t('navigation.users')}</Link></li>
-                  <li><Link to="/groups">{t('navigation.groups')}</Link></li>
-                  <li><Link to="/departments">{t('navigation.departments')}</Link></li>
-                </>
-              )}
-            </ul>
-          </li>
-
-          {/* Analysis & Improvement */}
-          {(isModuleEnabled('risks') || isModuleEnabled('improvements')) && (
-            <li className="has-submenu">
-              <span className="menu-label">{t('navigation.analysis')}</span>
-              <ul className="submenu">
-                {isModuleEnabled('risks') && (
-                  <>
-                    <li><Link to="/risks">{t('navigation.risks')}</Link></li>
-                    <li><Link to="/risks/board">{t('navigation.riskBoard')}</Link></li>
-                  </>
-                )}
-                {isModuleEnabled('improvements') && (
-                  <>
-                    <li><Link to="/improvement-ideas">{t('navigation.improvements')}</Link></li>
-                    <li><Link to="/swot-analysis">{t('navigation.swotAnalysis')}</Link></li>
-                  </>
-                )}
-              </ul>
-            </li>
-          )}
-
-          {/* Suppliers (if visible) */}
-          {isAdminOrManagerOrSuper && (
-            <li className="has-submenu">
-              <span className="menu-label">{t('navigation.suppliers')}</span>
-              <ul className="submenu">
-                <li><Link to="/supplier-performance">{t('navigation.supplierPerformance')}</Link></li>
-                <li><Link to="/approved-supplier-list">{t('navigation.approvedSuppliers')}</Link></li>
-              </ul>
-            </li>
-          )}
-
-          {/* Administration */}
-          {canSeeSettings && (
-            <li className="has-submenu">
-              <span className="menu-label">{t('navigation.admin')}</span>
-              <ul className="submenu">
-                <li><Link to="/settings">{t('navigation.settings')}</Link></li>
-                <li><Link to="/system-settings">{t('navigation.systemSettings')}</Link></li>
-                <li><Link to="/company-branding">{t('navigation.companyBranding')}</Link></li>
-                <li><Link to="/email-templates">{t('navigation.emailTemplates')}</Link></li>
-                <li><Link to="/api-keys">{t('navigation.apiKeys')}</Link></li>
-                <li><Link to="/backup-management">{t('navigation.backupManagement')}</Link></li>
-                <li><Link to="/audit-logs">{t('navigation.auditLogs')}</Link></li>
-                {hasRole('superuser') && (
-                  <li><Link to="/data-import">{t('navigation.dataImport')}</Link></li>
-                )}
-              </ul>
-            </li>
-          )}
+          {menuStructure.map(item => renderMenuItem(item))}
         </ul>
         <div className="navbar-user">
           <span className="user-info">
