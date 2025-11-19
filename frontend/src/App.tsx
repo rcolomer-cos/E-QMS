@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
+import ProtectedModuleRoute from './components/ProtectedModuleRoute';
 import Login from './pages/Login';
 import Setup from './pages/Setup';
 import LandingPage from './pages/LandingPage';
@@ -80,53 +81,53 @@ function App() {
       >
         <Route index element={<LandingPage />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="documents" element={<Documents />} />
-        <Route path="documents/:id" element={<DocumentView />} />
-        <Route path="documents/:id/edit" element={<DocumentEditor />} />
+        <Route path="documents" element={<ProtectedModuleRoute moduleKey="documents"><Documents /></ProtectedModuleRoute>} />
+        <Route path="documents/:id" element={<ProtectedModuleRoute moduleKey="documents"><DocumentView /></ProtectedModuleRoute>} />
+        <Route path="documents/:id/edit" element={<ProtectedModuleRoute moduleKey="documents"><DocumentEditor /></ProtectedModuleRoute>} />
         <Route path="tags" element={<Tags />} />
         <Route path="pending-changes" element={<PendingChanges />} />
-        <Route path="audits" element={<Audits />} />
-        <Route path="audits/:id/execute" element={<AuditExecution />} />
-        <Route path="audits/:auditId/findings" element={<AuditFindings />} />
-        <Route path="ncr" element={<NCR />} />
-        <Route path="ncr/dashboard" element={<NCRDashboard />} />
-        <Route path="ncr/:id" element={<NCRDetail />} />
-        <Route path="capa" element={<CAPA />} />
-        <Route path="capa/dashboard" element={<CAPADashboard />} />
-        <Route path="capa/:id" element={<CAPADetail />} />
-        <Route path="equipment" element={<Equipment />} />
-        <Route path="training" element={<Training />} />
-        <Route path="training-matrix" element={<TrainingMatrix />} />
-        <Route path="role-training-requirements" element={<RoleTrainingRequirements />} />
+        <Route path="audits" element={<ProtectedModuleRoute moduleKey="audits"><Audits /></ProtectedModuleRoute>} />
+        <Route path="audits/:id/execute" element={<ProtectedModuleRoute moduleKey="audits"><AuditExecution /></ProtectedModuleRoute>} />
+        <Route path="audits/:auditId/findings" element={<ProtectedModuleRoute moduleKey="audits"><AuditFindings /></ProtectedModuleRoute>} />
+        <Route path="ncr" element={<ProtectedModuleRoute moduleKey="ncr"><NCR /></ProtectedModuleRoute>} />
+        <Route path="ncr/dashboard" element={<ProtectedModuleRoute moduleKey="ncr"><NCRDashboard /></ProtectedModuleRoute>} />
+        <Route path="ncr/:id" element={<ProtectedModuleRoute moduleKey="ncr"><NCRDetail /></ProtectedModuleRoute>} />
+        <Route path="capa" element={<ProtectedModuleRoute moduleKey="capa"><CAPA /></ProtectedModuleRoute>} />
+        <Route path="capa/dashboard" element={<ProtectedModuleRoute moduleKey="capa"><CAPADashboard /></ProtectedModuleRoute>} />
+        <Route path="capa/:id" element={<ProtectedModuleRoute moduleKey="capa"><CAPADetail /></ProtectedModuleRoute>} />
+        <Route path="equipment" element={<ProtectedModuleRoute moduleKey="equipment"><Equipment /></ProtectedModuleRoute>} />
+        <Route path="training" element={<ProtectedModuleRoute moduleKey="training"><Training /></ProtectedModuleRoute>} />
+        <Route path="training-matrix" element={<ProtectedModuleRoute moduleKey="training"><TrainingMatrix /></ProtectedModuleRoute>} />
+        <Route path="role-training-requirements" element={<ProtectedModuleRoute moduleKey="training"><RoleTrainingRequirements /></ProtectedModuleRoute>} />
         <Route path="users" element={<Users />} />
         <Route path="groups" element={<GroupManagement />} />
         <Route path="groups/:id" element={<GroupDetail />} />
         <Route path="departments" element={<Departments />} />
         <Route path="organizational-chart" element={<OrganizationalChart />} />
-        <Route path="processes" element={<Processes />} />
-        <Route path="processes/overview" element={<ProcessOverview />} />
-        <Route path="processes/:id/detail" element={<ProcessDetail />} />
-        <Route path="calibration-records" element={<CalibrationRecords />} />
-        <Route path="calibration-records/:id" element={<CalibrationRecordDetail />} />
-        <Route path="inspection-records" element={<InspectionRecords />} />
-        <Route path="inspection-records/:id" element={<InspectionRecordDetail />} />
-        <Route path="inspection-mobile" element={<MobileInspectionForm />} />
-        <Route path="inspection-mobile/:id" element={<MobileInspectionForm />} />
-        <Route path="inspection-schedule" element={<InspectionSchedule />} />
-        <Route path="inspection-planning" element={<InspectionPlanning />} />
-        <Route path="service-records" element={<ServiceRecords />} />
-        <Route path="service-records/:id" element={<ServiceRecordDetail />} />
+        <Route path="processes" element={<ProtectedModuleRoute moduleKey="processes"><Processes /></ProtectedModuleRoute>} />
+        <Route path="processes/overview" element={<ProtectedModuleRoute moduleKey="processes"><ProcessOverview /></ProtectedModuleRoute>} />
+        <Route path="processes/:id/detail" element={<ProtectedModuleRoute moduleKey="processes"><ProcessDetail /></ProtectedModuleRoute>} />
+        <Route path="calibration-records" element={<ProtectedModuleRoute moduleKey="equipment"><CalibrationRecords /></ProtectedModuleRoute>} />
+        <Route path="calibration-records/:id" element={<ProtectedModuleRoute moduleKey="equipment"><CalibrationRecordDetail /></ProtectedModuleRoute>} />
+        <Route path="inspection-records" element={<ProtectedModuleRoute moduleKey="inspection"><InspectionRecords /></ProtectedModuleRoute>} />
+        <Route path="inspection-records/:id" element={<ProtectedModuleRoute moduleKey="inspection"><InspectionRecordDetail /></ProtectedModuleRoute>} />
+        <Route path="inspection-mobile" element={<ProtectedModuleRoute moduleKey="inspection"><MobileInspectionForm /></ProtectedModuleRoute>} />
+        <Route path="inspection-mobile/:id" element={<ProtectedModuleRoute moduleKey="inspection"><MobileInspectionForm /></ProtectedModuleRoute>} />
+        <Route path="inspection-schedule" element={<ProtectedModuleRoute moduleKey="inspection"><InspectionSchedule /></ProtectedModuleRoute>} />
+        <Route path="inspection-planning" element={<ProtectedModuleRoute moduleKey="inspection"><InspectionPlanning /></ProtectedModuleRoute>} />
+        <Route path="service-records" element={<ProtectedModuleRoute moduleKey="equipment"><ServiceRecords /></ProtectedModuleRoute>} />
+        <Route path="service-records/:id" element={<ProtectedModuleRoute moduleKey="equipment"><ServiceRecordDetail /></ProtectedModuleRoute>} />
         <Route path="audit-logs" element={<AuditLogs />} />
-        <Route path="external-audit-support" element={<ExternalAuditSupport />} />
-        <Route path="risks" element={<Risks />} />
-        <Route path="risks/board" element={<RiskBoard />} />
-        <Route path="risks/:id" element={<RiskDetail />} />
-        <Route path="swot-analysis" element={<SwotAnalysis />} />
+        <Route path="external-audit-support" element={<ProtectedModuleRoute moduleKey="audits"><ExternalAuditSupport /></ProtectedModuleRoute>} />
+        <Route path="risks" element={<ProtectedModuleRoute moduleKey="risks"><Risks /></ProtectedModuleRoute>} />
+        <Route path="risks/board" element={<ProtectedModuleRoute moduleKey="risks"><RiskBoard /></ProtectedModuleRoute>} />
+        <Route path="risks/:id" element={<ProtectedModuleRoute moduleKey="risks"><RiskDetail /></ProtectedModuleRoute>} />
+        <Route path="swot-analysis" element={<ProtectedModuleRoute moduleKey="improvements"><SwotAnalysis /></ProtectedModuleRoute>} />
         <Route path="supplier-performance" element={<SupplierPerformanceDashboard />} />
         <Route path="approved-supplier-list" element={<ApprovedSupplierList />} />
-        <Route path="improvement-ideas" element={<ImprovementIdeas />} />
-        <Route path="improvement-ideas/dashboard" element={<ImprovementStatusDashboard />} />
-        <Route path="improvement-ideas/:id" element={<ImprovementIdeaDetail />} />
+        <Route path="improvement-ideas" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementIdeas /></ProtectedModuleRoute>} />
+        <Route path="improvement-ideas/dashboard" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementStatusDashboard /></ProtectedModuleRoute>} />
+        <Route path="improvement-ideas/:id" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementIdeaDetail /></ProtectedModuleRoute>} />
         <Route path="email-templates" element={<EmailTemplates />} />
         <Route path="backup-management" element={<BackupManagement />} />
         <Route path="settings" element={<Settings />} />
