@@ -2,8 +2,19 @@ import { useState, useEffect } from 'react';
 import { Tree, TreeNode } from 'react-organizational-chart';
 import styled from 'styled-components';
 import { getOrganizationalHierarchy } from '../services/organizationalChartService';
-import { getDepartments, updateDepartment } from '../services/departmentService';
-import { updateProcess } from '../services/processService';
+import { 
+  getDepartments, 
+  updateDepartment, 
+  createDepartment,
+  CreateDepartmentData 
+} from '../services/departmentService';
+import { 
+  updateProcess, 
+  createProcess, 
+  assignProcessOwner, 
+  removeProcessOwner,
+  CreateProcessData
+} from '../services/processService';
 import { getUsers } from '../services/userService';
 import { useToast } from '../contexts/ToastContext';
 import { Department, Process, ProcessOwner, User } from '../types';
@@ -14,7 +25,7 @@ interface HierarchyData {
   orphanProcesses: Array<Process & { owners: ProcessOwner[] }>;
 }
 
-const StyledNode = styled.div`
+const StyledNode = styled.div<{ isDragging?: boolean; isOver?: boolean }>`
   padding: 12px 20px;
   border-radius: 8px;
   display: inline-block;
@@ -25,6 +36,13 @@ const StyledNode = styled.div`
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  opacity: ${props => props.isDragging ? 0.5 : 1};
+  
+  ${props => props.isOver && `
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+    transform: scale(1.02);
+  `}
 
   &:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -51,6 +69,50 @@ const StyledNode = styled.div`
     font-size: 0.9em;
     padding: 8px 16px;
   }
+
+  &.primary-owner {
+    background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%);
+    border-color: #d35400;
+    font-weight: 600;
+  }
+
+  &.manager {
+    background: linear-gradient(135deg, #3498db 0%, #9b59b6 100%);
+    border-color: #8e44ad;
+  }
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 8px;
+`;
+
+const ActionButton = styled.button`
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75em;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+`;
+
+const RoleBadge = styled.span`
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.7em;
+  margin-left: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+  font-weight: 600;
 `;
 
 const OrganizationalChart = () => {
@@ -64,6 +126,23 @@ const OrganizationalChart = () => {
   const [editingEntity, setEditingEntity] = useState<{ type: 'department' | 'process'; data: any } | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  
+  // New modals
+  const [showAddDepartmentModal, setShowAddDepartmentModal] = useState(false);
+  const [showAddProcessModal, setShowAddProcessModal] = useState(false);
+  const [showManageOwnersModal, setShowManageOwnersModal] = useState(false);
+  const [selectedProcess, setSelectedProcess] = useState<Process & { owners: ProcessOwner[] } | null>(null);
+  const [newDepartmentData, setNewDepartmentData] = useState<CreateDepartmentData>({
+    name: '',
+    code: '',
+    description: '',
+  });
+  const [newProcessData, setNewProcessData] = useState<CreateProcessData>({
+    name: '',
+    code: '',
+    description: '',
+    processCategory: 'Core',
+  });
 
   useEffect(() => {
     loadData();
@@ -144,25 +223,165 @@ const OrganizationalChart = () => {
     }
   };
 
+  const handleProcessDrop = async (processId: number, targetDepartmentId: number | null) => {
+    try {
+      await updateProcess(processId, {
+        departmentId: targetDepartmentId || undefined,
+      });
+      toast.showUpdateSuccess('Process moved');
+      loadData();
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'Failed to move process';
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleAddDepartment = async () => {
+    if (!newDepartmentData.name || !newDepartmentData.code) {
+      toast.error('Name and Code are required');
+      return;
+    }
+
+    try {
+      await createDepartment(newDepartmentData);
+      toast.success('Department created successfully');
+      setShowAddDepartmentModal(false);
+      setNewDepartmentData({ name: '', code: '', description: '' });
+      loadData();
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'Failed to create department';
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleAddProcess = async () => {
+    if (!newProcessData.name || !newProcessData.code) {
+      toast.error('Name and Code are required');
+      return;
+    }
+
+    try {
+      await createProcess(newProcessData);
+      toast.success('Process created successfully');
+      setShowAddProcessModal(false);
+      setNewProcessData({ name: '', code: '', description: '', processCategory: 'Core' });
+      loadData();
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'Failed to create process';
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleManageOwners = (process: Process & { owners: ProcessOwner[] }) => {
+    setSelectedProcess(process);
+    setShowManageOwnersModal(true);
+  };
+
+  const handleAssignOwner = async (ownerId: number, isPrimaryOwner: boolean) => {
+    if (!selectedProcess) return;
+
+    try {
+      await assignProcessOwner(selectedProcess.id, { ownerId, isPrimaryOwner });
+      toast.success('Process owner assigned successfully');
+      loadData();
+      // Refresh selected process
+      const updatedHierarchy = await getOrganizationalHierarchy();
+      const allProcesses = [
+        ...updatedHierarchy.departments.flatMap((d: any) => d.processes),
+        ...updatedHierarchy.orphanProcesses,
+      ];
+      const updated = allProcesses.find((p: any) => p.id === selectedProcess.id);
+      if (updated) setSelectedProcess(updated);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'Failed to assign owner';
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleRemoveOwner = async (ownerId: number) => {
+    if (!selectedProcess) return;
+
+    try {
+      await removeProcessOwner(selectedProcess.id, ownerId);
+      toast.success('Process owner removed successfully');
+      loadData();
+      // Refresh selected process
+      const updatedHierarchy = await getOrganizationalHierarchy();
+      const allProcesses = [
+        ...updatedHierarchy.departments.flatMap((d: any) => d.processes),
+        ...updatedHierarchy.orphanProcesses,
+      ];
+      const updated = allProcesses.find((p: any) => p.id === selectedProcess.id);
+      if (updated) setSelectedProcess(updated);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'Failed to remove owner';
+      toast.error(errorMsg);
+    }
+  };
+
   const renderUserNode = (owner: ProcessOwner) => (
     <TreeNode
       key={`owner-${owner.id}`}
       label={
-        <StyledNode className="user">
-          <div>{owner.ownerName}</div>
-          {owner.isPrimaryOwner && <div style={{ fontSize: '0.8em', marginTop: '4px' }}>⭐ Primary</div>}
+        <StyledNode className={owner.isPrimaryOwner ? "user primary-owner" : "user"}>
+          <div>
+            {owner.ownerName}
+            {owner.isPrimaryOwner && <RoleBadge>⭐ Primary</RoleBadge>}
+          </div>
+          {editMode && isAdmin() && (
+            <ActionButtons>
+              <ActionButton onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(`Remove ${owner.ownerName} from this process?`)) {
+                  handleRemoveOwner(owner.ownerId);
+                }
+              }}>
+                Remove
+              </ActionButton>
+            </ActionButtons>
+          )}
         </StyledNode>
       }
     />
   );
 
-  const renderProcessNode = (process: Process & { owners: ProcessOwner[] }) => (
-    <TreeNode
-      key={`process-${process.id}`}
-      label={
+  const DraggableProcessNode = ({ 
+    process, 
+    sourceDepartmentId 
+  }: { 
+    process: Process & { owners: ProcessOwner[] }; 
+    sourceDepartmentId?: number;
+  }) => {
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleDragStart = (e: React.DragEvent) => {
+      if (!editMode || !isAdmin()) {
+        e.preventDefault();
+        return;
+      }
+      setIsDragging(true);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        processId: process.id,
+        sourceDepartmentId
+      }));
+    };
+
+    const handleDragEnd = () => {
+      setIsDragging(false);
+    };
+
+    return (
+      <div
+        draggable={editMode && isAdmin()}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         <StyledNode
           className="process"
-          onClick={() => handleNodeClick('process', process)}
+          isDragging={isDragging}
+          onClick={() => !isDragging && handleNodeClick('process', process)}
+          style={{ cursor: editMode && isAdmin() ? 'move' : 'pointer' }}
         >
           <div style={{ fontWeight: 'bold' }}>{process.name}</div>
           <div style={{ fontSize: '0.85em', marginTop: '4px', opacity: 0.9 }}>
@@ -173,8 +392,31 @@ const OrganizationalChart = () => {
               {process.processCategory}
             </div>
           )}
+          {editMode && isAdmin() && (
+            <ActionButtons>
+              <ActionButton onClick={(e) => {
+                e.stopPropagation();
+                handleManageOwners(process);
+              }}>
+                👥 Owners
+              </ActionButton>
+              <ActionButton onClick={(e) => {
+                e.stopPropagation();
+                handleNodeClick('process', process);
+              }}>
+                ✏️ Edit
+              </ActionButton>
+            </ActionButtons>
+          )}
         </StyledNode>
-      }
+      </div>
+    );
+  };
+
+  const renderProcessNode = (process: Process & { owners: ProcessOwner[] }, departmentId?: number) => (
+    <TreeNode
+      key={`process-${process.id}`}
+      label={<DraggableProcessNode process={process} sourceDepartmentId={departmentId} />}
     >
       {process.owners && process.owners.length > 0 ? (
         process.owners.map(owner => renderUserNode(owner))
@@ -182,7 +424,21 @@ const OrganizationalChart = () => {
         <TreeNode
           label={
             <StyledNode className="user" style={{ opacity: 0.5 }}>
-              No assigned owners
+              {editMode && isAdmin() ? (
+                <>
+                  <div>No assigned owners</div>
+                  <ActionButtons>
+                    <ActionButton onClick={(e) => {
+                      e.stopPropagation();
+                      handleManageOwners(process);
+                    }}>
+                      Assign Owner
+                    </ActionButton>
+                  </ActionButtons>
+                </>
+              ) : (
+                'No assigned owners'
+              )}
             </StyledNode>
           }
         />
@@ -190,12 +446,47 @@ const OrganizationalChart = () => {
     </TreeNode>
   );
 
-  const renderDepartmentNode = (department: Department & { processes: Array<Process & { owners: ProcessOwner[] }> }) => (
-    <TreeNode
-      key={`dept-${department.id}`}
-      label={
+  const DroppableDepartmentNode = ({ 
+    department 
+  }: { 
+    department: Department & { processes: Array<Process & { owners: ProcessOwner[] }> };
+  }) => {
+    const [isOver, setIsOver] = useState(false);
+
+    const handleDragOver = (e: React.DragEvent) => {
+      if (!editMode || !isAdmin()) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setIsOver(true);
+    };
+
+    const handleDragLeave = () => {
+      setIsOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsOver(false);
+      
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        if (data.processId && data.sourceDepartmentId !== department.id) {
+          handleProcessDrop(data.processId, department.id);
+        }
+      } catch (error) {
+        console.error('Error parsing drop data:', error);
+      }
+    };
+
+    return (
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <StyledNode
-          className="department"
+          className={department.managerName ? "department manager" : "department"}
+          isOver={isOver}
           onClick={() => handleNodeClick('department', department)}
         >
           <div style={{ fontWeight: 'bold', fontSize: '1.1em' }}>{department.name}</div>
@@ -204,19 +495,41 @@ const OrganizationalChart = () => {
           </div>
           {department.managerName && (
             <div style={{ fontSize: '0.8em', marginTop: '4px', opacity: 0.8 }}>
-              Manager: {department.managerName}
+              👔 Manager: {department.managerName}
             </div>
           )}
+          {editMode && isAdmin() && isOver && (
+            <div style={{ fontSize: '0.75em', marginTop: '4px', fontStyle: 'italic' }}>
+              Drop to move process here
+            </div>
+          )}
+          {editMode && isAdmin() && (
+            <ActionButtons>
+              <ActionButton onClick={(e) => {
+                e.stopPropagation();
+                handleNodeClick('department', department);
+              }}>
+                ✏️ Edit
+              </ActionButton>
+            </ActionButtons>
+          )}
         </StyledNode>
-      }
+      </div>
+    );
+  };
+
+  const renderDepartmentNode = (department: Department & { processes: Array<Process & { owners: ProcessOwner[] }> }) => (
+    <TreeNode
+      key={`dept-${department.id}`}
+      label={<DroppableDepartmentNode department={department} />}
     >
       {department.processes && department.processes.length > 0 ? (
-        department.processes.map(process => renderProcessNode(process))
+        department.processes.map(process => renderProcessNode(process, department.id))
       ) : (
         <TreeNode
           label={
             <StyledNode className="process" style={{ opacity: 0.5 }}>
-              No processes assigned
+              {editMode && isAdmin() ? 'Drop a process here or add new' : 'No processes assigned'}
             </StyledNode>
           }
         />
@@ -258,12 +571,30 @@ const OrganizationalChart = () => {
         </div>
         <div className="header-actions">
           {isAdmin() && (
-            <button
-              className={editMode ? 'btn-secondary' : 'btn-primary'}
-              onClick={() => setEditMode(!editMode)}
-            >
-              {editMode ? 'Exit Edit Mode' : 'Edit Mode'}
-            </button>
+            <>
+              <button
+                className={editMode ? 'btn-secondary' : 'btn-primary'}
+                onClick={() => setEditMode(!editMode)}
+              >
+                {editMode ? 'Exit Edit Mode' : 'Edit Mode'}
+              </button>
+              {editMode && (
+                <>
+                  <button
+                    className="btn-primary"
+                    onClick={() => setShowAddDepartmentModal(true)}
+                  >
+                    + Add Department
+                  </button>
+                  <button
+                    className="btn-primary"
+                    onClick={() => setShowAddProcessModal(true)}
+                  >
+                    + Add Process
+                  </button>
+                </>
+              )}
+            </>
           )}
           <button className="btn-primary" onClick={loadData}>
             Refresh
@@ -273,8 +604,13 @@ const OrganizationalChart = () => {
 
       {editMode && isAdmin() && (
         <div className="edit-info">
-          <strong>Edit Mode Active:</strong> Click on any department or process to edit its details.
-          Use the Departments and Processes pages for more advanced editing options.
+          <strong>Edit Mode Active:</strong> 
+          <ul style={{ marginTop: '0.5rem', marginBottom: 0, paddingLeft: '1.5rem' }}>
+            <li>Drag processes to move them between departments</li>
+            <li>Click "👥 Owners" to assign/unassign process owners</li>
+            <li>Click "✏️ Edit" on departments or processes to edit details</li>
+            <li>Use "+ Add Department" and "+ Add Process" buttons to create new items</li>
+          </ul>
         </div>
       )}
 
@@ -320,6 +656,9 @@ const OrganizationalChart = () => {
                   borderColor: '#7f8c8d'
                 }}>
                   Unassigned Processes
+                  {editMode && isAdmin() && <div style={{ fontSize: '0.75em', marginTop: '4px', opacity: 0.9 }}>
+                    Drag these to departments
+                  </div>}
                 </StyledNode>
               }
             >
@@ -429,6 +768,241 @@ const OrganizationalChart = () => {
               </button>
               <button className="btn-primary" onClick={handleSaveEdit}>
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Department Modal */}
+      {showAddDepartmentModal && (
+        <div className="modal-overlay" onClick={() => setShowAddDepartmentModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add New Department</h2>
+              <button className="close-btn" onClick={() => setShowAddDepartmentModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Name *</label>
+                <input
+                  type="text"
+                  value={newDepartmentData.name}
+                  onChange={e => setNewDepartmentData({ ...newDepartmentData, name: e.target.value })}
+                  placeholder="e.g., Quality Assurance"
+                />
+              </div>
+              <div className="form-group">
+                <label>Code *</label>
+                <input
+                  type="text"
+                  value={newDepartmentData.code}
+                  onChange={e => setNewDepartmentData({ ...newDepartmentData, code: e.target.value })}
+                  placeholder="e.g., QA"
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={newDepartmentData.description || ''}
+                  onChange={e => setNewDepartmentData({ ...newDepartmentData, description: e.target.value })}
+                  rows={3}
+                  placeholder="Brief description of the department"
+                />
+              </div>
+              <div className="form-group">
+                <label>Manager</label>
+                <select
+                  value={newDepartmentData.managerId || ''}
+                  onChange={e => setNewDepartmentData({ 
+                    ...newDepartmentData, 
+                    managerId: e.target.value ? parseInt(e.target.value) : undefined 
+                  })}
+                >
+                  <option value="">No Manager</option>
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.firstName} {user.lastName} ({user.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowAddDepartmentModal(false)}>
+                Cancel
+              </button>
+              <button className="btn-primary" onClick={handleAddDepartment}>
+                Add Department
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Process Modal */}
+      {showAddProcessModal && (
+        <div className="modal-overlay" onClick={() => setShowAddProcessModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add New Process</h2>
+              <button className="close-btn" onClick={() => setShowAddProcessModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Name *</label>
+                <input
+                  type="text"
+                  value={newProcessData.name}
+                  onChange={e => setNewProcessData({ ...newProcessData, name: e.target.value })}
+                  placeholder="e.g., Document Control"
+                />
+              </div>
+              <div className="form-group">
+                <label>Code *</label>
+                <input
+                  type="text"
+                  value={newProcessData.code || ''}
+                  onChange={e => setNewProcessData({ ...newProcessData, code: e.target.value })}
+                  placeholder="e.g., DC-001"
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={newProcessData.description || ''}
+                  onChange={e => setNewProcessData({ ...newProcessData, description: e.target.value })}
+                  rows={3}
+                  placeholder="Brief description of the process"
+                />
+              </div>
+              <div className="form-group">
+                <label>Department</label>
+                <select
+                  value={newProcessData.departmentId || ''}
+                  onChange={e => setNewProcessData({ 
+                    ...newProcessData, 
+                    departmentId: e.target.value ? parseInt(e.target.value) : undefined 
+                  })}
+                >
+                  <option value="">No Department (Unassigned)</option>
+                  {departments.map(dept => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name} ({dept.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  value={newProcessData.processCategory || 'Core'}
+                  onChange={e => setNewProcessData({ ...newProcessData, processCategory: e.target.value })}
+                >
+                  <option value="Core">Core</option>
+                  <option value="Management">Management</option>
+                  <option value="Support">Support</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowAddProcessModal(false)}>
+                Cancel
+              </button>
+              <button className="btn-primary" onClick={handleAddProcess}>
+                Add Process
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Process Owners Modal */}
+      {showManageOwnersModal && selectedProcess && (
+        <div className="modal-overlay" onClick={() => setShowManageOwnersModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Manage Process Owners</h2>
+              <button className="close-btn" onClick={() => setShowManageOwnersModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <h3 style={{ marginBottom: '1rem', color: '#2c3e50' }}>
+                {selectedProcess.name} ({selectedProcess.code})
+              </h3>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ marginBottom: '0.5rem', color: '#34495e' }}>Current Owners</h4>
+                {selectedProcess.owners && selectedProcess.owners.length > 0 ? (
+                  <div className="owners-list">
+                    {selectedProcess.owners.map(owner => (
+                      <div key={owner.id} className="owner-item">
+                        <div>
+                          <strong>{owner.ownerName}</strong>
+                          {owner.isPrimaryOwner && <RoleBadge style={{ marginLeft: '8px', color: '#2c3e50' }}>⭐ Primary</RoleBadge>}
+                          <div style={{ fontSize: '0.85em', color: '#7f8c8d' }}>{owner.ownerEmail}</div>
+                        </div>
+                        <button 
+                          className="btn-secondary"
+                          style={{ padding: '0.5rem 1rem' }}
+                          onClick={() => {
+                            if (window.confirm(`Remove ${owner.ownerName} from this process?`)) {
+                              handleRemoveOwner(owner.ownerId);
+                            }
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: '#7f8c8d', fontStyle: 'italic' }}>No owners assigned yet</p>
+                )}
+              </div>
+
+              <div>
+                <h4 style={{ marginBottom: '0.5rem', color: '#34495e' }}>Assign New Owner</h4>
+                <div className="form-group">
+                  <label>Select User</label>
+                  <select id="new-owner-select">
+                    <option value="">Choose a user...</option>
+                    {users
+                      .filter(user => !selectedProcess.owners?.some(o => o.ownerId === user.id))
+                      .map(user => (
+                        <option key={user.id} value={user.id}>
+                          {user.firstName} {user.lastName} ({user.email})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input type="checkbox" id="is-primary-owner" />
+                    <span>Set as Primary Owner</span>
+                  </label>
+                </div>
+                <button 
+                  className="btn-primary"
+                  onClick={() => {
+                    const select = document.getElementById('new-owner-select') as HTMLSelectElement;
+                    const checkbox = document.getElementById('is-primary-owner') as HTMLInputElement;
+                    const ownerId = parseInt(select.value);
+                    if (ownerId) {
+                      handleAssignOwner(ownerId, checkbox.checked);
+                      select.value = '';
+                      checkbox.checked = false;
+                    } else {
+                      toast.error('Please select a user');
+                    }
+                  }}
+                >
+                  Assign Owner
+                </button>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowManageOwnersModal(false)}>
+                Close
               </button>
             </div>
           </div>
