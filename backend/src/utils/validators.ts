@@ -2059,3 +2059,76 @@ export const validateEmailTemplateUpdate = [
     .withMessage('isDefault must be a boolean'),
 ];
 
+// SWOT Entry Validators
+export const validateSwotEntry = [
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must be between 1 and 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('category')
+    .isIn(['Strength', 'Weakness', 'Opportunity', 'Threat'])
+    .withMessage('Category must be one of: Strength, Weakness, Opportunity, Threat'),
+  body('owner')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid owner ID'),
+  body('priority')
+    .optional()
+    .isIn(['low', 'medium', 'high', 'critical'])
+    .withMessage('Priority must be one of: low, medium, high, critical'),
+  body('reviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Review date must be a valid date'),
+  body('nextReviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Next review date must be a valid date'),
+  body('status')
+    .optional()
+    .isIn(['active', 'archived', 'addressed'])
+    .withMessage('Status must be one of: active, archived, addressed'),
+];
+
+export const validateSwotEntryUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Title must be between 1 and 500 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Description must not exceed 2000 characters'),
+  body('category')
+    .optional()
+    .isIn(['Strength', 'Weakness', 'Opportunity', 'Threat'])
+    .withMessage('Category must be one of: Strength, Weakness, Opportunity, Threat'),
+  body('owner')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Invalid owner ID'),
+  body('priority')
+    .optional()
+    .isIn(['low', 'medium', 'high', 'critical'])
+    .withMessage('Priority must be one of: low, medium, high, critical'),
+  body('reviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Review date must be a valid date'),
+  body('nextReviewDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Next review date must be a valid date'),
+  body('status')
+    .optional()
+    .isIn(['active', 'archived', 'addressed'])
+    .withMessage('Status must be one of: active, archived, addressed'),
+];
+

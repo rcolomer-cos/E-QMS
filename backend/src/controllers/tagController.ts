@@ -71,7 +71,7 @@ export const createTag = async (req: AuthRequest, res: Response): Promise<void> 
 /**
  * Get all tags
  */
-export const getTags = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getTags = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const tags = await TagModel.findAll();
     res.json(tags);
@@ -236,7 +236,7 @@ export const deleteTag = async (req: AuthRequest, res: Response): Promise<void> 
 /**
  * Get tag usage statistics
  */
-export const getTagUsage = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getTagUsage = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const usage = await TagModel.getTagUsageCount();
     res.json(usage);
