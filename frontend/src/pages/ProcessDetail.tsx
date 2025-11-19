@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getProcessById, getProcessDocuments, linkDocumentToProcess, unlinkDocumentFromProcess } from '../services/processService';
+import { getProcessById, getProcessDocuments, linkDocumentToProcess, unlinkDocumentFromProcess, updateProcess } from '../services/processService';
 import { getDocuments } from '../services/documentService';
 import { Document, Process } from '../types';
+import { useAuth } from '../services/authService';
+import FlowchartEditor from '../components/FlowchartEditor';
+import FlowchartViewer from '../components/FlowchartViewer';
 import '../styles/Processes.css';
 import '../styles/Documents.css';
 
 function ProcessDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [process, setProcess] = useState<Process | null>(null);
   const [linkedDocuments, setLinkedDocuments] = useState<any[]>([]);
   const [allDocuments, setAllDocuments] = useState<Document[]>([]);
@@ -16,6 +20,13 @@ function ProcessDetail() {
   const [error, setError] = useState('');
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Role checking helper
+  const normalizeRole = (r: string) => r?.trim().toLowerCase() || '';
+  const roleNames: string[] = ((user?.roles?.map(r => r.name)) || (user?.role ? [user.role as string] : [])) as string[];
+  const roleNamesLower = roleNames.map(normalizeRole);
+  const hasRole = (r: string) => roleNamesLower.includes(r.toLowerCase());
+  const canEditFlowchart = hasRole('superuser') || hasRole('manager');
 
   useEffect(() => {
     if (!id) return;
@@ -84,6 +95,39 @@ function ProcessDetail() {
     }
   };
 
+  const handleSaveFlowchart = async (flowchartData: { nodes: any[]; edges: any[] }) => {
+    if (!id || !process) return;
+    try {
+      await updateProcess(parseInt(id, 10), {
+        name: process.name,
+        code: process.code,
+        description: process.description,
+        departmentId: process.departmentId,
+        processCategory: process.processCategory,
+        processType: process.processType,
+        parentProcessId: process.parentProcessId,
+        displayOrder: process.displayOrder,
+        objective: process.objective,
+        scope: process.scope,
+        flowchartSvg: JSON.stringify(flowchartData)
+      });
+      await loadData();
+      setError('');
+      alert('Flowchart saved successfully!');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to save flowchart');
+    }
+  };
+
+  const flowchartData = useMemo(() => {
+    if (!process?.flowchartSvg) return null;
+    try {
+      return JSON.parse(process.flowchartSvg);
+    } catch {
+      return null;
+    }
+  }, [process?.flowchartSvg]);
+
   if (loading) return <div className="loading">Loading process...</div>;
   if (error || !process) return (
     <div className="processes-page">
@@ -107,10 +151,6 @@ function ProcessDetail() {
       <div className="process-detail">
         <div className="info-grid">
           <div className="info-item">
-            <label>Code</label>
-            <span className="code-badge">{process.code}</span>
-          </div>
-          <div className="info-item">
             <label>Type</label>
             <span>{process.processType || 'N/A'}</span>
           </div>
@@ -130,8 +170,13 @@ function ProcessDetail() {
 
         <section className="process-flowchart" style={{ marginTop: 16 }}>
           <h2>Flowchart</h2>
-          {process.flowchartSvg ? (
-            <div className="flowchart-container" dangerouslySetInnerHTML={{ __html: process.flowchartSvg }} />
+          {canEditFlowchart ? (
+            <FlowchartEditor
+              initialData={flowchartData || undefined}
+              onSave={handleSaveFlowchart}
+            />
+          ) : flowchartData ? (
+            <FlowchartViewer data={flowchartData} />
           ) : (
             <div className="no-data">No flowchart defined</div>
           )}
