@@ -6,6 +6,7 @@ import { getConnection } from '../config/database';
 import { NotificationService } from '../services/notificationService';
 import { logCreate, logUpdate, logDelete, AuditActionCategory } from '../services/auditLogService';
 import { DocumentContentModel } from '../models/DocumentContentModel';
+import { DocumentGroupModel } from '../models/DocumentGroupModel';
 import PDFDocument from 'pdfkit';
 
 export const createDocument = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -27,6 +28,15 @@ export const createDocument = async (req: AuthRequest, res: Response): Promise<v
     };
 
     const documentId = await DocumentModel.create(document);
+
+    // If groups are specified, assign them to the document
+    if (req.body.groupIds && Array.isArray(req.body.groupIds) && req.body.groupIds.length > 0) {
+      await DocumentGroupModel.assignGroupsToDocument(req.body.groupIds, documentId, req.user.id);
+      
+      // Notify all users in assigned groups
+      const actorName = `${req.user.firstName} ${req.user.lastName}`;
+      await NotificationService.notifyDocumentCreated(documentId, actorName);
+    }
 
     // Log audit entry
     await logCreate({
@@ -149,6 +159,30 @@ export const updateDocument = async (req: AuthRequest, res: Response): Promise<v
     const document = req.document;
     const updates = req.body;
     await DocumentModel.update(documentId, updates);
+
+    // If groups are being updated, handle group assignments
+    if (updates.groupIds && Array.isArray(updates.groupIds)) {
+      // Get current groups
+      const currentGroups = await DocumentGroupModel.findByDocumentId(documentId);
+      const currentGroupIds = currentGroups.map((g: any) => g.id);
+      
+      // Find groups to add and remove
+      const groupsToAdd = updates.groupIds.filter((id: number) => !currentGroupIds.includes(id));
+      const groupsToRemove = currentGroupIds.filter((id: number) => !updates.groupIds.includes(id));
+      
+      if (groupsToAdd.length > 0) {
+        await DocumentGroupModel.assignGroupsToDocument(groupsToAdd, documentId, req.user!.id);
+      }
+      if (groupsToRemove.length > 0) {
+        await DocumentGroupModel.removeGroupsFromDocument(groupsToRemove, documentId);
+      }
+      
+      // Notify all users in assigned groups about the update
+      if (groupsToAdd.length > 0 || updates.groupIds.length > 0) {
+        const actorName = req.user ? `${req.user.firstName} ${req.user.lastName}` : 'System';
+        await NotificationService.notifyDocumentUpdated(documentId, actorName);
+      }
+    }
 
     // Log audit entry
     await logUpdate({
@@ -717,5 +751,130 @@ export const getDocumentProcesses = async (req: AuthRequest, res: Response): Pro
   } catch (error) {
     console.error('Get document processes error:', error);
     res.status(500).json({ error: 'Failed to fetch document processes' });
+  }
+};
+
+/**
+ * Get all groups assigned to a document
+ */
+export const getDocumentGroups = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+
+    const groups = await DocumentGroupModel.findByDocumentId(documentId);
+
+    res.json(groups);
+  } catch (error) {
+    console.error('Get document groups error:', error);
+    res.status(500).json({ error: 'Failed to get document groups' });
+  }
+};
+
+/**
+ * Assign groups to a document
+ */
+export const assignGroupsToDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { groupIds } = req.body;
+
+    if (!Array.isArray(groupIds) || groupIds.length === 0) {
+      res.status(400).json({ error: 'groupIds must be a non-empty array' });
+      return;
+    }
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    await DocumentGroupModel.assignGroupsToDocument(groupIds, documentId, req.user.id);
+
+    // Notify all users in assigned groups
+    const actorName = `${req.user.firstName} ${req.user.lastName}`;
+    await NotificationService.notifyDocumentCreated(documentId, actorName);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: {},
+      newValues: { action: 'assign_groups', groupIds },
+    });
+
+    res.json({ message: 'Groups assigned to document successfully' });
+  } catch (error) {
+    console.error('Assign groups to document error:', error);
+    res.status(500).json({ error: 'Failed to assign groups to document' });
+  }
+};
+
+/**
+ * Remove groups from a document
+ */
+export const removeGroupsFromDocument = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const { id } = req.params;
+    const documentId = parseInt(id, 10);
+    const { groupIds } = req.body;
+
+    if (!Array.isArray(groupIds) || groupIds.length === 0) {
+      res.status(400).json({ error: 'groupIds must be a non-empty array' });
+      return;
+    }
+
+    // Check if document exists
+    const document = await DocumentModel.findById(documentId);
+    if (!document) {
+      res.status(404).json({ error: 'Document not found' });
+      return;
+    }
+
+    await DocumentGroupModel.removeGroupsFromDocument(groupIds, documentId);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.DOCUMENT,
+      entityType: 'Document',
+      entityId: documentId,
+      entityIdentifier: document.title,
+      oldValues: {},
+      newValues: { action: 'remove_groups', groupIds },
+    });
+
+    res.json({ message: 'Groups removed from document successfully' });
+  } catch (error) {
+    console.error('Remove groups from document error:', error);
+    res.status(500).json({ error: 'Failed to remove groups from document' });
   }
 };
