@@ -109,22 +109,36 @@
 }
 
 .btn-add {
-  background: rgba(255, 255, 255, 0.3);
-  border: 2px solid white;
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.8);
   color: white;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+  padding: 0;
 }
 
 .btn-add:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.4);
+  border-color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-add:active {
+  transform: scale(0.95);
 }
 
 .quadrant-content {
@@ -476,6 +490,65 @@
     font-size: 1rem;
   }
 }
+
+/* =============================================
+   Slim SWOT Entry Overrides (Issue #243)
+   ============================================= */
+.swot-entry {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.55rem;
+  margin: 0.25rem 0;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #fff;
+  line-height: 1.1;
+  cursor: pointer;
+  user-select: none;
+  transition: filter 0.15s ease, transform 0.15s ease;
+  min-height: 22px;
+  border-left: none !important;
+  box-shadow: none;
+}
+
+.swot-entry:hover { filter: brightness(1.1); }
+.swot-entry.dragging { filter: brightness(0.9) contrast(1.1); }
+
+.swot-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+/* Tooltip using description */
+.swot-entry[data-description]:hover::after {
+  content: attr(data-description);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  max-width: 240px;
+  white-space: normal;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  z-index: 20;
+}
+
+/* Remove legacy spacing reserved for drag grip */
+.swot-entry[draggable="true"]::before { display: none; }
+.swot-entry[draggable="true"] { cursor: move; }
+.swot-entry[draggable="true"]:hover { cursor: grab; }
+.swot-entry[draggable="true"]:active { cursor: grabbing; }
+
+/* Ensure category backgrounds provide contrast */
+.strengths .swot-entry { background: #388e3c; }
+.weaknesses .swot-entry { background: #d32f2f; }
+.opportunities .swot-entry { background: #1976d2; }
+.threats .swot-entry { background: #f57c00; }
+
 
 @media (max-width: 768px) {
   .swot-container {

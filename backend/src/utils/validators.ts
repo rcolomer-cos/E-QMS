@@ -2076,19 +2076,19 @@ export const validateSwotEntry = [
     .isIn(['Strength', 'Weakness', 'Opportunity', 'Threat'])
     .withMessage('Category must be one of: Strength, Weakness, Opportunity, Threat'),
   body('owner')
-    .optional()
+    .optional({ nullable: true })
     .isInt({ min: 1 })
     .withMessage('Invalid owner ID'),
   body('priority')
-    .optional()
+    .optional({ nullable: true })
     .isIn(['low', 'medium', 'high', 'critical'])
     .withMessage('Priority must be one of: low, medium, high, critical'),
   body('reviewDate')
-    .optional()
+    .optional({ nullable: true })
     .isISO8601()
     .withMessage('Review date must be a valid date'),
   body('nextReviewDate')
-    .optional()
+    .optional({ nullable: true })
     .isISO8601()
     .withMessage('Next review date must be a valid date'),
   body('status')
@@ -2097,6 +2097,7 @@ export const validateSwotEntry = [
     .withMessage('Status must be one of: active, archived, addressed'),
 ];
 
+// SWOT Entry Update Validator - allows null values for optional fields
 export const validateSwotEntryUpdate = [
   body('title')
     .optional()
@@ -2113,19 +2114,23 @@ export const validateSwotEntryUpdate = [
     .isIn(['Strength', 'Weakness', 'Opportunity', 'Threat'])
     .withMessage('Category must be one of: Strength, Weakness, Opportunity, Threat'),
   body('owner')
-    .optional()
+    .optional({ nullable: true })
     .isInt({ min: 1 })
     .withMessage('Invalid owner ID'),
   body('priority')
-    .optional()
+    .optional({ nullable: true })
     .isIn(['low', 'medium', 'high', 'critical'])
     .withMessage('Priority must be one of: low, medium, high, critical'),
+  body('displayOrder')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('displayOrder must be a positive integer'),
   body('reviewDate')
-    .optional()
+    .optional({ nullable: true })
     .isISO8601()
     .withMessage('Review date must be a valid date'),
   body('nextReviewDate')
-    .optional()
+    .optional({ nullable: true })
     .isISO8601()
     .withMessage('Next review date must be a valid date'),
   body('status')

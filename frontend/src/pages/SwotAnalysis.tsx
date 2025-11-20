@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   getSwotEntries,
   getSwotStatistics,
@@ -14,10 +15,12 @@ import {
   getCategoryColor,
 } from '../services/swotService';
 import { getUsers } from '../services/userService';
+import { getCurrentUser } from '../services/authService';
 import { User } from '../types';
 import '../styles/SwotAnalysis.css';
 
 function SwotAnalysis() {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<SwotEntry[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [statistics, setStatistics] = useState<SwotStatistics | null>(null);
@@ -50,7 +53,8 @@ function SwotAnalysis() {
 
   useEffect(() => {
     loadData();
-    loadCurrentUser();
+    const user = getCurrentUser();
+    setCurrentUser(user);
   }, [filters]);
 
   const loadData = async () => {
@@ -72,26 +76,13 @@ function SwotAnalysis() {
     }
   };
 
-  const loadCurrentUser = () => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        setCurrentUser(user);
-      } catch (err) {
-        console.error('Failed to parse user from localStorage:', err);
-      }
-    }
-  };
-
   const isAdmin = (): boolean => {
     return currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'superuser' || false;
   };
 
   const canModify = (): boolean => {
-    return currentUser?.role === 'admin' || 
-           currentUser?.role === 'manager' || 
-           currentUser?.role === 'superuser' || false;
+    // All authenticated users can modify SWOT entries
+    return currentUser !== null;
   };
 
   const handleCreateOrUpdate = async (e: React.FormEvent) => {
@@ -121,6 +112,7 @@ function SwotAnalysis() {
       reviewDate: entry.reviewDate?.split('T')[0],
       nextReviewDate: entry.nextReviewDate?.split('T')[0],
       status: entry.status,
+      displayOrder: entry.displayOrder,
     });
     setShowModal(true);
   };
@@ -302,85 +294,47 @@ function SwotAnalysis() {
   };
 
   if (loading) {
-    return <div className="loading">Loading SWOT Analysis...</div>;
+    return <div className="loading">{t('swot.loading')}</div>;
   }
 
   return (
     <div className="swot-container">
       <div className="swot-header">
         <div>
-          <h1>SWOT Analysis</h1>
-          <p>Strategic planning and management review</p>
+          <h1>{t('swot.swotTitle')}</h1>
+          <p>{t('swot.subtitle')}</p>
         </div>
         {canModify() && (
           <button className="btn-primary" onClick={() => openModal()}>
-            Add SWOT Entry
+            {t('swot.addEntry')}
           </button>
         )}
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
-      {/* Filters */}
-      <div className="swot-filters">
-        <div className="filter-group">
-          <label>Search:</label>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search entries..."
-          />
-        </div>
-        <div className="filter-group">
-          <label>Status:</label>
-          <select
-            value={filters.status || ''}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value || undefined })}
-          >
-            <option value="">All</option>
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
-            <option value="addressed">Addressed</option>
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Priority:</label>
-          <select
-            value={filters.priority || ''}
-            onChange={(e) => setFilters({ ...filters, priority: e.target.value || undefined })}
-          >
-            <option value="">All</option>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </div>
-      </div>
-
       {/* Statistics */}
       {statistics && (
         <div className="swot-stats">
           <div className="stat-card">
             <h3>{statistics.totalEntries}</h3>
-            <p>Total Entries</p>
+            <p>{t('swot.totalEntries')}</p>
           </div>
           <div className="stat-card">
             <h3>{statistics.byCategory.Strength || 0}</h3>
-            <p>Strengths</p>
+            <p>{t('swot.strengths')}</p>
           </div>
           <div className="stat-card">
             <h3>{statistics.byCategory.Weakness || 0}</h3>
-            <p>Weaknesses</p>
+            <p>{t('swot.weaknesses')}</p>
           </div>
           <div className="stat-card">
             <h3>{statistics.byCategory.Opportunity || 0}</h3>
-            <p>Opportunities</p>
+            <p>{t('swot.opportunities')}</p>
           </div>
           <div className="stat-card">
             <h3>{statistics.byCategory.Threat || 0}</h3>
-            <p>Threats</p>
+            <p>{t('swot.threats')}</p>
           </div>
         </div>
       )}
@@ -394,7 +348,7 @@ function SwotAnalysis() {
         >
           <div className="delete-zone-content">
             <span className="delete-icon">🗑️</span>
-            <p>Drop here to delete</p>
+            <p>{t('swot.dropToDelete')}</p>
           </div>
         </div>
       )}
@@ -410,47 +364,29 @@ function SwotAnalysis() {
           onDrop={(e) => handleDrop(e, 'Strength')}
         >
           <div className="quadrant-header" style={{ backgroundColor: getCategoryColor('Strength') }}>
-            <h2>Strengths</h2>
+            <h2>{t('swot.strengths')}</h2>
             {canModify() && (
               <button className="btn-add" onClick={() => openModal('Strength')}>+</button>
             )}
           </div>
           <div className="quadrant-content">
             {getEntriesByCategory('Strength').length === 0 ? (
-              <p className="empty-message">No strengths identified</p>
+              <p className="empty-message">{t('swot.noStrengths')}</p>
             ) : (
               getEntriesByCategory('Strength').map(entry => (
-                <div 
-                  key={entry.id} 
+                <div
+                  key={entry.id}
                   className="swot-entry"
                   data-entry-id={entry.id}
+                  data-description={entry.description || ''}
+                  title={entry.description || ''}
                   draggable={canModify()}
                   onDragStart={(e) => handleDragStart(e, entry)}
                   onDragEnd={handleDragEnd}
+                  onClick={() => { if (canModify()) handleEdit(entry); }}
+                  style={{ backgroundColor: getCategoryColor('Strength') }}
                 >
-                  <div className="entry-header">
-                    <h4>{entry.title}</h4>
-                    {entry.priority && (
-                      <span 
-                        className="priority-badge" 
-                        style={{ backgroundColor: getPriorityColor(entry.priority) }}
-                      >
-                        {entry.priority}
-                      </span>
-                    )}
-                  </div>
-                  {entry.description && <p>{entry.description}</p>}
-                  <div className="entry-meta">
-                    <span>Owner: {getUserName(entry.owner)}</span>
-                    {canModify() && (
-                      <div className="entry-actions">
-                        <button onClick={() => handleEdit(entry)}>Edit</button>
-                        {isAdmin() && (
-                          <button onClick={() => handleDelete(entry.id!)}>Delete</button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <span className="swot-title">{entry.title}</span>
                 </div>
               ))
             )}
@@ -466,47 +402,29 @@ function SwotAnalysis() {
           onDrop={(e) => handleDrop(e, 'Weakness')}
         >
           <div className="quadrant-header" style={{ backgroundColor: getCategoryColor('Weakness') }}>
-            <h2>Weaknesses</h2>
+            <h2>{t('swot.weaknesses')}</h2>
             {canModify() && (
               <button className="btn-add" onClick={() => openModal('Weakness')}>+</button>
             )}
           </div>
           <div className="quadrant-content">
             {getEntriesByCategory('Weakness').length === 0 ? (
-              <p className="empty-message">No weaknesses identified</p>
+              <p className="empty-message">{t('swot.noWeaknesses')}</p>
             ) : (
               getEntriesByCategory('Weakness').map(entry => (
-                <div 
-                  key={entry.id} 
+                <div
+                  key={entry.id}
                   className="swot-entry"
                   data-entry-id={entry.id}
+                  data-description={entry.description || ''}
+                  title={entry.description || ''}
                   draggable={canModify()}
                   onDragStart={(e) => handleDragStart(e, entry)}
                   onDragEnd={handleDragEnd}
+                  onClick={() => { if (canModify()) handleEdit(entry); }}
+                  style={{ backgroundColor: getCategoryColor('Weakness') }}
                 >
-                  <div className="entry-header">
-                    <h4>{entry.title}</h4>
-                    {entry.priority && (
-                      <span 
-                        className="priority-badge" 
-                        style={{ backgroundColor: getPriorityColor(entry.priority) }}
-                      >
-                        {entry.priority}
-                      </span>
-                    )}
-                  </div>
-                  {entry.description && <p>{entry.description}</p>}
-                  <div className="entry-meta">
-                    <span>Owner: {getUserName(entry.owner)}</span>
-                    {canModify() && (
-                      <div className="entry-actions">
-                        <button onClick={() => handleEdit(entry)}>Edit</button>
-                        {isAdmin() && (
-                          <button onClick={() => handleDelete(entry.id!)}>Delete</button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <span className="swot-title">{entry.title}</span>
                 </div>
               ))
             )}
@@ -522,47 +440,29 @@ function SwotAnalysis() {
           onDrop={(e) => handleDrop(e, 'Opportunity')}
         >
           <div className="quadrant-header" style={{ backgroundColor: getCategoryColor('Opportunity') }}>
-            <h2>Opportunities</h2>
+            <h2>{t('swot.opportunities')}</h2>
             {canModify() && (
               <button className="btn-add" onClick={() => openModal('Opportunity')}>+</button>
             )}
           </div>
           <div className="quadrant-content">
             {getEntriesByCategory('Opportunity').length === 0 ? (
-              <p className="empty-message">No opportunities identified</p>
+              <p className="empty-message">{t('swot.noOpportunities')}</p>
             ) : (
               getEntriesByCategory('Opportunity').map(entry => (
-                <div 
-                  key={entry.id} 
+                <div
+                  key={entry.id}
                   className="swot-entry"
                   data-entry-id={entry.id}
+                  data-description={entry.description || ''}
+                  title={entry.description || ''}
                   draggable={canModify()}
                   onDragStart={(e) => handleDragStart(e, entry)}
                   onDragEnd={handleDragEnd}
+                  onClick={() => { if (canModify()) handleEdit(entry); }}
+                  style={{ backgroundColor: getCategoryColor('Opportunity') }}
                 >
-                  <div className="entry-header">
-                    <h4>{entry.title}</h4>
-                    {entry.priority && (
-                      <span 
-                        className="priority-badge" 
-                        style={{ backgroundColor: getPriorityColor(entry.priority) }}
-                      >
-                        {entry.priority}
-                      </span>
-                    )}
-                  </div>
-                  {entry.description && <p>{entry.description}</p>}
-                  <div className="entry-meta">
-                    <span>Owner: {getUserName(entry.owner)}</span>
-                    {canModify() && (
-                      <div className="entry-actions">
-                        <button onClick={() => handleEdit(entry)}>Edit</button>
-                        {isAdmin() && (
-                          <button onClick={() => handleDelete(entry.id!)}>Delete</button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <span className="swot-title">{entry.title}</span>
                 </div>
               ))
             )}
@@ -578,47 +478,29 @@ function SwotAnalysis() {
           onDrop={(e) => handleDrop(e, 'Threat')}
         >
           <div className="quadrant-header" style={{ backgroundColor: getCategoryColor('Threat') }}>
-            <h2>Threats</h2>
+            <h2>{t('swot.threats')}</h2>
             {canModify() && (
               <button className="btn-add" onClick={() => openModal('Threat')}>+</button>
             )}
           </div>
           <div className="quadrant-content">
             {getEntriesByCategory('Threat').length === 0 ? (
-              <p className="empty-message">No threats identified</p>
+              <p className="empty-message">{t('swot.noThreats')}</p>
             ) : (
               getEntriesByCategory('Threat').map(entry => (
-                <div 
-                  key={entry.id} 
+                <div
+                  key={entry.id}
                   className="swot-entry"
                   data-entry-id={entry.id}
+                  data-description={entry.description || ''}
+                  title={entry.description || ''}
                   draggable={canModify()}
                   onDragStart={(e) => handleDragStart(e, entry)}
                   onDragEnd={handleDragEnd}
+                  onClick={() => { if (canModify()) handleEdit(entry); }}
+                  style={{ backgroundColor: getCategoryColor('Threat') }}
                 >
-                  <div className="entry-header">
-                    <h4>{entry.title}</h4>
-                    {entry.priority && (
-                      <span 
-                        className="priority-badge" 
-                        style={{ backgroundColor: getPriorityColor(entry.priority) }}
-                      >
-                        {entry.priority}
-                      </span>
-                    )}
-                  </div>
-                  {entry.description && <p>{entry.description}</p>}
-                  <div className="entry-meta">
-                    <span>Owner: {getUserName(entry.owner)}</span>
-                    {canModify() && (
-                      <div className="entry-actions">
-                        <button onClick={() => handleEdit(entry)}>Edit</button>
-                        {isAdmin() && (
-                          <button onClick={() => handleDelete(entry.id!)}>Delete</button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <span className="swot-title">{entry.title}</span>
                 </div>
               ))
             )}
@@ -630,23 +512,23 @@ function SwotAnalysis() {
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>{editingEntry ? 'Edit SWOT Entry' : 'Create SWOT Entry'}</h2>
+            <h2>{editingEntry ? t('swot.editEntry') : t('swot.createEntry')}</h2>
             <form onSubmit={handleCreateOrUpdate}>
               <div className="form-group">
-                <label>Category *</label>
+                <label>{t('swot.category')} *</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
                   required
                 >
-                  <option value="Strength">Strength</option>
-                  <option value="Weakness">Weakness</option>
-                  <option value="Opportunity">Opportunity</option>
-                  <option value="Threat">Threat</option>
+                  <option value="Strength">{t('swot.strength')}</option>
+                  <option value="Weakness">{t('swot.weakness')}</option>
+                  <option value="Opportunity">{t('swot.opportunity')}</option>
+                  <option value="Threat">{t('swot.threat')}</option>
                 </select>
               </div>
               <div className="form-group">
-                <label>Title *</label>
+                <label>{t('swot.title')} *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -656,7 +538,7 @@ function SwotAnalysis() {
                 />
               </div>
               <div className="form-group">
-                <label>Description</label>
+                <label>{t('swot.description')}</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -666,12 +548,12 @@ function SwotAnalysis() {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Owner</label>
+                  <label>{t('swot.owner')}</label>
                   <select
                     value={formData.owner || ''}
                     onChange={(e) => setFormData({ ...formData, owner: e.target.value ? parseInt(e.target.value) : undefined })}
                   >
-                    <option value="">Unassigned</option>
+                    <option value="">{t('swot.unassigned')}</option>
                     {users.map(user => (
                       <option key={user.id} value={user.id}>
                         {user.firstName} {user.lastName}
@@ -680,22 +562,22 @@ function SwotAnalysis() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Priority</label>
+                  <label>{t('swot.priority')}</label>
                   <select
                     value={formData.priority || ''}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value as any || undefined })}
                   >
-                    <option value="">None</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
+                    <option value="">{t('swot.none')}</option>
+                    <option value="low">{t('swot.low')}</option>
+                    <option value="medium">{t('swot.medium')}</option>
+                    <option value="high">{t('swot.high')}</option>
+                    <option value="critical">{t('swot.critical')}</option>
                   </select>
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Review Date</label>
+                  <label>{t('swot.reviewDate')}</label>
                   <input
                     type="date"
                     value={formData.reviewDate || ''}
@@ -703,7 +585,7 @@ function SwotAnalysis() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Next Review Date</label>
+                  <label>{t('swot.nextReviewDate')}</label>
                   <input
                     type="date"
                     value={formData.nextReviewDate || ''}
@@ -712,22 +594,42 @@ function SwotAnalysis() {
                 </div>
               </div>
               <div className="form-group">
-                <label>Status</label>
+                <label>{t('swot.status')}</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                 >
-                  <option value="active">Active</option>
-                  <option value="archived">Archived</option>
-                  <option value="addressed">Addressed</option>
+                  <option value="active">{t('swot.active')}</option>
+                  <option value="archived">{t('swot.archived')}</option>
+                  <option value="addressed">{t('swot.addressed')}</option>
                 </select>
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
-                  Cancel
+                  {t('common.cancel')}
                 </button>
+                {editingEntry && (
+                  <button 
+                    type="button" 
+                    className="btn-danger" 
+                    onClick={async () => {
+                      if (window.confirm(t('swot.confirmDelete'))) {
+                        try {
+                          await deleteSwotEntry(editingEntry.id!);
+                          setShowModal(false);
+                          resetForm();
+                          loadData();
+                        } catch (err: any) {
+                          setError(err.response?.data?.error || 'Failed to delete SWOT entry');
+                        }
+                      }
+                    }}
+                  >
+                    {t('common.delete')}
+                  </button>
+                )}
                 <button type="submit" className="btn-primary">
-                  {editingEntry ? 'Update' : 'Create'}
+                  {editingEntry ? t('common.update') : t('common.create')}
                 </button>
               </div>
             </form>
