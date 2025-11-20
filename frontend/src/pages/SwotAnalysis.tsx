@@ -5,6 +5,7 @@ import {
   createSwotEntry,
   updateSwotEntry,
   deleteSwotEntry,
+  reorderSwotEntries,
   CreateSwotEntryData,
   SwotEntry,
   SwotStatistics,
@@ -29,6 +30,11 @@ function SwotAnalysis() {
     status: 'active',
   });
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Drag and drop state
+  const [draggedEntry, setDraggedEntry] = useState<SwotEntry | null>(null);
+  const [dragOverCategory, setDragOverCategory] = useState<string | null>(null);
+  const [isDraggingOutside, setIsDraggingOutside] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<CreateSwotEntryData>({
@@ -169,6 +175,132 @@ function SwotAnalysis() {
     return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, entry: SwotEntry) => {
+    if (!canModify()) return;
+    setDraggedEntry(entry);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+    e.currentTarget.classList.add('dragging');
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.currentTarget.classList.remove('dragging');
+    setDraggedEntry(null);
+    setDragOverCategory(null);
+    setIsDraggingOutside(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent, category: string) => {
+    if (!draggedEntry || !canModify()) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverCategory(category);
+    setIsDraggingOutside(false);
+  };
+
+  const handleDragEnter = (e: React.DragEvent, category: string) => {
+    if (!draggedEntry || !canModify()) return;
+    e.preventDefault();
+    setDragOverCategory(category);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!draggedEntry || !canModify()) return;
+    // Check if we're leaving the SWOT matrix area
+    const target = e.currentTarget as HTMLElement;
+    if (!target.contains(e.relatedTarget as Node)) {
+      setDragOverCategory(null);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetCategory: string) => {
+    e.preventDefault();
+    if (!draggedEntry || !canModify()) return;
+
+    const categoryEntries = getEntriesByCategory(targetCategory);
+    const dropTarget = e.target as HTMLElement;
+    const entryElement = dropTarget.closest('.swot-entry');
+    
+    let newOrder: number;
+    let targetEntry: SwotEntry | undefined;
+
+    if (entryElement) {
+      const targetId = parseInt(entryElement.getAttribute('data-entry-id') || '0');
+      targetEntry = categoryEntries.find(e => e.id === targetId);
+    }
+
+    // Same category - reorder
+    if (draggedEntry.category === targetCategory) {
+      const filteredEntries = categoryEntries.filter(e => e.id !== draggedEntry.id);
+      
+      if (targetEntry) {
+        const targetIndex = filteredEntries.findIndex(e => e.id === targetEntry!.id);
+        filteredEntries.splice(targetIndex, 0, draggedEntry);
+      } else {
+        filteredEntries.push(draggedEntry);
+      }
+
+      // Update display orders
+      const orders = filteredEntries.map((entry, index) => ({
+        id: entry.id!,
+        displayOrder: index + 1,
+      }));
+
+      try {
+        await reorderSwotEntries(orders);
+        await loadData();
+      } catch (err: any) {
+        setError(err.response?.data?.error || 'Failed to reorder entries');
+      }
+    } else {
+      // Different category - update category and position
+      newOrder = targetEntry ? targetEntry.displayOrder! : categoryEntries.length + 1;
+      
+      try {
+        await updateSwotEntry(draggedEntry.id!, {
+          category: targetCategory as any,
+          displayOrder: newOrder,
+        });
+        await loadData();
+      } catch (err: any) {
+        setError(err.response?.data?.error || 'Failed to move entry');
+      }
+    }
+
+    setDraggedEntry(null);
+    setDragOverCategory(null);
+  };
+
+  const handleDeleteZoneDragOver = (e: React.DragEvent) => {
+    if (!draggedEntry || !canModify() || !isAdmin()) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDraggingOutside(true);
+    setDragOverCategory(null);
+  };
+
+  const handleDeleteZoneDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedEntry || !canModify() || !isAdmin()) return;
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${draggedEntry.title}"? This action cannot be undone.`
+    );
+
+    if (confirmDelete) {
+      try {
+        await deleteSwotEntry(draggedEntry.id!);
+        await loadData();
+      } catch (err: any) {
+        setError(err.response?.data?.error || 'Failed to delete entry');
+      }
+    }
+
+    setDraggedEntry(null);
+    setIsDraggingOutside(false);
+  };
+
   if (loading) {
     return <div className="loading">Loading SWOT Analysis...</div>;
   }
@@ -253,10 +385,30 @@ function SwotAnalysis() {
         </div>
       )}
 
+      {/* Delete Zone - shown when dragging */}
+      {draggedEntry && isAdmin() && (
+        <div 
+          className={`delete-zone ${isDraggingOutside ? 'active' : ''}`}
+          onDragOver={handleDeleteZoneDragOver}
+          onDrop={handleDeleteZoneDrop}
+        >
+          <div className="delete-zone-content">
+            <span className="delete-icon">🗑️</span>
+            <p>Drop here to delete</p>
+          </div>
+        </div>
+      )}
+
       {/* SWOT Matrix */}
       <div className="swot-matrix">
         {/* Strengths Quadrant */}
-        <div className="swot-quadrant strengths">
+        <div 
+          className={`swot-quadrant strengths ${dragOverCategory === 'Strength' ? 'drag-over' : ''}`}
+          onDragOver={(e) => handleDragOver(e, 'Strength')}
+          onDragEnter={(e) => handleDragEnter(e, 'Strength')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'Strength')}
+        >
           <div className="quadrant-header" style={{ backgroundColor: getCategoryColor('Strength') }}>
             <h2>Strengths</h2>
             {canModify() && (
@@ -268,7 +420,14 @@ function SwotAnalysis() {
               <p className="empty-message">No strengths identified</p>
             ) : (
               getEntriesByCategory('Strength').map(entry => (
-                <div key={entry.id} className="swot-entry">
+                <div 
+                  key={entry.id} 
+                  className="swot-entry"
+                  data-entry-id={entry.id}
+                  draggable={canModify()}
+                  onDragStart={(e) => handleDragStart(e, entry)}
+                  onDragEnd={handleDragEnd}
+                >
                   <div className="entry-header">
                     <h4>{entry.title}</h4>
                     {entry.priority && (
@@ -299,7 +458,13 @@ function SwotAnalysis() {
         </div>
 
         {/* Weaknesses Quadrant */}
-        <div className="swot-quadrant weaknesses">
+        <div 
+          className={`swot-quadrant weaknesses ${dragOverCategory === 'Weakness' ? 'drag-over' : ''}`}
+          onDragOver={(e) => handleDragOver(e, 'Weakness')}
+          onDragEnter={(e) => handleDragEnter(e, 'Weakness')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'Weakness')}
+        >
           <div className="quadrant-header" style={{ backgroundColor: getCategoryColor('Weakness') }}>
             <h2>Weaknesses</h2>
             {canModify() && (
@@ -311,7 +476,14 @@ function SwotAnalysis() {
               <p className="empty-message">No weaknesses identified</p>
             ) : (
               getEntriesByCategory('Weakness').map(entry => (
-                <div key={entry.id} className="swot-entry">
+                <div 
+                  key={entry.id} 
+                  className="swot-entry"
+                  data-entry-id={entry.id}
+                  draggable={canModify()}
+                  onDragStart={(e) => handleDragStart(e, entry)}
+                  onDragEnd={handleDragEnd}
+                >
                   <div className="entry-header">
                     <h4>{entry.title}</h4>
                     {entry.priority && (
@@ -342,7 +514,13 @@ function SwotAnalysis() {
         </div>
 
         {/* Opportunities Quadrant */}
-        <div className="swot-quadrant opportunities">
+        <div 
+          className={`swot-quadrant opportunities ${dragOverCategory === 'Opportunity' ? 'drag-over' : ''}`}
+          onDragOver={(e) => handleDragOver(e, 'Opportunity')}
+          onDragEnter={(e) => handleDragEnter(e, 'Opportunity')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'Opportunity')}
+        >
           <div className="quadrant-header" style={{ backgroundColor: getCategoryColor('Opportunity') }}>
             <h2>Opportunities</h2>
             {canModify() && (
@@ -354,7 +532,14 @@ function SwotAnalysis() {
               <p className="empty-message">No opportunities identified</p>
             ) : (
               getEntriesByCategory('Opportunity').map(entry => (
-                <div key={entry.id} className="swot-entry">
+                <div 
+                  key={entry.id} 
+                  className="swot-entry"
+                  data-entry-id={entry.id}
+                  draggable={canModify()}
+                  onDragStart={(e) => handleDragStart(e, entry)}
+                  onDragEnd={handleDragEnd}
+                >
                   <div className="entry-header">
                     <h4>{entry.title}</h4>
                     {entry.priority && (
@@ -385,7 +570,13 @@ function SwotAnalysis() {
         </div>
 
         {/* Threats Quadrant */}
-        <div className="swot-quadrant threats">
+        <div 
+          className={`swot-quadrant threats ${dragOverCategory === 'Threat' ? 'drag-over' : ''}`}
+          onDragOver={(e) => handleDragOver(e, 'Threat')}
+          onDragEnter={(e) => handleDragEnter(e, 'Threat')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'Threat')}
+        >
           <div className="quadrant-header" style={{ backgroundColor: getCategoryColor('Threat') }}>
             <h2>Threats</h2>
             {canModify() && (
@@ -397,7 +588,14 @@ function SwotAnalysis() {
               <p className="empty-message">No threats identified</p>
             ) : (
               getEntriesByCategory('Threat').map(entry => (
-                <div key={entry.id} className="swot-entry">
+                <div 
+                  key={entry.id} 
+                  className="swot-entry"
+                  data-entry-id={entry.id}
+                  draggable={canModify()}
+                  onDragStart={(e) => handleDragStart(e, entry)}
+                  onDragEnd={handleDragEnd}
+                >
                   <div className="entry-header">
                     <h4>{entry.title}</h4>
                     {entry.priority && (

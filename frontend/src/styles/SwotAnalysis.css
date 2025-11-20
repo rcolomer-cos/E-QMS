@@ -341,10 +341,139 @@
   margin-bottom: 1rem;
 }
 
+/* Drag and Drop Styles */
+.swot-entry[draggable="true"] {
+  cursor: move;
+  user-select: none;
+}
+
+.swot-entry.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.swot-quadrant.drag-over {
+  background: rgba(25, 118, 210, 0.05);
+  border: 2px dashed #1976d2;
+}
+
+.swot-quadrant.drag-over .quadrant-content {
+  background: rgba(25, 118, 210, 0.02);
+}
+
+/* Delete Zone */
+.delete-zone {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 200px;
+  background: rgba(211, 47, 47, 0.1);
+  border: 3px dashed #d32f2f;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.delete-zone.active {
+  opacity: 1;
+  background: rgba(211, 47, 47, 0.2);
+  border-color: #b71c1c;
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 8px 24px rgba(211, 47, 47, 0.3);
+}
+
+.delete-zone-content {
+  text-align: center;
+  color: #d32f2f;
+}
+
+.delete-zone.active .delete-zone-content {
+  color: #b71c1c;
+}
+
+.delete-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+  animation: shake 0.5s ease-in-out infinite;
+}
+
+.delete-zone.active .delete-icon {
+  animation: shake 0.3s ease-in-out infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px) rotate(-5deg); }
+  75% { transform: translateX(5px) rotate(5deg); }
+}
+
+.delete-zone p {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Drag Handle Visual Cue */
+.swot-entry[draggable="true"]:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: grab;
+}
+
+.swot-entry[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Add subtle grip indicator */
+.swot-entry[draggable="true"]::before {
+  content: '⋮⋮';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ccc;
+  font-size: 1rem;
+  letter-spacing: -2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.swot-entry[draggable="true"]:hover::before {
+  opacity: 0.5;
+}
+
+.swot-entry {
+  position: relative;
+  padding-left: 2rem;
+}
+
 /* Responsive design */
 @media (max-width: 1024px) {
   .swot-matrix {
     grid-template-columns: 1fr;
+  }
+
+  .delete-zone {
+    width: 250px;
+    height: 150px;
+  }
+
+  .delete-icon {
+    font-size: 2rem;
+  }
+
+  .delete-zone p {
+    font-size: 1rem;
   }
 }
 
@@ -369,5 +498,19 @@
 
   .swot-stats {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .delete-zone {
+    width: 200px;
+    height: 120px;
+  }
+
+  .delete-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .delete-zone p {
+    font-size: 0.875rem;
   }
 }

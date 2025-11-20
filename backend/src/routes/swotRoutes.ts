@@ -6,6 +6,7 @@ import {
   updateSwotEntry,
   deleteSwotEntry,
   getSwotStatistics,
+  reorderSwotEntries,
 } from '../controllers/swotController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { validateId, validateSwotEntry, validateSwotEntryUpdate } from '../utils/validators';
@@ -19,6 +20,9 @@ router.use(authenticateToken);
 
 // Get SWOT statistics - Accessible to all authenticated users
 router.get('/statistics', getSwotStatistics);
+
+// Reorder SWOT entries - Requires ADMIN or MANAGER role
+router.post('/reorder', authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), reorderSwotEntries);
 
 // Create SWOT entry - Requires ADMIN or MANAGER role
 router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), validateSwotEntry, createSwotEntry);

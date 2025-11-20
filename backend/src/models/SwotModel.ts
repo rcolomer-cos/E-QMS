@@ -10,6 +10,7 @@ export interface SwotEntry {
   reviewDate?: Date;
   nextReviewDate?: Date;
   status: 'active' | 'archived' | 'addressed';
+  displayOrder?: number;
   createdBy: number;
   createdAt?: Date;
   updatedAt?: Date;
@@ -36,6 +37,16 @@ export class SwotModel {
   static async create(entry: SwotEntry): Promise<number> {
     const pool = await getConnection();
 
+    // Get next displayOrder for the category
+    let displayOrder = entry.displayOrder;
+    if (displayOrder === undefined) {
+      const maxOrderResult = await pool
+        .request()
+        .input('category', sql.NVarChar, entry.category)
+        .query('SELECT ISNULL(MAX(displayOrder), 0) + 1 as nextOrder FROM SwotEntries WHERE category = @category');
+      displayOrder = maxOrderResult.recordset[0].nextOrder;
+    }
+
     const result = await pool
       .request()
       .input('title', sql.NVarChar, entry.title)
@@ -46,16 +57,17 @@ export class SwotModel {
       .input('reviewDate', sql.DateTime2, entry.reviewDate || null)
       .input('nextReviewDate', sql.DateTime2, entry.nextReviewDate || null)
       .input('status', sql.NVarChar, entry.status)
+      .input('displayOrder', sql.Int, displayOrder)
       .input('createdBy', sql.Int, entry.createdBy)
       .query(`
         INSERT INTO SwotEntries (
           title, description, category, owner, priority,
-          reviewDate, nextReviewDate, status, createdBy
+          reviewDate, nextReviewDate, status, displayOrder, createdBy
         )
         OUTPUT INSERTED.id
         VALUES (
           @title, @description, @category, @owner, @priority,
-          @reviewDate, @nextReviewDate, @status, @createdBy
+          @reviewDate, @nextReviewDate, @status, @displayOrder, @createdBy
         )
       `);
 
@@ -101,8 +113,8 @@ export class SwotModel {
       query += ' AND owner = @owner';
     }
 
-    // Default ordering by category and creation date
-    query += ' ORDER BY category, createdAt DESC';
+    // Order by category and displayOrder (or creation date as fallback)
+    query += ' ORDER BY category, displayOrder, createdAt DESC';
 
     const result = await request.query(query);
     return result.recordset;
@@ -176,5 +188,31 @@ export class SwotModel {
       byStatus,
       byPriority,
     };
+  }
+
+  /**
+   * Reorder SWOT entries within a category
+   */
+  static async reorder(orders: Array<{ id: number; displayOrder: number }>): Promise<void> {
+    const pool = await getConnection();
+    
+    // Use transaction for batch update
+    const transaction = pool.transaction();
+    await transaction.begin();
+    
+    try {
+      for (const { id, displayOrder } of orders) {
+        await transaction
+          .request()
+          .input('id', sql.Int, id)
+          .input('displayOrder', sql.Int, displayOrder)
+          .query('UPDATE SwotEntries SET displayOrder = @displayOrder, updatedAt = GETDATE() WHERE id = @id');
+      }
+      
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 }

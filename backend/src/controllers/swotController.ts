@@ -181,3 +181,44 @@ export const getSwotStatistics = async (_req: AuthRequest, res: Response): Promi
     res.status(500).json({ error: 'Failed to get SWOT statistics' });
   }
 };
+
+/**
+ * Reorder SWOT entries
+ */
+export const reorderSwotEntries = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // Validate input
+    const { orders } = req.body;
+    
+    if (!Array.isArray(orders)) {
+      res.status(400).json({ error: 'Orders must be an array' });
+      return;
+    }
+
+    // Validate each order item
+    for (const order of orders) {
+      if (typeof order.id !== 'number' || typeof order.displayOrder !== 'number') {
+        res.status(400).json({ error: 'Each order must have id and displayOrder as numbers' });
+        return;
+      }
+    }
+
+    await SwotModel.reorder(orders);
+
+    // Log audit entry
+    await logUpdate({
+      req,
+      actionCategory: AuditActionCategory.STRATEGIC_PLANNING,
+      entityType: 'SwotEntry',
+      entityId: 0,
+      entityIdentifier: 'Bulk Reorder',
+      oldValues: {},
+      newValues: { orders },
+    });
+
+    res.json({ message: 'SWOT entries reordered successfully' });
+  } catch (error) {
+    console.error('Reorder SWOT entries error:', error);
+    res.status(500).json({ error: 'Failed to reorder SWOT entries' });
+  }
+};

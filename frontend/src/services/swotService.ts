@@ -10,6 +10,7 @@ export interface SwotEntry {
   reviewDate?: string;
   nextReviewDate?: string;
   status: 'active' | 'archived' | 'addressed';
+  displayOrder?: number;
   createdBy?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -35,6 +36,7 @@ export interface UpdateSwotEntryData {
   reviewDate?: string;
   nextReviewDate?: string;
   status?: 'active' | 'archived' | 'addressed';
+  displayOrder?: number;
 }
 
 export interface SwotListResponse {
@@ -142,4 +144,11 @@ export const deleteSwotEntry = async (id: number): Promise<void> => {
 export const getSwotStatistics = async (): Promise<SwotStatistics> => {
   const response = await api.get('/swot/statistics');
   return response.data;
+};
+
+/**
+ * Reorder SWOT entries
+ */
+export const reorderSwotEntries = async (orders: Array<{ id: number; displayOrder: number }>): Promise<void> => {
+  await api.post('/swot/reorder', { orders });
 };
