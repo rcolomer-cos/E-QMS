@@ -23,15 +23,15 @@ router.use('/*/submit-for-review', authenticateToken);
 router.use('/*/approve', authenticateToken);
 router.use('/*/reject', authenticateToken);
 
-router.post('/', authenticateToken, createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), createAudit);
+router.post('/', authenticateToken, createLimiter, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), createAudit);
 router.get('/', flexibleAuth, enforceReadOnly, checkResourceScope('audit'), logAuditorAccess('audit'), getAudits);
 router.get('/:id', flexibleAuth, validateId, enforceReadOnly, checkResourceScope('audit'), logAuditorAccess('audit'), getAuditById);
-router.put('/:id', authenticateToken, validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), updateAudit);
-router.delete('/:id', authenticateToken, validateId, authorizeRoles(UserRole.ADMIN), deleteAudit);
+router.put('/:id', authenticateToken, validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), updateAudit);
+router.delete('/:id', authenticateToken, validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN), deleteAudit);
 
 // Approval workflow routes
-router.post('/:id/submit-for-review', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), submitAuditForReview);
-router.post('/:id/approve', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), approveAudit);
-router.post('/:id/reject', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), rejectAudit);
+router.post('/:id/submit-for-review', validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), submitAuditForReview);
+router.post('/:id/approve', validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER), approveAudit);
+router.post('/:id/reject', validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER), rejectAudit);
 
 export default router;

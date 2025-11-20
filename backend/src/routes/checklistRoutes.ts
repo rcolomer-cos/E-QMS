@@ -48,27 +48,27 @@ router.get('/templates/active', getActiveTemplates);
 // Get template by ID
 router.get('/templates/:id', validateId, getTemplateById);
 
-// Create template (admin, manager, auditor)
+// Create template (superuser, admin, manager, auditor)
 router.post(
   '/templates',
   createLimiter,
-  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
   createTemplate
 );
 
-// Update template (admin, manager, auditor)
+// Update template (superuser, admin, manager, auditor)
 router.put(
   '/templates/:id',
   validateId,
-  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
   updateTemplate
 );
 
-// Delete template (admin only)
+// Delete template (superuser, admin only)
 router.delete(
   '/templates/:id',
   validateId,
-  authorizeRoles(UserRole.ADMIN),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN),
   deleteTemplate
 );
 
@@ -82,35 +82,35 @@ router.get('/templates/:templateId/questions', validateId, getQuestionsByTemplat
 // Get question by ID
 router.get('/questions/:id', validateId, getQuestionById);
 
-// Create question (admin, manager, auditor)
+// Create question (superuser, admin, manager, auditor)
 router.post(
   '/questions',
   createLimiter,
-  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
   createQuestion
 );
 
-// Update question (admin, manager, auditor)
+// Update question (superuser, admin, manager, auditor)
 router.put(
   '/questions/:id',
   validateId,
-  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
   updateQuestion
 );
 
-// Delete question (admin only)
+// Delete question (superuser, admin only)
 router.delete(
   '/questions/:id',
   validateId,
-  authorizeRoles(UserRole.ADMIN),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN),
   deleteQuestion
 );
 
-// Reorder questions in a template (admin, manager, auditor)
+// Reorder questions in a template (superuser, admin, manager, auditor)
 router.put(
   '/templates/:templateId/questions/reorder',
   validateId,
-  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
   reorderQuestions
 );
 
@@ -139,27 +139,27 @@ router.get('/audits/:auditId/completion-stats', validateId, getAuditCompletionSt
 // Get response by ID
 router.get('/responses/:id', validateId, getResponseById);
 
-// Create response (auditor and above)
+// Create response (superuser, admin, manager, auditor)
 router.post(
   '/responses',
   createLimiter,
-  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
   createResponse
 );
 
-// Update response (auditor and above)
+// Update response (superuser, admin, manager, auditor)
 router.put(
   '/responses/:id',
   validateId,
-  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR),
   updateResponse
 );
 
-// Delete response (admin only)
+// Delete response (superuser, admin only)
 router.delete(
   '/responses/:id',
   validateId,
-  authorizeRoles(UserRole.ADMIN),
+  authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN),
   deleteResponse
 );
 

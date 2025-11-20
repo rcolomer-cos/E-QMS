@@ -35,8 +35,8 @@ function EditAudit() {
         getAuditById(parseInt(id, 10)),
       ]);
       const auditorCandidates = usersData.filter(u => {
-        const roleNames: string[] = (u as any).roleNames || ((u as any).roles?.map((r: any) => r.name)) || (u as any).role ? [(u as any).role] : [];
-        return roleNames.some(r => ['manager','superuser'].includes(r.toLowerCase()));
+        const roleNames: string[] = u.roleNames || u.roles?.map((r: any) => r.name) || (u.role ? [u.role] : []);
+        return roleNames.some(r => ['manager','superuser','auditor'].includes(r.toLowerCase()));
       });
       setUsers(auditorCandidates);
       setAudit(auditData);

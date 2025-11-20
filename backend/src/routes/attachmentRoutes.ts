@@ -53,7 +53,7 @@ router.get('/:id/download', validateId, downloadAttachment);
 // Update attachment metadata - Accessible to authenticated users
 router.put('/:id', validateId, validateAttachmentUpdate, updateAttachment);
 
-// Delete attachment - Requires ADMIN or MANAGER role
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), deleteAttachment);
+// Delete attachment - Requires SUPERUSER, ADMIN, MANAGER, or AUDITOR role
+router.delete('/:id', validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), deleteAttachment);
 
 export default router;

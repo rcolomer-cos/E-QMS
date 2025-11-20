@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Attachment, getAttachmentDownloadUrl, isImageFile, isPdfFile, formatFileSize, getFileTypeIcon } from '../services/attachmentService';
+import { Attachment, getAttachmentDownloadUrl, downloadAttachment, isImageFile, isPdfFile, formatFileSize, getFileTypeIcon } from '../services/attachmentService';
 import '../styles/AttachmentGallery.css';
 
 interface AttachmentGalleryProps {
@@ -11,6 +11,7 @@ interface AttachmentGalleryProps {
 const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: AttachmentGalleryProps) => {
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [downloading, setDownloading] = useState<number | null>(null);
 
   // Close modal on escape key
   useEffect(() => {
@@ -26,19 +27,16 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
     }
   }, [selectedAttachment]);
 
-  const handleDownload = (attachment: Attachment) => {
-    const url = getAttachmentDownloadUrl(attachment.id);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = attachment.fileName;
-    // Add authorization token to the request
-    const token = localStorage.getItem('token');
-    if (token) {
-      link.setAttribute('data-token', token);
+  const handleDownload = async (attachment: Attachment) => {
+    try {
+      setDownloading(attachment.id);
+      await downloadAttachment(attachment.id, attachment.fileName);
+    } catch (error) {
+      console.error('Failed to download attachment:', error);
+      alert('Failed to download attachment. Please try again.');
+    } finally {
+      setDownloading(null);
     }
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handleDelete = async (id: number) => {
@@ -119,9 +117,10 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
               <button
                 className="btn-download"
                 onClick={() => handleDownload(attachment)}
+                disabled={downloading === attachment.id}
                 title="Download"
               >
-                ⬇️ Download
+                {downloading === attachment.id ? '⏳' : '⬇️'} Download
               </button>
               {canDelete && (
                 <button
@@ -183,8 +182,9 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
                   <button
                     className="btn-download-large"
                     onClick={() => handleDownload(selectedAttachment)}
+                    disabled={downloading === selectedAttachment.id}
                   >
-                    Download File
+                    {downloading === selectedAttachment.id ? '⏳ Downloading...' : 'Download File'}
                   </button>
                 </div>
               )}
