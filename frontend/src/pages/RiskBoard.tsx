@@ -8,10 +8,12 @@ import {
 } from '../services/riskService';
 import { Risk, RiskStatistics } from '../types';
 import '../styles/RiskBoard.css';
+import { useTranslation } from 'react-i18next';
 
 type ViewMode = 'matrix' | 'cards';
 
 function RiskBoard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [risks, setRisks] = useState<Risk[]>([]);
   const [statistics, setStatistics] = useState<RiskStatistics | null>(null);
@@ -96,16 +98,16 @@ function RiskBoard() {
   });
 
   if (loading) {
-    return <div className="loading">Loading risk board...</div>;
+    return <div className="loading">{t('riskBoard.loading')}</div>;
   }
 
   return (
     <div className="risk-board-container">
       <div className="risk-board-header">
         <div className="header-left">
-          <h1>Risk Board</h1>
+          <h1>{t('riskBoard.title')}</h1>
           <button onClick={() => navigate('/risks')} className="btn-back">
-            ← Back to Risks List
+            ← {t('riskBoard.backToRisksList')}
           </button>
         </div>
         <div className="view-toggle">
@@ -113,13 +115,13 @@ function RiskBoard() {
             className={viewMode === 'matrix' ? 'active' : ''}
             onClick={() => setViewMode('matrix')}
           >
-            Matrix View
+            {t('riskBoard.matrixView')}
           </button>
           <button
             className={viewMode === 'cards' ? 'active' : ''}
             onClick={() => setViewMode('cards')}
           >
-            Card View
+            {t('riskBoard.cardView')}
           </button>
         </div>
       </div>
@@ -130,29 +132,29 @@ function RiskBoard() {
       {statistics && (
         <div className="risk-board-stats">
           <div className="stat-item">
-            <span className="stat-label">Total Risks:</span>
+            <span className="stat-label">{t('riskManagement.totalRisks')}:</span>
             <span className="stat-value">{statistics.totalRisks}</span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">Critical:</span>
+            <span className="stat-label">{t('riskManagement.critical')}:</span>
             <span className="stat-value" style={{ color: getRiskLevelColor('critical') }}>
               {statistics.byLevel.critical || 0}
             </span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">High:</span>
+            <span className="stat-label">{t('riskManagement.high')}:</span>
             <span className="stat-value" style={{ color: getRiskLevelColor('high') }}>
               {statistics.byLevel.high || 0}
             </span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">Medium:</span>
+            <span className="stat-label">{t('riskManagement.medium')}:</span>
             <span className="stat-value" style={{ color: getRiskLevelColor('medium') }}>
               {statistics.byLevel.medium || 0}
             </span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">Low:</span>
+            <span className="stat-label">{t('riskManagement.low')}:</span>
             <span className="stat-value" style={{ color: getRiskLevelColor('low') }}>
               {statistics.byLevel.low || 0}
             </span>
@@ -166,20 +168,20 @@ function RiskBoard() {
           value={filters.status || ''}
           onChange={e => handleFilterChange('status', e.target.value)}
         >
-          <option value="">All Statuses</option>
-          <option value="identified">Identified</option>
-          <option value="assessed">Assessed</option>
-          <option value="mitigating">Mitigating</option>
-          <option value="monitoring">Monitoring</option>
-          <option value="closed">Closed</option>
-          <option value="accepted">Accepted</option>
+          <option value="">{t('riskManagement.allStatuses')}</option>
+          <option value="identified">{t('riskManagement.status.identified')}</option>
+          <option value="assessed">{t('riskManagement.status.assessed')}</option>
+          <option value="mitigating">{t('riskManagement.status.mitigating')}</option>
+          <option value="monitoring">{t('riskManagement.status.monitoring')}</option>
+          <option value="closed">{t('riskManagement.status.closed')}</option>
+          <option value="accepted">{t('riskManagement.status.accepted')}</option>
         </select>
 
         <select
           value={filters.category || ''}
           onChange={e => handleFilterChange('category', e.target.value)}
         >
-          <option value="">All Categories</option>
+          <option value="">{t('riskBoard.allCategories')}</option>
           {statistics && Object.keys(statistics.byCategory).map(category => (
             <option key={category} value={category}>
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -189,13 +191,13 @@ function RiskBoard() {
 
         <input
           type="text"
-          placeholder="Filter by department..."
+          placeholder={t('riskBoard.filterByDepartment')}
           value={filters.department || ''}
           onChange={e => handleFilterChange('department', e.target.value)}
         />
 
         <button onClick={() => setFilters({ limit: 100 })} className="btn-clear-filters">
-          Clear Filters
+          {t('riskBoard.clearFilters')}
         </button>
       </div>
 
@@ -203,32 +205,32 @@ function RiskBoard() {
       {viewMode === 'matrix' && (
         <div className="risk-matrix-container">
           <div className="matrix-legend">
-            <h3>Risk Matrix</h3>
-            <p>Likelihood (horizontal) × Impact (vertical) = Risk Level</p>
+            <h3>{t('riskBoard.riskMatrix')}</h3>
+            <p>{t('riskBoard.matrixExplanation')}</p>
           </div>
           
           <div className="risk-matrix">
             {/* Impact axis label */}
             <div className="axis-label axis-label-vertical">
-              <span>Impact</span>
+              <span>{t('riskManagement.impact')}</span>
             </div>
 
             {/* Matrix grid */}
             <div className="matrix-grid">
               {/* Column headers (Likelihood) */}
               <div className="matrix-corner"></div>
-              <div className="matrix-header">1<br/>Very Low</div>
-              <div className="matrix-header">2<br/>Low</div>
-              <div className="matrix-header">3<br/>Medium</div>
-              <div className="matrix-header">4<br/>High</div>
-              <div className="matrix-header">5<br/>Very High</div>
+              <div className="matrix-header">1<br/>{t('riskBoard.veryLow')}</div>
+              <div className="matrix-header">2<br/>{t('riskManagement.low')}</div>
+              <div className="matrix-header">3<br/>{t('riskManagement.medium')}</div>
+              <div className="matrix-header">4<br/>{t('riskManagement.high')}</div>
+              <div className="matrix-header">5<br/>{t('riskBoard.veryHigh')}</div>
 
               {/* Rows (Impact from high to low) */}
               {[5, 4, 3, 2, 1].map(impact => (
                 <>
                   <div key={`row-header-${impact}`} className="matrix-row-header">
                     {impact}<br/>
-                    {impact === 5 ? 'Catastrophic' : impact === 4 ? 'Major' : impact === 3 ? 'Moderate' : impact === 2 ? 'Minor' : 'Negligible'}
+                    {impact === 5 ? t('riskBoard.catastrophic') : impact === 4 ? t('riskBoard.major') : impact === 3 ? t('riskBoard.moderate') : impact === 2 ? t('riskBoard.minor') : t('riskBoard.negligible')}
                   </div>
                   {[1, 2, 3, 4, 5].map(likelihood => {
                     const cellRisks = getRisksForCell(likelihood, impact);
@@ -269,7 +271,7 @@ function RiskBoard() {
                           ))}
                           {filteredCellRisks.length > 3 && (
                             <div className="risk-more-indicator">
-                              +{filteredCellRisks.length - 3} more
+                              +{filteredCellRisks.length - 3} {t('riskBoard.more')}
                             </div>
                           )}
                         </div>
@@ -282,7 +284,7 @@ function RiskBoard() {
 
             {/* Likelihood axis label */}
             <div className="axis-label axis-label-horizontal">
-              <span>Likelihood</span>
+              <span>{t('riskManagement.likelihood')}</span>
             </div>
           </div>
         </div>
@@ -292,7 +294,7 @@ function RiskBoard() {
       {viewMode === 'cards' && (
         <div className="risk-cards-container">
           {filteredRisks.length === 0 ? (
-            <p className="no-risks-message">No risks match the selected filters.</p>
+            <p className="no-risks-message">{t('riskBoard.noRisksMatchFilters')}</p>
           ) : (
             <div className="risk-cards-grid">
               {filteredRisks.map(risk => (
@@ -320,15 +322,15 @@ function RiskBoard() {
                   
                   <div className="risk-card-details">
                     <div className="risk-card-row">
-                      <span className="label">Category:</span>
+                      <span className="label">{t('riskManagement.category')}:</span>
                       <span className="value">{risk.category}</span>
                     </div>
                     <div className="risk-card-row">
-                      <span className="label">Risk Score:</span>
+                      <span className="label">{t('riskManagement.riskScore')}:</span>
                       <span className="value">{risk.riskScore} (L:{risk.likelihood} × I:{risk.impact})</span>
                     </div>
                     <div className="risk-card-row">
-                      <span className="label">Status:</span>
+                      <span className="label">{t('common.status')}:</span>
                       <span
                         className="value status-badge"
                         style={{ backgroundColor: getStatusColor(risk.status) }}
@@ -338,7 +340,7 @@ function RiskBoard() {
                     </div>
                     {risk.department && (
                       <div className="risk-card-row">
-                        <span className="label">Department:</span>
+                        <span className="label">{t('riskManagement.department')}:</span>
                         <span className="value">{risk.department}</span>
                       </div>
                     )}
@@ -346,7 +348,7 @@ function RiskBoard() {
 
                   {risk.mitigationStrategy && (
                     <div className="risk-card-mitigation">
-                      <div className="mitigation-label">Mitigation:</div>
+                      <div className="mitigation-label">{t('riskBoard.mitigation')}:</div>
                       <div className="mitigation-text">
                         {risk.mitigationStrategy.substring(0, 100)}
                         {risk.mitigationStrategy.length > 100 ? '...' : ''}
@@ -362,43 +364,43 @@ function RiskBoard() {
 
       {/* Legend */}
       <div className="risk-board-legend">
-        <h3>Legend</h3>
+        <h3>{t('riskBoard.legend')}</h3>
         <div className="legend-items">
           <div className="legend-item">
             <div className="legend-color" style={{ backgroundColor: getRiskLevelColor('critical') }}></div>
-            <span>Critical (20-25)</span>
+            <span>{t('riskManagement.critical')} (20-25)</span>
           </div>
           <div className="legend-item">
             <div className="legend-color" style={{ backgroundColor: getRiskLevelColor('high') }}></div>
-            <span>High (12-19)</span>
+            <span>{t('riskManagement.high')} (12-19)</span>
           </div>
           <div className="legend-item">
             <div className="legend-color" style={{ backgroundColor: getRiskLevelColor('medium') }}></div>
-            <span>Medium (6-11)</span>
+            <span>{t('riskManagement.medium')} (6-11)</span>
           </div>
           <div className="legend-item">
             <div className="legend-color" style={{ backgroundColor: getRiskLevelColor('low') }}></div>
-            <span>Low (1-5)</span>
+            <span>{t('riskManagement.low')} (1-5)</span>
           </div>
         </div>
         <div className="legend-status">
-          <h4>Status Colors:</h4>
+          <h4>{t('riskBoard.statusColors')}:</h4>
           <div className="legend-items">
             <div className="legend-item">
               <div className="legend-color" style={{ backgroundColor: getStatusColor('closed') }}></div>
-              <span>Closed</span>
+              <span>{t('riskManagement.status.closed')}</span>
             </div>
             <div className="legend-item">
               <div className="legend-color" style={{ backgroundColor: getStatusColor('monitoring') }}></div>
-              <span>Monitoring</span>
+              <span>{t('riskManagement.status.monitoring')}</span>
             </div>
             <div className="legend-item">
               <div className="legend-color" style={{ backgroundColor: getStatusColor('mitigating') }}></div>
-              <span>Mitigating</span>
+              <span>{t('riskManagement.status.mitigating')}</span>
             </div>
             <div className="legend-item">
               <div className="legend-color" style={{ backgroundColor: getStatusColor('identified') }}></div>
-              <span>Identified/Assessed</span>
+              <span>{t('riskBoard.identifiedAssessed')}</span>
             </div>
           </div>
         </div>
