@@ -122,6 +122,10 @@ export interface Audit {
   completedDate?: string;
   scope?: string;
   description?: string;
+  externalAuditorName?: string;
+  externalAuditorOrganization?: string;
+  externalAuditorEmail?: string;
+  externalAuditorPhone?: string;
 }
 
 export interface NCR {

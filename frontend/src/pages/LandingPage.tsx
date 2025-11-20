@@ -186,7 +186,7 @@ function LandingPage() {
           </button>
           <button 
             className="quick-action-card"
-            onClick={() => navigate('/audits')}
+            onClick={() => navigate('/revisioner')}
           >
             <div className="quick-action-icon">🔍</div>
             <div className="quick-action-title">{t('landing.viewAudits')}</div>

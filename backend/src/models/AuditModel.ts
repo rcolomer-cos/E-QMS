@@ -20,12 +20,28 @@ export interface Audit {
   reviewerId?: number;
   reviewedAt?: Date;
   reviewComments?: string;
+  externalAuditorName?: string;
+  externalAuditorOrganization?: string;
+  externalAuditorEmail?: string;
+  externalAuditorPhone?: string;
   createdBy: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export class AuditModel {
+  static async generateAuditNumber(): Promise<string> {
+    const pool = await getConnection();
+    const result = await pool.request().query('SELECT TOP 1 auditNumber FROM Audits ORDER BY id DESC');
+    let next = 1;
+    if (result.recordset[0]?.auditNumber) {
+      const match = result.recordset[0].auditNumber.match(/AUD-(\d{6})/);
+      if (match) {
+        next = parseInt(match[1], 10) + 1;
+      }
+    }
+    return `AUD-${String(next).padStart(6, '0')}`;
+  }
   static async create(audit: Audit): Promise<number> {
     const pool = await getConnection();
 
@@ -42,11 +58,15 @@ export class AuditModel {
       .input('department', sql.NVarChar, audit.department)
       .input('auditCriteria', sql.NVarChar, audit.auditCriteria)
       .input('relatedProcesses', sql.NVarChar, audit.relatedProcesses)
+      .input('externalAuditorName', sql.NVarChar, audit.externalAuditorName)
+      .input('externalAuditorOrganization', sql.NVarChar, audit.externalAuditorOrganization)
+      .input('externalAuditorEmail', sql.NVarChar, audit.externalAuditorEmail)
+      .input('externalAuditorPhone', sql.NVarChar, audit.externalAuditorPhone)
       .input('createdBy', sql.Int, audit.createdBy)
       .query(`
-        INSERT INTO Audits (auditNumber, title, description, auditType, scope, status, scheduledDate, leadAuditorId, department, auditCriteria, relatedProcesses, createdBy)
+        INSERT INTO Audits (auditNumber, title, description, auditType, scope, status, scheduledDate, leadAuditorId, department, auditCriteria, relatedProcesses, externalAuditorName, externalAuditorOrganization, externalAuditorEmail, externalAuditorPhone, createdBy)
         OUTPUT INSERTED.id
-        VALUES (@auditNumber, @title, @description, @auditType, @scope, @status, @scheduledDate, @leadAuditorId, @department, @auditCriteria, @relatedProcesses, @createdBy)
+        VALUES (@auditNumber, @title, @description, @auditType, @scope, @status, @scheduledDate, @leadAuditorId, @department, @auditCriteria, @relatedProcesses, @externalAuditorName, @externalAuditorOrganization, @externalAuditorEmail, @externalAuditorPhone, @createdBy)
       `);
 
     return result.recordset[0].id;

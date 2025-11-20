@@ -346,7 +346,7 @@ function AuditExecution() {
         status: 'completed',
         completedDate: new Date().toISOString(),
       });
-      navigate('/audits');
+      navigate('/revisioner');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
       setError(error.response?.data?.error || 'Failed to complete audit');

@@ -165,7 +165,7 @@ function Dashboard() {
           <p>{t('dashboard.totalDocuments')}</p>
         </div>
 
-        <div className="stat-card clickable" onClick={() => navigate('/audits')}>
+        <div className="stat-card clickable" onClick={() => navigate('/revisioner')}>
           <h3>{t('audits.title')}</h3>
           <div className="stat-value">{stats.activeAudits}</div>
           <p>{t('dashboard.activeAudits')}</p>

@@ -16,8 +16,25 @@ export const createAudit = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // Generate audit number server-side (ignoring any client-provided auditNumber)
+    const auditNumber = await AuditModel.generateAuditNumber();
+
     const audit: Audit = {
-      ...req.body,
+      auditNumber,
+      title: req.body.title,
+      description: req.body.description,
+      auditType: req.body.auditType,
+      scope: req.body.scope,
+      status: req.body.status,
+      scheduledDate: new Date(req.body.scheduledDate),
+      leadAuditorId: req.body.leadAuditorId,
+      department: req.body.department,
+      auditCriteria: req.body.auditCriteria,
+      relatedProcesses: req.body.relatedProcesses,
+      externalAuditorName: req.body.externalAuditorName,
+      externalAuditorOrganization: req.body.externalAuditorOrganization,
+      externalAuditorEmail: req.body.externalAuditorEmail,
+      externalAuditorPhone: req.body.externalAuditorPhone,
       createdBy: req.user.id,
     };
 
@@ -26,6 +43,7 @@ export const createAudit = async (req: AuthRequest, res: Response): Promise<void
     res.status(201).json({
       message: 'Audit created successfully',
       auditId,
+      auditNumber,
     });
   } catch (error) {
     console.error('Create audit error:', error);

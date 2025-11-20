@@ -10,6 +10,9 @@ import DocumentView from './pages/DocumentView';
 import DocumentEditor from './pages/DocumentEditor';
 import PendingChanges from './pages/PendingChanges';
 import Audits from './pages/Audits';
+import ScheduleAudit from './pages/ScheduleAudit';
+import EditAudit from './pages/EditAudit';
+import AuditDetail from './pages/AuditDetail';
 import AuditExecution from './pages/AuditExecution';
 import AuditFindings from './pages/AuditFindings';
 import NCR from './pages/NCR';
@@ -85,8 +88,16 @@ function App() {
         <Route path="tags" element={<Tags />} />
         <Route path="pending-changes" element={<PendingChanges />} />
         <Route path="audits" element={<ProtectedModuleRoute moduleKey="audits"><Audits /></ProtectedModuleRoute>} />
+        <Route path="audits/:id" element={<ProtectedModuleRoute moduleKey="audits"><AuditDetail /></ProtectedModuleRoute>} />
+        <Route path="audits/schedule" element={<ProtectedModuleRoute moduleKey="audits"><ScheduleAudit /></ProtectedModuleRoute>} />
+        <Route path="audits/:id/edit" element={<ProtectedModuleRoute moduleKey="audits"><EditAudit /></ProtectedModuleRoute>} />
         <Route path="audits/:id/execute" element={<ProtectedModuleRoute moduleKey="audits"><AuditExecution /></ProtectedModuleRoute>} />
         <Route path="audits/:auditId/findings" element={<ProtectedModuleRoute moduleKey="audits"><AuditFindings /></ProtectedModuleRoute>} />
+        {/* Swedish route aliases */}
+        <Route path="revisioner" element={<ProtectedModuleRoute moduleKey="audits"><Audits /></ProtectedModuleRoute>} />
+        <Route path="revisioner/:id" element={<ProtectedModuleRoute moduleKey="audits"><AuditDetail /></ProtectedModuleRoute>} />
+        <Route path="revisioner/:id/utfor" element={<ProtectedModuleRoute moduleKey="audits"><AuditExecution /></ProtectedModuleRoute>} />
+        <Route path="revisioner/:auditId/observationer" element={<ProtectedModuleRoute moduleKey="audits"><AuditFindings /></ProtectedModuleRoute>} />
         <Route path="ncr" element={<ProtectedModuleRoute moduleKey="ncr"><NCR /></ProtectedModuleRoute>} />
         <Route path="ncr/dashboard" element={<ProtectedModuleRoute moduleKey="ncr"><NCRDashboard /></ProtectedModuleRoute>} />
         <Route path="ncr/:id" element={<ProtectedModuleRoute moduleKey="ncr"><NCRDetail /></ProtectedModuleRoute>} />

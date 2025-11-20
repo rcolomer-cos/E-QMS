@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { Audit } from '../types';
 import { submitAuditForReview, approveAudit, rejectAudit } from '../services/auditService';
+import { useTranslation } from 'react-i18next';
 
 function Audits() {
   const [audits, setAudits] = useState<Audit[]>([]);
@@ -13,6 +14,7 @@ function Audits() {
   const [reviewComments, setReviewComments] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     loadAudits();
@@ -92,7 +94,7 @@ function Audits() {
   };
 
   const getStatusLabel = (status: string) => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return t(`audits.${status}`, status);
   };
 
   if (loading) {
@@ -102,26 +104,26 @@ function Audits() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Audit Management</h1>
-        <button className="tw-btn tw-btn-primary">Schedule Audit</button>
+        <h1>{t('audits.auditManagement')}</h1>
+        <button className="tw-btn tw-btn-primary" onClick={() => navigate('/audits/schedule')}>{t('audits.scheduleAudit')}</button>
       </div>
 
       <table className="data-table">
         <thead>
           <tr>
-            <th>Audit Number</th>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>Scheduled Date</th>
-            <th>Reviewer</th>
-            <th>Actions</th>
+            <th>{t('audits.auditNumber')}</th>
+            <th>{t('audits.auditTitle')}</th>
+            <th>{t('audits.auditType')}</th>
+            <th>{t('audits.auditStatus')}</th>
+            <th>{t('audits.scheduledDate')}</th>
+            <th>{t('audits.reviewer')}</th>
+            <th>{t('common.actions')}</th>
           </tr>
         </thead>
         <tbody>
           {audits.length === 0 ? (
             <tr>
-              <td colSpan={7}>No audits found</td>
+              <td colSpan={7}>{t('common.noData', 'No data')}</td>
             </tr>
           ) : (
             audits.map((audit) => (
@@ -146,15 +148,15 @@ function Audits() {
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button className="tw-btn-small">View</button>
-                    <button className="tw-btn-small">Edit</button>
+                    <button className="tw-btn-small" onClick={() => navigate(`/audits/${audit.id}`)}>{t('common.view')}</button>
+                    <button className="tw-btn-small" onClick={() => navigate(`/audits/${audit.id}/edit`)}>{t('common.edit')}</button>
                     
                     {(audit.status === 'planned' || audit.status === 'in_progress') && (
                       <button 
                         className="tw-btn-small tw-btn-primary"
                         onClick={() => handleExecuteAudit(audit.id)}
                       >
-                        Execute
+                        {t('audits.execute')}
                       </button>
                     )}
                     
@@ -164,7 +166,7 @@ function Audits() {
                         onClick={() => handleSubmitForReview(audit.id)}
                         disabled={actionLoading}
                       >
-                        Submit for Review
+                        {t('audits.submitForReview')}
                       </button>
                     )}
                     
@@ -175,14 +177,14 @@ function Audits() {
                           onClick={() => handleOpenReviewModal(audit, 'approve')}
                           disabled={actionLoading}
                         >
-                          Approve
+                          {t('audits.approve')}
                         </button>
                         <button 
                           className="tw-btn-small tw-btn-danger"
                           onClick={() => handleOpenReviewModal(audit, 'reject')}
                           disabled={actionLoading}
                         >
-                          Reject
+                          {t('audits.reject')}
                         </button>
                       </>
                     )}
@@ -199,7 +201,7 @@ function Audits() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h2>{reviewAction === 'approve' ? 'Approve Audit' : 'Reject Audit'}</h2>
+              <h2>{reviewAction === 'approve' ? t('audits.approve') : t('audits.reject')}</h2>
               <button className="close-button" onClick={handleCloseReviewModal}>×</button>
             </div>
             <div className="modal-body">
@@ -208,7 +210,7 @@ function Audits() {
               </p>
               <div className="form-group">
                 <label htmlFor="reviewComments">
-                  Comments {reviewAction === 'reject' && <span className="text-danger">*</span>}
+                  {t('common.description')} {reviewAction === 'reject' && <span className="text-danger">*</span>}
                 </label>
                 <textarea
                   id="reviewComments"
@@ -229,14 +231,14 @@ function Audits() {
                 onClick={handleCloseReviewModal}
                 disabled={actionLoading}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button 
                 className={reviewAction === 'approve' ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-danger'}
                 onClick={handleSubmitReview}
                 disabled={actionLoading}
               >
-                {actionLoading ? 'Processing...' : (reviewAction === 'approve' ? 'Approve' : 'Reject')}
+                {actionLoading ? t('common.loading') : (reviewAction === 'approve' ? t('audits.approve') : t('audits.reject'))}
               </button>
             </div>
           </div>
