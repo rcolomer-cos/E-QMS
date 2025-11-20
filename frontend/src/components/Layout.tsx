@@ -4,6 +4,7 @@ import { logout, getCurrentUser } from '../services/authService';
 import { useBranding } from '../contexts/BrandingContext';
 import { useModuleVisibility } from '../contexts/ModuleVisibilityContext';
 import { menuStructure, MenuItem } from '../config/menuStructure';
+import Footer from './Footer';
 import '../styles/Layout.css';
 
 function Layout() {
@@ -136,6 +137,7 @@ function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 }
