@@ -227,3 +227,5 @@ Assist in refactoring legacy code if provided.
 Help troubleshoot SQL scripts or React runtime errors.
 
 Always align new features with ISO 9001 process principles.
+
+Always check for the latest patch number of the sql script before generating any database-related code. backend/Setupscript/Patch 
