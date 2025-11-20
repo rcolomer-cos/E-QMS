@@ -3,7 +3,7 @@ import { getUsers, deleteUser, updateUserRole } from '../services/userService';
 import { useToast } from '../contexts/ToastContext';
 import { User } from '../types';
 import { getCurrentUser } from '../services/authService';
-import CreateUserDialog from '../components/CreateUserDialog';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Users.css';
 
 const Users = () => {
@@ -13,7 +13,7 @@ const Users = () => {
   const [error, setError] = useState('');
   const [editingRole, setEditingRole] = useState<number | null>(null);
   const [newRole, setNewRole] = useState('');
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const navigate = useNavigate();
   const currentUser = getCurrentUser();
 
   const roles = ['admin', 'manager', 'auditor', 'user', 'viewer'];
@@ -115,10 +115,7 @@ const Users = () => {
           <h1>User Management</h1>
           <p className="subtitle">Manage system users and their roles</p>
         </div>
-        <button
-          className="btn-create-user"
-          onClick={() => setShowCreateDialog(true)}
-        >
+        <button className="btn-create-user" onClick={() => navigate('/users/create')}>
           + Create User
         </button>
       </div>
@@ -232,11 +229,7 @@ const Users = () => {
         </table>
       </div>
 
-      <CreateUserDialog
-        isOpen={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-        onUserCreated={handleUserCreated}
-      />
+      {/* Dialog removed; creation handled via dedicated route */}
     </div>
   );
 };

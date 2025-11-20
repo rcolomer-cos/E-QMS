@@ -74,7 +74,7 @@
        listen 80;
        server_name your-domain.com;
        
-       root /path/to/E-QMS/frontend/dist;
+       root /path/to/frontend/dist;
        index index.html;
        
        location / {

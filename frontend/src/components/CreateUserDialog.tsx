@@ -115,21 +115,16 @@ const CreateUserDialog = ({ isOpen, onClose, onUserCreated }: CreateUserDialogPr
 
       const response = await createUser(userData);
 
-      // Show credentials dialog
       setCredentials({
         email: response.email,
         password: response.password,
       });
 
-      // Reset form
       resetForm();
-
-      // Notify parent
       onUserCreated();
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 'Failed to create user';
       toast.error(errorMsg);
-      
       if (errorMsg.includes('already exists')) {
         setErrors({ email: 'This email is already in use' });
       }
@@ -171,16 +166,11 @@ const CreateUserDialog = ({ isOpen, onClose, onUserCreated }: CreateUserDialogPr
   };
 
   const handleGroupToggle = (groupId: number) => {
-    setSelectedGroupIds(prev => 
-      prev.includes(groupId)
-        ? prev.filter(id => id !== groupId)
-        : [...prev, groupId]
-    );
+    setSelectedGroupIds(prev => prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]);
   };
 
   if (!isOpen) return null;
 
-  // Show credentials dialog if user was just created
   if (credentials) {
     return (
       <div className="modal-overlay" onClick={handleCloseCredentials}>
@@ -190,8 +180,7 @@ const CreateUserDialog = ({ isOpen, onClose, onUserCreated }: CreateUserDialogPr
           </div>
           <div className="modal-body">
             <div className="credentials-warning">
-              <strong>⚠️ Important:</strong> This is the only time you will see this password. 
-              Make sure to copy it now.
+              <strong>⚠️ Important:</strong> This is the only time you will see this password. Make sure to copy it now.
             </div>
             <div className="credentials-display">
               <div className="credential-field">
@@ -205,20 +194,8 @@ const CreateUserDialog = ({ isOpen, onClose, onUserCreated }: CreateUserDialogPr
             </div>
           </div>
           <div className="modal-footer">
-            <button 
-              type="button" 
-              className="btn-secondary"
-              onClick={handleCopyCredentials}
-            >
-              📋 Copy Credentials
-            </button>
-            <button 
-              type="button" 
-              className="btn-primary"
-              onClick={handleCloseCredentials}
-            >
-              Close
-            </button>
+            <button type="button" className="btn-secondary" onClick={handleCopyCredentials}>📋 Copy Credentials</button>
+            <button type="button" className="btn-primary" onClick={handleCloseCredentials}>Close</button>
           </div>
         </div>
       </div>
@@ -232,182 +209,66 @@ const CreateUserDialog = ({ isOpen, onClose, onUserCreated }: CreateUserDialogPr
           <h2>Create New User</h2>
           <button className="close-button" onClick={handleClose}>&times;</button>
         </div>
-        
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            <div className="form-section">
-              <h3>User Information</h3>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="firstName">
-                    First Name <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className={errors.firstName ? 'error' : ''}
-                    disabled={loading}
-                  />
-                  {errors.firstName && <span className="error-message">{errors.firstName}</span>}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="lastName">
-                    Last Name <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className={errors.lastName ? 'error' : ''}
-                    disabled={loading}
-                  />
-                  {errors.lastName && <span className="error-message">{errors.lastName}</span>}
-                </div>
-              </div>
-
+            <div className="two-column-grid">
               <div className="form-group">
-                <label htmlFor="email">
-                  Email (Username) <span className="required">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={errors.email ? 'error' : ''}
-                  disabled={loading}
-                />
+                <label htmlFor="firstName">First Name <span className="required">*</span></label>
+                <input type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={errors.firstName ? 'error' : ''} disabled={loading} />
+                {errors.firstName && <span className="error-message">{errors.firstName}</span>}
+              </div>
+              <div className="form-group">
+                <label htmlFor="lastName">Last Name <span className="required">*</span></label>
+                <input type="text" id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} className={errors.lastName ? 'error' : ''} disabled={loading} />
+                {errors.lastName && <span className="error-message">{errors.lastName}</span>}
+              </div>
+              <div className="form-group full-span">
+                <label htmlFor="email">Email <span className="required">*</span></label>
+                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={errors.email ? 'error' : ''} disabled={loading} />
                 {errors.email && <span className="error-message">{errors.email}</span>}
               </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="phone">Phone (Optional)</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="department">Department (Optional)</label>
-                  <input
-                    type="text"
-                    id="department"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h3>Access Controls</h3>
-              
               <div className="form-group">
-                <label htmlFor="role">
-                  Application Role <span className="required">*</span>
-                </label>
-                <select
-                  id="role"
-                  value={selectedRoleId}
-                  onChange={(e) => setSelectedRoleId(e.target.value ? Number(e.target.value) : '')}
-                  className={errors.role ? 'error' : ''}
-                  disabled={loading}
-                >
-                  <option value="">-- Select a role --</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                      {role.description && ` - ${role.description}`}
-                    </option>
-                  ))}
+                <label htmlFor="phone">Phone</label>
+                <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={loading} placeholder="Optional" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="department">Department</label>
+                <input type="text" id="department" value={department} onChange={(e) => setDepartment(e.target.value)} disabled={loading} placeholder="Optional" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="role">Application Role <span className="required">*</span></label>
+                <select id="role" value={selectedRoleId} onChange={(e) => setSelectedRoleId(e.target.value ? Number(e.target.value) : '')} className={errors.role ? 'error' : ''} disabled={loading}>
+                  <option value="">-- Select Role --</option>
+                  {roles.map(role => <option key={role.id} value={role.id}>{role.name.charAt(0).toUpperCase() + role.name.slice(1)}</option>)}
                 </select>
                 {errors.role && <span className="error-message">{errors.role}</span>}
               </div>
-
               <div className="form-group">
-                <label>User Groups (Optional)</label>
-                <div className="groups-selection">
-                  {groups.length === 0 ? (
-                    <p className="no-groups">No groups available</p>
-                  ) : (
-                    groups.map((group) => (
-                      <label key={group.id} className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={selectedGroupIds.includes(group.id!)}
-                          onChange={() => handleGroupToggle(group.id!)}
-                          disabled={loading}
-                        />
-                        <span>{group.name}</span>
-                        {group.description && <span className="group-description"> - {group.description}</span>}
-                      </label>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h3>Password Generation</h3>
-              
-              <div className="form-group">
-                <label htmlFor="password">
-                  Password <span className="required">*</span>
-                </label>
+                <label htmlFor="password">Temporary Password <span className="required">*</span></label>
                 <div className="password-input-group">
-                  <input
-                    type="text"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={errors.password ? 'error' : ''}
-                    disabled={loading}
-                    placeholder="Enter or generate a password"
-                  />
-                  <button
-                    type="button"
-                    className="btn-generate"
-                    onClick={handleGeneratePassword}
-                    disabled={loading}
-                  >
-                    🎲 Generate
-                  </button>
+                  <input type="text" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className={errors.password ? 'error' : ''} disabled={loading} placeholder="Minimum 8 characters" />
+                  <button type="button" className="btn-generate" onClick={handleGeneratePassword} disabled={loading}>Generate Password</button>
                 </div>
                 {errors.password && <span className="error-message">{errors.password}</span>}
-                <small className="form-hint">
-                  Password must be at least 8 characters. Click "Generate" for a secure, memorable password.
-                </small>
               </div>
+              {groups.length > 0 && (
+                <div className="form-group full-span">
+                  <label>User Groups (Optional)</label>
+                  <div className="groups-selection-compact">
+                    {groups.map(group => (
+                      <label key={group.id} className="checkbox-label-compact">
+                        <input type="checkbox" checked={selectedGroupIds.includes(group.id!)} onChange={() => handleGroupToggle(group.id!)} disabled={loading} />
+                        <span>{group.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-
           <div className="modal-footer">
-            <button 
-              type="button" 
-              className="btn-secondary"
-              onClick={handleClose}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Creating...' : 'Create User'}
-            </button>
+            <button type="button" className="btn-secondary" onClick={handleClose} disabled={loading}>Cancel</button>
+            <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Creating...' : 'Create User'}</button>
           </div>
         </form>
       </div>

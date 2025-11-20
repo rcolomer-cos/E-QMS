@@ -8,9 +8,6 @@ import {
   Background,
   BackgroundVariant,
   FitViewOptions,
-  NodeTypes,
-  Handle,
-  Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import './FlowchartViewer.css';
@@ -18,61 +15,6 @@ import './FlowchartViewer.css';
 interface FlowchartViewerProps {
   data: { nodes: Node[]; edges: Edge[] };
 }
-
-// Custom node components matching the editor
-const RectangleViewerNode = ({ data }: any) => {
-  return (
-    <div className="flowchart-node flowchart-node-rectangle">
-      <Handle type="target" position={Position.Top} isConnectable={false} />
-      <Handle type="target" position={Position.Left} isConnectable={false} />
-      <Handle type="target" position={Position.Right} isConnectable={false} />
-      <Handle type="target" position={Position.Bottom} isConnectable={false} />
-      <div className="flowchart-node-label">{data.label}</div>
-      <Handle type="source" position={Position.Top} isConnectable={false} />
-      <Handle type="source" position={Position.Left} isConnectable={false} />
-      <Handle type="source" position={Position.Right} isConnectable={false} />
-      <Handle type="source" position={Position.Bottom} isConnectable={false} />
-    </div>
-  );
-};
-
-const DiamondViewerNode = ({ data }: any) => {
-  return (
-    <div className="flowchart-node flowchart-node-diamond">
-      <Handle type="target" position={Position.Top} isConnectable={false} style={{ top: '0%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-      <Handle type="target" position={Position.Left} isConnectable={false} style={{ left: '0%', top: '50%', transform: 'translate(-50%, -50%)' }} />
-      <Handle type="target" position={Position.Right} isConnectable={false} style={{ right: '0%', top: '50%', transform: 'translate(50%, -50%)' }} />
-      <Handle type="target" position={Position.Bottom} isConnectable={false} style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
-      <div className="flowchart-node-label">{data.label}</div>
-      <Handle type="source" position={Position.Top} isConnectable={false} style={{ top: '0%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-      <Handle type="source" position={Position.Left} isConnectable={false} style={{ left: '0%', top: '50%', transform: 'translate(-50%, -50%)' }} />
-      <Handle type="source" position={Position.Right} isConnectable={false} style={{ right: '0%', top: '50%', transform: 'translate(50%, -50%)' }} />
-      <Handle type="source" position={Position.Bottom} isConnectable={false} style={{ bottom: '0%', left: '50%', transform: 'translate(-50%, 50%)' }} />
-    </div>
-  );
-};
-
-const CircleViewerNode = ({ data }: any) => {
-  return (
-    <div className="flowchart-node flowchart-node-circle">
-      <Handle type="target" position={Position.Top} isConnectable={false} />
-      <Handle type="target" position={Position.Left} isConnectable={false} />
-      <Handle type="target" position={Position.Right} isConnectable={false} />
-      <Handle type="target" position={Position.Bottom} isConnectable={false} />
-      <div className="flowchart-node-label">{data.label}</div>
-      <Handle type="source" position={Position.Top} isConnectable={false} />
-      <Handle type="source" position={Position.Left} isConnectable={false} />
-      <Handle type="source" position={Position.Right} isConnectable={false} />
-      <Handle type="source" position={Position.Bottom} isConnectable={false} />
-    </div>
-  );
-};
-
-const nodeTypes: NodeTypes = {
-  default: RectangleViewerNode,
-  diamond: DiamondViewerNode,
-  circle: CircleViewerNode,
-};
 
 const fitViewOptions: FitViewOptions = {
   padding: 0.2,
@@ -93,7 +35,6 @@ const FlowchartViewer: React.FC<FlowchartViewerProps> = ({ data }) => {
       <ReactFlow
         nodes={data.nodes}
         edges={data.edges}
-        nodeTypes={nodeTypes}
         fitView
         fitViewOptions={fitViewOptions}
         nodesDraggable={false}
