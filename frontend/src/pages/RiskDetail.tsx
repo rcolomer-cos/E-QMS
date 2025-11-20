@@ -96,9 +96,12 @@ function RiskDetail() {
     return dateString ? new Date(dateString).toLocaleDateString() : 'N/A';
   };
 
-  const canModify = currentUser?.role === 'admin' || 
-                    currentUser?.role === 'manager' || 
-                    currentUser?.role === 'auditor';
+  // Check user roles - handle both legacy single role and new roles array
+  const userRoles = currentUser?.roleNames || 
+                    currentUser?.roles?.map(r => r.name) || 
+                    (currentUser?.role ? [currentUser.role] : []);
+  
+  const canModify = userRoles.some(role => ['admin', 'manager', 'superuser'].includes(role));
 
   if (loading) {
     return <div className="loading">Loading risk details...</div>;

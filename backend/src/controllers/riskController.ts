@@ -27,6 +27,9 @@ export const createRisk = async (req: AuthRequest, res: Response): Promise<void>
     };
 
     const riskId = await RiskModel.create(risk);
+    
+    // Fetch the created risk to get the generated risk number
+    const createdRisk = await RiskModel.findById(riskId);
 
     // Log audit entry
     await logCreate({
@@ -34,13 +37,14 @@ export const createRisk = async (req: AuthRequest, res: Response): Promise<void>
       actionCategory: AuditActionCategory.RISK,
       entityType: 'Risk',
       entityId: riskId,
-      entityIdentifier: risk.riskNumber,
-      newValues: risk,
+      entityIdentifier: createdRisk?.riskNumber || 'Unknown',
+      newValues: createdRisk,
     });
 
     res.status(201).json({
       message: 'Risk created successfully',
       id: riskId,
+      riskNumber: createdRisk?.riskNumber,
     });
   } catch (error) {
     console.error('Create risk error:', error);

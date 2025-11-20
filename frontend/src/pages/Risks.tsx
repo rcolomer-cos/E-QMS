@@ -15,8 +15,10 @@ import {
 import { getUsers } from '../services/userService';
 import { Risk, User, RiskStatistics } from '../types';
 import '../styles/Risks.css';
+import { useTranslation } from 'react-i18next';
 
 function Risks() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [risks, setRisks] = useState<Risk[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -40,7 +42,6 @@ function Risks() {
 
   // Form state
   const [formData, setFormData] = useState<CreateRiskData>({
-    riskNumber: '',
     title: '',
     description: '',
     category: '',
@@ -86,7 +87,7 @@ function Risks() {
   };
 
   const loadCurrentUser = () => {
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -99,6 +100,13 @@ function Risks() {
 
   const handleCreateRisk = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.riskOwner || formData.riskOwner === 0) {
+      setError('Please select a risk owner');
+      return;
+    }
+    
     try {
       await createRisk(formData);
       await loadData();
@@ -145,7 +153,6 @@ function Risks() {
 
   const resetForm = () => {
     setFormData({
-      riskNumber: '',
       title: '',
       description: '',
       category: '',
@@ -183,13 +190,16 @@ function Risks() {
     return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
   };
 
-  const canModify = currentUser?.role === 'admin' || 
-                    currentUser?.role === 'manager' || 
-                    currentUser?.role === 'auditor';
-  const canDelete = currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'superuser';
+  // Check user roles - handle both legacy single role and new roles array
+  const userRoles = currentUser?.roleNames || 
+                    currentUser?.roles?.map(r => r.name) || 
+                    (currentUser?.role ? [currentUser.role] : []);
+  
+  const canModify = userRoles.some(role => ['admin', 'manager', 'superuser'].includes(role));
+  const canDelete = userRoles.some(role => ['admin', 'manager', 'superuser'].includes(role));
 
   if (loading) {
-    return <div className="loading">Loading risks...</div>;
+    return <div className="loading">{t('common.loading')}</div>;
   }
 
   // Calculate score and level for form preview
@@ -199,47 +209,47 @@ function Risks() {
   return (
     <div className="risks-container">
       <div className="risks-header">
-        <h1>Risk Management</h1>
+        <h1>{t('riskManagement.title')}</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={() => navigate('/risks/board')} className="tw-btn tw-btn-secondary">
-            View Risk Board
+            {t('riskManagement.viewRiskBoard')}
           </button>
           {canModify && (
             <button onClick={handleOpenModal} className="tw-btn tw-btn-primary">
-              Create New Risk
+              {t('riskManagement.createNewRisk')}
             </button>
           )}
         </div>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      {error && <div className="error-message">{t(error) || error}</div>}
 
       {/* Statistics Dashboard */}
       {statistics && (
         <div className="risk-statistics">
           <div className="stat-card">
-            <h3>Total Risks</h3>
+            <h3>{t('riskManagement.totalRisks')}</h3>
             <div className="stat-value">{statistics.totalRisks}</div>
           </div>
           <div className="stat-card">
-            <h3>By Level</h3>
+            <h3>{t('riskManagement.byLevel')}</h3>
             <div className="stat-breakdown">
               <div className="stat-item" style={{ color: getRiskLevelColor('critical') }}>
-                Critical: {statistics.byLevel.critical || 0}
+                {t('riskManagement.critical')}: {statistics.byLevel.critical || 0}
               </div>
               <div className="stat-item" style={{ color: getRiskLevelColor('high') }}>
-                High: {statistics.byLevel.high || 0}
+                {t('riskManagement.high')}: {statistics.byLevel.high || 0}
               </div>
               <div className="stat-item" style={{ color: getRiskLevelColor('medium') }}>
-                Medium: {statistics.byLevel.medium || 0}
+                {t('riskManagement.medium')}: {statistics.byLevel.medium || 0}
               </div>
               <div className="stat-item" style={{ color: getRiskLevelColor('low') }}>
-                Low: {statistics.byLevel.low || 0}
+                {t('riskManagement.low')}: {statistics.byLevel.low || 0}
               </div>
             </div>
           </div>
           <div className="stat-card">
-            <h3>By Status</h3>
+            <h3>{t('riskManagement.byStatus')}</h3>
             <div className="stat-breakdown">
               {Object.entries(statistics.byStatus).map(([status, count]) => (
                 <div key={status} className="stat-item">
@@ -257,64 +267,64 @@ function Risks() {
           value={filters.status || ''}
           onChange={e => handleFilterChange('status', e.target.value || undefined)}
         >
-          <option value="">All Statuses</option>
-          <option value="identified">Identified</option>
-          <option value="assessed">Assessed</option>
-          <option value="mitigating">Mitigating</option>
-          <option value="monitoring">Monitoring</option>
-          <option value="closed">Closed</option>
-          <option value="accepted">Accepted</option>
+          <option value="">{t('riskManagement.allStatuses')}</option>
+          <option value="identified">{t('riskManagement.status.identified')}</option>
+          <option value="assessed">{t('riskManagement.status.assessed')}</option>
+          <option value="mitigating">{t('riskManagement.status.mitigating')}</option>
+          <option value="monitoring">{t('riskManagement.status.monitoring')}</option>
+          <option value="closed">{t('riskManagement.status.closed')}</option>
+          <option value="accepted">{t('riskManagement.status.accepted')}</option>
         </select>
 
         <select
           value={filters.riskLevel || ''}
           onChange={e => handleFilterChange('riskLevel', e.target.value || undefined)}
         >
-          <option value="">All Levels</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="critical">Critical</option>
+          <option value="">{t('riskManagement.allLevels')}</option>
+          <option value="low">{t('riskManagement.low')}</option>
+          <option value="medium">{t('riskManagement.medium')}</option>
+          <option value="high">{t('riskManagement.high')}</option>
+          <option value="critical">{t('riskManagement.critical')}</option>
         </select>
 
         <select
           value={filters.sortBy || 'riskScore'}
           onChange={e => handleFilterChange('sortBy', e.target.value)}
         >
-          <option value="riskScore">Risk Score</option>
-          <option value="residualRiskScore">Residual Risk Score</option>
-          <option value="identifiedDate">Identified Date</option>
-          <option value="nextReviewDate">Next Review Date</option>
-          <option value="title">Title</option>
+          <option value="riskScore">{t('riskManagement.riskScore')}</option>
+          <option value="residualRiskScore">{t('riskManagement.residualRiskScore')}</option>
+          <option value="identifiedDate">{t('riskManagement.identifiedDate')}</option>
+          <option value="nextReviewDate">{t('riskManagement.nextReviewDate')}</option>
+          <option value="title">{t('riskManagement.titleLabel')}</option>
         </select>
 
         <select
           value={filters.sortOrder || 'DESC'}
           onChange={e => handleFilterChange('sortOrder', e.target.value as 'ASC' | 'DESC')}
         >
-          <option value="DESC">Descending</option>
-          <option value="ASC">Ascending</option>
+          <option value="DESC">{t('riskManagement.descending')}</option>
+          <option value="ASC">{t('riskManagement.ascending')}</option>
         </select>
       </div>
 
       {/* Risk List */}
       <div className="risk-list">
         {risks.length === 0 ? (
-          <p>No risks found</p>
+          <p>{t('riskManagement.noRisksFound')}</p>
         ) : (
           <table className="risk-table">
             <thead>
               <tr>
-                <th>Risk Number</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Likelihood</th>
-                <th>Impact</th>
-                <th>Risk Score</th>
-                <th>Risk Level</th>
-                <th>Status</th>
-                <th>Owner</th>
-                <th>Actions</th>
+                <th>{t('riskManagement.riskNumber')}</th>
+                <th>{t('riskManagement.titleLabel')}</th>
+                <th>{t('riskManagement.category')}</th>
+                <th>{t('riskManagement.likelihood')}</th>
+                <th>{t('riskManagement.impact')}</th>
+                <th>{t('riskManagement.riskScore')}</th>
+                <th>{t('riskManagement.riskLevel')}</th>
+                <th>{t('common.status')}</th>
+                <th>{t('riskManagement.owner')}</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -370,15 +380,17 @@ function Risks() {
                     <button
                       onClick={() => navigate(`/risks/${risk.id}`)}
                       className="btn-view"
+                      title={t('common.view')}
                     >
-                      View
+                      ✏️
                     </button>
                     {canDelete && (
                       <button
                         onClick={() => handleDeleteRisk(risk.id)}
                         className="btn-delete"
+                        title={t('common.delete')}
                       >
-                        Delete
+                        🗑️
                       </button>
                     )}
                   </td>
@@ -396,16 +408,16 @@ function Risks() {
             onClick={() => handlePageChange(pagination.page - 1)}
             disabled={pagination.page === 1}
           >
-            Previous
+            {t('common.previous')}
           </button>
           <span>
-            Page {pagination.page} of {pagination.pages}
+            {t('riskManagement.pageOf', { page: pagination.page, pages: pagination.pages })}
           </span>
           <button
             onClick={() => handlePageChange(pagination.page + 1)}
             disabled={pagination.page === pagination.pages}
           >
-            Next
+            {t('common.next')}
           </button>
         </div>
       )}
@@ -415,7 +427,7 @@ function Risks() {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Create New Risk</h2>
+              <h2>{t('riskManagement.createNewRisk')}</h2>
               <button onClick={handleCloseModal} className="close-button">
                 ×
               </button>
@@ -423,16 +435,16 @@ function Risks() {
             <form onSubmit={handleCreateRisk} className="risk-form">
               <div className="form-row">
                 <div className="form-group">
-                  <label>Risk Number *</label>
+                  <label>{t('riskManagement.riskNumber')}</label>
                   <input
                     type="text"
-                    value={formData.riskNumber}
-                    onChange={e => setFormData({ ...formData, riskNumber: e.target.value })}
-                    required
+                    value="Auto-generated (RID-XXXXXX)"
+                    disabled
+                    style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Category *</label>
+                  <label>{t('riskManagement.category')} *</label>
                   <input
                     type="text"
                     value={formData.category}
@@ -444,7 +456,7 @@ function Risks() {
               </div>
 
               <div className="form-group">
-                <label>Title *</label>
+                <label>{t('riskManagement.titleLabel')} *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -454,7 +466,7 @@ function Risks() {
               </div>
 
               <div className="form-group">
-                <label>Description *</label>
+                <label>{t('riskManagement.description')} *</label>
                 <textarea
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -465,51 +477,51 @@ function Risks() {
 
               {/* Risk Scoring Section */}
               <div className="risk-scoring-section">
-                <h3>Risk Scoring</h3>
+                <h3>{t('riskManagement.riskScoring')}</h3>
                 <div className="scoring-explanation">
-                  <p>Risk Score = Likelihood × Impact</p>
-                  <p>Scale: 1 (very low) to 5 (very high)</p>
+                  <p>{t('riskManagement.riskScoreFormula')}</p>
+                  <p>{t('riskManagement.scaleExplanation')}</p>
                 </div>
                 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Likelihood (1-5) *</label>
+                    <label>{t('riskManagement.likelihood')} (1-5) *</label>
                     <select
                       value={formData.likelihood}
                       onChange={e => setFormData({ ...formData, likelihood: parseInt(e.target.value) })}
                       required
                     >
-                      <option value="1">1 - Very Unlikely</option>
-                      <option value="2">2 - Unlikely</option>
-                      <option value="3">3 - Possible</option>
-                      <option value="4">4 - Likely</option>
-                      <option value="5">5 - Very Likely</option>
+                      <option value="1">{t('riskManagement.likelihood1')}</option>
+                      <option value="2">{t('riskManagement.likelihood2')}</option>
+                      <option value="3">{t('riskManagement.likelihood3')}</option>
+                      <option value="4">{t('riskManagement.likelihood4')}</option>
+                      <option value="5">{t('riskManagement.likelihood5')}</option>
                     </select>
                   </div>
 
                   <div className="form-group">
-                    <label>Impact (1-5) *</label>
+                    <label>{t('riskManagement.impact')} (1-5) *</label>
                     <select
                       value={formData.impact}
                       onChange={e => setFormData({ ...formData, impact: parseInt(e.target.value) })}
                       required
                     >
-                      <option value="1">1 - Negligible</option>
-                      <option value="2">2 - Minor</option>
-                      <option value="3">3 - Moderate</option>
-                      <option value="4">4 - Major</option>
-                      <option value="5">5 - Catastrophic</option>
+                      <option value="1">{t('riskManagement.impact1')}</option>
+                      <option value="2">{t('riskManagement.impact2')}</option>
+                      <option value="3">{t('riskManagement.impact3')}</option>
+                      <option value="4">{t('riskManagement.impact4')}</option>
+                      <option value="5">{t('riskManagement.impact5')}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="risk-score-preview">
                   <div className="score-display">
-                    <span className="label">Risk Score:</span>
+                    <span className="label">{t('riskManagement.riskScore')}:</span>
                     <span className="value">{previewScore}</span>
                   </div>
                   <div className="level-display">
-                    <span className="label">Risk Level:</span>
+                    <span className="label">{t('riskManagement.riskLevel')}:</span>
                     <span
                       className="value"
                       style={{
@@ -527,23 +539,27 @@ function Risks() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Risk Owner *</label>
+                  <label>{t('riskManagement.riskOwner')} *</label>
                   <select
                     value={formData.riskOwner}
                     onChange={e => setFormData({ ...formData, riskOwner: parseInt(e.target.value) })}
                     required
+                    style={formData.riskOwner === 0 ? { borderColor: '#dc3545' } : {}}
                   >
-                    <option value="0">Select Owner</option>
+                    <option value="0" disabled>{t('riskManagement.selectRiskOwner')}</option>
                     {users.map(user => (
                       <option key={user.id} value={user.id}>
                         {user.firstName} {user.lastName}
                       </option>
                     ))}
                   </select>
+                  {formData.riskOwner === 0 && (
+                    <small style={{ color: '#dc3545' }}>Risk owner is required</small>
+                  )}
                 </div>
 
                 <div className="form-group">
-                  <label>Department</label>
+                  <label>{t('riskManagement.department')}</label>
                   <input
                     type="text"
                     value={formData.department}
@@ -553,7 +569,7 @@ function Risks() {
               </div>
 
               <div className="form-group">
-                <label>Mitigation Strategy</label>
+                <label>{t('riskManagement.mitigationStrategy')}</label>
                 <textarea
                   value={formData.mitigationStrategy}
                   onChange={e => setFormData({ ...formData, mitigationStrategy: e.target.value })}
@@ -562,7 +578,7 @@ function Risks() {
               </div>
 
               <div className="form-group">
-                <label>Mitigation Actions</label>
+                <label>{t('riskManagement.mitigationActions')}</label>
                 <textarea
                   value={formData.mitigationActions}
                   onChange={e => setFormData({ ...formData, mitigationActions: e.target.value })}
@@ -572,10 +588,10 @@ function Risks() {
 
               <div className="form-actions">
                 <button type="button" onClick={handleCloseModal} className="tw-btn tw-btn-secondary">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="tw-btn tw-btn-primary">
-                  Create Risk
+                  {t('riskManagement.createRisk')}
                 </button>
               </div>
             </form>

@@ -20,28 +20,29 @@ import { UserRole } from '../types';
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication and admin/manager/superuser roles
 router.use(authenticateToken);
+router.use(authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER));
 
-// Get risk statistics - Accessible to all authenticated users
+// Get risk statistics - Requires ADMIN, MANAGER, or SUPERUSER role
 router.get('/statistics', getRiskStatistics);
 
-// Create risk - Requires ADMIN, MANAGER, or AUDITOR role
-router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateRisk, createRisk);
+// Create risk - Requires ADMIN, MANAGER, or SUPERUSER role
+router.post('/', createLimiter, validateRisk, createRisk);
 
-// Get all risks - Accessible to all authenticated users
+// Get all risks - Requires ADMIN, MANAGER, or SUPERUSER role
 router.get('/', getRisks);
 
-// Get risk by ID - Accessible to all authenticated users
+// Get risk by ID - Requires ADMIN, MANAGER, or SUPERUSER role
 router.get('/:id', validateId, getRiskById);
 
-// Update risk status - ADMIN and MANAGER can close/accept risks; ADMIN, MANAGER, and AUDITOR can change to other statuses
-router.put('/:id/status', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateRiskStatus, updateRiskStatus);
+// Update risk status - Requires ADMIN, MANAGER, or SUPERUSER role
+router.put('/:id/status', validateId, validateRiskStatus, updateRiskStatus);
 
-// Update risk - Requires ADMIN, MANAGER, or AUDITOR role
-router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateRiskUpdate, updateRisk);
+// Update risk - Requires ADMIN, MANAGER, or SUPERUSER role
+router.put('/:id', validateId, validateRiskUpdate, updateRisk);
 
 // Delete risk - Requires ADMIN, MANAGER, or SUPERUSER role
-router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteRisk);
+router.delete('/:id', validateId, deleteRisk);
 
 export default router;

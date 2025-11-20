@@ -62,10 +62,39 @@ export class RiskModel {
   }
 
   /**
+   * Generate the next risk number in format RID-000001
+   */
+  private static async generateRiskNumber(): Promise<string> {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .query(`
+        SELECT TOP 1 riskNumber 
+        FROM Risks 
+        WHERE riskNumber LIKE 'RID-%'
+        ORDER BY id DESC
+      `);
+
+    let nextNumber = 1;
+    if (result.recordset.length > 0) {
+      const lastRiskNumber = result.recordset[0].riskNumber;
+      const match = lastRiskNumber.match(/RID-(\d+)/);
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    return `RID-${nextNumber.toString().padStart(6, '0')}`;
+  }
+
+  /**
    * Create a new risk entry
    */
   static async create(risk: Risk): Promise<number> {
     const pool = await getConnection();
+
+    // Generate risk number automatically
+    const riskNumber = await this.generateRiskNumber();
 
     // Calculate risk level based on likelihood and impact
     const riskScore = risk.likelihood * risk.impact;
@@ -73,7 +102,7 @@ export class RiskModel {
 
     const result = await pool
       .request()
-      .input('riskNumber', sql.NVarChar, risk.riskNumber)
+      .input('riskNumber', sql.NVarChar, riskNumber)
       .input('title', sql.NVarChar, risk.title)
       .input('description', sql.NVarChar, risk.description)
       .input('category', sql.NVarChar, risk.category)

@@ -1342,10 +1342,7 @@ export const validateAuditFindingUpdate = [
 
 // Risk validators
 export const validateRisk = [
-  body('riskNumber')
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Risk number is required and must not exceed 100 characters'),
+  // riskNumber is auto-generated, so no validation needed
   body('title')
     .trim()
     .isLength({ min: 1, max: 500 })
