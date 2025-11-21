@@ -188,7 +188,10 @@ const GroupDetail = () => {
                   {users.map((user) => (
                     <tr key={user.id}>
                       <td>
-                        {user.firstName} {user.lastName}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <Avatar user={user} size="small" />
+                          <span>{user.firstName} {user.lastName}</span>
+                        </div>
                       </td>
                       <td>{user.email}</td>
                       <td>{user.department || '-'}</td>
@@ -289,6 +292,7 @@ const GroupDetail = () => {
                           checked={selectedUserIds.includes(user.id)}
                           onChange={() => handleToggleUser(user.id)}
                         />
+                        <Avatar user={user} size="small" />
                         <span className="user-info">
                           <strong>
                             {user.firstName} {user.lastName}

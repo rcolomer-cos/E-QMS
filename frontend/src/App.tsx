@@ -61,6 +61,7 @@ import SwotAnalysis from './pages/SwotAnalysis';
 import DataImport from './pages/DataImport';
 import { useAuth } from './services/authService';
 import CreateUserPage from './pages/CreateUserPage';
+import UserProfile from './pages/UserProfile';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -111,6 +112,7 @@ function App() {
         <Route path="groups/:id" element={<GroupDetail />} />
         <Route path="departments" element={<Departments />} />
         <Route path="users/create" element={<CreateUserPage />} />
+        <Route path="profile" element={<UserProfile />} />
         
         {/* Redirects for old routes to settings tabs */}
         <Route path="users" element={<Navigate to="/settings?tab=users" replace />} />

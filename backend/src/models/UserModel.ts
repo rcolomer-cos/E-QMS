@@ -10,6 +10,7 @@ export interface User {
   lastName: string;
   department?: string;
   phone?: string;
+  avatarUrl?: string | null;
   active: boolean;
   lastLogin?: Date;
   failedLoginAttempts?: number;
@@ -117,12 +118,14 @@ export class UserModel {
    * Find user by ID
    */
   static async findById(id: number): Promise<User | null> {
+    console.log('UserModel.findById called with id:', id, 'type:', typeof id);
     const pool = await getConnection();
     const result = await pool
       .request()
       .input('id', sql.Int, id)
       .query('SELECT * FROM Users WHERE id = @id AND active = 1');
 
+    console.log('findById query result:', result.recordset.length, 'rows');
     if (result.recordset.length === 0) {
       return null;
     }
@@ -142,7 +145,7 @@ export class UserModel {
       .request()
       .query(`
         SELECT 
-          id, email, firstName, lastName, department, 
+          id, email, firstName, lastName, department, avatarUrl,
           active, lastLogin, createdAt, updatedAt 
         FROM Users 
         WHERE active = 1
@@ -268,6 +271,10 @@ export class UserModel {
     if (updates.department) {
       request.input('department', sql.NVarChar, updates.department);
       fields.push('department = @department');
+    }
+    if (updates.avatarUrl !== undefined) {
+      request.input('avatarUrl', sql.NVarChar, updates.avatarUrl);
+      fields.push('avatarUrl = @avatarUrl');
     }
 
     if (fields.length > 0) {

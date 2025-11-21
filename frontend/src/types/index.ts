@@ -14,6 +14,7 @@ export interface User {
   lastName?: string;
   department?: string;
   phone?: string;
+  avatarUrl?: string;
   active?: boolean;
   createdAt?: string;
   updatedAt?: string;

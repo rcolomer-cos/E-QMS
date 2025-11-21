@@ -92,6 +92,13 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Serve static files for uploads with CORS headers
+app.use('/uploads', (_req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+}, express.static('uploads'));
+
 // API routes
 app.use('/api/system', systemRoutes);
 app.use('/api/auth', authRoutes);

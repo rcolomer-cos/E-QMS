@@ -26,6 +26,16 @@ export const getUsers = async (): Promise<User[]> => {
 };
 
 /**
+ * Get current user profile
+ */
+export const getCurrentUser = async (): Promise<User> => {
+  console.log('Calling getCurrentUser, baseURL:', api.defaults.baseURL);
+  const response = await api.get<User>('/users/me');
+  console.log('getCurrentUser response:', response.data);
+  return response.data;
+};
+
+/**
  * Get user by ID
  */
 export const getUserById = async (id: number): Promise<User> => {

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { handleSessionExpiry, isLogoutInProgress } from './logoutHandler';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.DEV ? 'http://localhost:3001/api' : '/api',
   headers: {
     'Content-Type': 'application/json',
   },

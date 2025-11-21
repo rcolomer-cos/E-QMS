@@ -1,15 +1,34 @@
+import { useState, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { logout, getCurrentUser } from '../services/authService';
+import { getCurrentUser as fetchCurrentUser } from '../services/userService';
 import { useBranding } from '../contexts/BrandingContext';
 import { useModuleVisibility } from '../contexts/ModuleVisibilityContext';
 import { menuStructure, MenuItem } from '../config/menuStructure';
 import Footer from './Footer';
+import Avatar from './Avatar';
+import { User } from '../types';
 import '../styles/Layout.css';
 
 function Layout() {
   const { t } = useTranslation();
-  const user = getCurrentUser();
+  const cachedUser = getCurrentUser();
+  const [user, setUser] = useState<User | null>(cachedUser);
+
+  useEffect(() => {
+    // Fetch current user data to get latest avatarUrl
+    const loadUser = async () => {
+      try {
+        const freshUser = await fetchCurrentUser();
+        setUser(freshUser);
+      } catch (error) {
+        console.error('Failed to load user:', error);
+        // Keep cached user if fetch fails
+      }
+    };
+    loadUser();
+  }, []);
   const { isModuleEnabled } = useModuleVisibility();
   const roleNames: string[] = ((user?.roles?.map(r => r.name)) || (user?.role ? [user.role as string] : [])) as string[];
   const normalizeRole = (name: string) => {
@@ -123,12 +142,17 @@ function Layout() {
           {menuStructure.map(item => renderMenuItem(item))}
         </ul>
         <div className="navbar-user">
+          <Link to="/profile" className="user-profile-link">
+            <Avatar user={user} size="small" />
+          </Link>
           <span className="user-info">
-            <span className="user-name">
-              {user?.firstName && user?.lastName 
-                ? `${user.firstName} ${user.lastName}` 
-                : user?.username}
-            </span>
+            <Link to="/profile" className="user-name-link">
+              <span className="user-name">
+                {user?.firstName && user?.lastName 
+                  ? `${user.firstName} ${user.lastName}` 
+                  : user?.username}
+              </span>
+            </Link>
             <span className="user-role">{highestRoleTitle}</span>
           </span>
           <button onClick={handleLogout}>{t('auth.logout')}</button>

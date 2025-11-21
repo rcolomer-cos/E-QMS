@@ -4,6 +4,7 @@ import { useToast } from '../contexts/ToastContext';
 import { User } from '../types';
 import { getCurrentUser } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
+import Avatar from '../components/Avatar';
 import '../styles/Users.css';
 
 const Users = () => {
@@ -145,9 +146,14 @@ const Users = () => {
                 <td>{user.username}</td>
                 <td>{user.email}</td>
                 <td>
-                  {user.firstName || user.lastName
-                    ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
-                    : 'N/A'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Avatar user={user} size="small" />
+                    <span>
+                      {user.firstName || user.lastName
+                        ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+                        : 'N/A'}
+                    </span>
+                  </div>
                 </td>
                 <td>{user.department || 'N/A'}</td>
                 <td>

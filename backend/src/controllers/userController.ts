@@ -36,6 +36,38 @@ export const getAllUsers = async (_req: AuthRequest, res: Response): Promise<voi
 };
 
 /**
+ * Get current user profile (authenticated user)
+ */
+export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('getCurrentUser called, req.user:', req.user);
+    
+    if (!req.user?.id) {
+      console.error('No user ID in request');
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    console.log('Fetching user by ID:', req.user.id);
+    const user = await UserModel.findById(req.user.id);
+    console.log('User found:', user ? 'yes' : 'no');
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Remove password from response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+};
+
+/**
  * Get user by ID (admin/superuser only)
  */
 export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -377,5 +409,123 @@ export const getAllRoles = async (_req: AuthRequest, res: Response): Promise<voi
   } catch (error) {
     console.error('Get all roles error:', error);
     res.status(500).json({ error: 'Failed to fetch roles' });
+  }
+};
+
+/**
+ * Upload user avatar
+ */
+export const uploadAvatar = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(id, 10);
+
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Check if user exists
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check permissions - users can only update their own avatar unless admin/superuser
+    if (req.user && req.user.id !== userId) {
+      const isSuperuser = req.user.roles.includes(UserRole.SUPERUSER);
+      const isAdmin = req.user.roles.includes(UserRole.ADMIN);
+      if (!isSuperuser && !isAdmin) {
+        res.status(403).json({ error: 'You can only update your own avatar' });
+        return;
+      }
+    }
+
+    // Create avatar URL path
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    // Update user avatar
+    await UserModel.update(userId, { avatarUrl });
+
+    // Log the update
+    if (req.user) {
+      await logUpdate({
+        req,
+        actionCategory: AuditActionCategory.USER_MANAGEMENT,
+        entityType: 'user',
+        entityId: userId,
+        oldValues: { avatarUrl: user.avatarUrl },
+        newValues: { avatarUrl }
+      });
+    }
+
+    res.json({ 
+      message: 'Avatar uploaded successfully', 
+      avatarUrl 
+    });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ error: 'Failed to upload avatar' });
+  }
+};
+
+/**
+ * Delete user avatar
+ */
+export const deleteAvatar = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(id, 10);
+
+    // Check if user exists
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check permissions
+    if (req.user && req.user.id !== userId) {
+      const isSuperuser = req.user.roles.includes(UserRole.SUPERUSER);
+      const isAdmin = req.user.roles.includes(UserRole.ADMIN);
+      if (!isSuperuser && !isAdmin) {
+        res.status(403).json({ error: 'You can only delete your own avatar' });
+        return;
+      }
+    }
+
+    // Delete avatar file if exists
+    if (user.avatarUrl) {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const filePath = path.join(process.cwd(), 'uploads', 'avatars', path.basename(user.avatarUrl));
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        console.error('Failed to delete avatar file:', err);
+        // Continue even if file deletion fails
+      }
+    }
+
+    // Update user avatar to null
+    await UserModel.update(userId, { avatarUrl: null });
+
+    // Log the update
+    if (req.user) {
+      await logUpdate({
+        req,
+        actionCategory: AuditActionCategory.USER_MANAGEMENT,
+        entityType: 'user',
+        entityId: userId,
+        oldValues: { avatarUrl: user.avatarUrl },
+        newValues: { avatarUrl: null }
+      });
+    }
+
+    res.json({ message: 'Avatar deleted successfully' });
+  } catch (error) {
+    console.error('Delete avatar error:', error);
+    res.status(500).json({ error: 'Failed to delete avatar' });
   }
 };

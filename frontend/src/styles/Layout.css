@@ -143,11 +143,32 @@
   gap: 1rem;
 }
 
+.navbar-user .user-profile-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.navbar-user .user-profile-link:hover {
+  opacity: 0.8;
+}
+
 .navbar-user .user-info {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   font-size: 0.9rem;
+}
+
+.navbar-user .user-name-link {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+.navbar-user .user-name-link:hover {
+  opacity: 0.8;
 }
 
 .navbar-user .user-name {
