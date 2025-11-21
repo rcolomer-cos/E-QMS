@@ -229,3 +229,7 @@ Help troubleshoot SQL scripts or React runtime errors.
 Always align new features with ISO 9001 process principles.
 
 Always check for the latest patch number of the sql script before generating any database-related code. backend/Setupscript/Patch 
+
+Always ensure that the superuser role is implemented with the highest level of access in the RBAC system for each new module or feature.
+
+End of Agent Instruction
