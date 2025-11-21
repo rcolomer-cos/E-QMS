@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext';
+import { getCurrentUser } from '../services/authService';
 import { getGroups, createGroup, updateGroup, deleteGroup, Group } from '../services/groupService';
 import { useNavigate } from 'react-router-dom';
 import '../styles/GroupManagement.css';
@@ -7,6 +8,7 @@ import '../styles/GroupManagement.css';
 const GroupManagement = () => {
   const toast = useToast();
   const navigate = useNavigate();
+  const currentUser = getCurrentUser();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,6 +18,19 @@ const GroupManagement = () => {
     name: '',
     description: '',
   });
+
+  // Check user permissions
+  const roleNames: string[] = ((currentUser?.roles?.map(r => r.name)) || (currentUser?.role ? [currentUser.role as string] : [])) as string[];
+  const normalizeRole = (name: string) => {
+    const n = (name || '').toLowerCase();
+    if (n === 'administrator' || n.startsWith('admin')) return 'admin';
+    if (n === 'super user' || n === 'super-user' || n.startsWith('super')) return 'superuser';
+    if (n.startsWith('manager')) return 'manager';
+    return n;
+  };
+  const hasRole = (r: string) => roleNames.map(normalizeRole).includes(r.toLowerCase());
+  const canEdit = hasRole('admin') || hasRole('manager') || hasRole('superuser');
+  const canDelete = hasRole('superuser');
 
   useEffect(() => {
     loadGroups();
@@ -114,9 +129,11 @@ const GroupManagement = () => {
     <div className="group-management">
       <div className="page-header">
         <h1>Group Management</h1>
-        <button className="btn-primary" onClick={() => handleOpenModal()}>
-          Create Group
-        </button>
+        {canEdit && (
+          <button className="btn-primary" onClick={() => handleOpenModal()}>
+            Create Group
+          </button>
+        )}
       </div>
 
       <div className="groups-list">
@@ -149,12 +166,16 @@ const GroupManagement = () => {
                   <button className="btn-secondary" onClick={() => handleManageGroup(group.id!)}>
                     Manage
                   </button>
-                  <button className="btn-secondary" onClick={() => handleOpenModal(group)}>
-                    Edit
-                  </button>
-                  <button className="btn-danger" onClick={() => handleDelete(group.id!, group.name)}>
-                    Deactivate
-                  </button>
+                  {canEdit && (
+                    <button className="btn-secondary" onClick={() => handleOpenModal(group)}>
+                      Edit
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button className="btn-danger" onClick={() => handleDelete(group.id!, group.name)}>
+                      Deactivate
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

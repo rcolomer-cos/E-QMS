@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
+import { getCurrentUser } from '../services/authService';
 import {
   getGroupById,
   getGroupUsers,
@@ -12,12 +13,14 @@ import {
   GroupDocument,
 } from '../services/groupService';
 import { getUsers, User } from '../services/userService';
+import Avatar from '../components/Avatar';
 import '../styles/GroupDetail.css';
 
 const GroupDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
+  const currentUser = getCurrentUser();
   const [group, setGroup] = useState<Group | null>(null);
   const [users, setUsers] = useState<GroupUser[]>([]);
   const [documents, setDocuments] = useState<GroupDocument[]>([]);
@@ -27,6 +30,19 @@ const GroupDetail = () => {
   const [showAddUsersModal, setShowAddUsersModal] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<'users' | 'documents'>('users');
+
+  // Check user permissions
+  const roleNames: string[] = ((currentUser?.roles?.map(r => r.name)) || (currentUser?.role ? [currentUser.role as string] : [])) as string[];
+  const normalizeRole = (name: string) => {
+    const n = (name || '').toLowerCase();
+    if (n === 'administrator' || n.startsWith('admin')) return 'admin';
+    if (n === 'super user' || n === 'super-user' || n.startsWith('super')) return 'superuser';
+    if (n.startsWith('manager')) return 'manager';
+    return n;
+  };
+  const hasRole = (r: string) => roleNames.map(normalizeRole).includes(r.toLowerCase());
+  const canAddUsers = hasRole('admin') || hasRole('manager') || hasRole('superuser');
+  const canRemoveUsers = hasRole('superuser');
 
   useEffect(() => {
     if (id) {
@@ -162,9 +178,11 @@ const GroupDetail = () => {
         <div className="tab-content">
           <div className="section-header">
             <h2>Group Members</h2>
-            <button className="btn-primary" onClick={handleOpenAddUsersModal}>
-              Add Users
-            </button>
+            {canAddUsers && (
+              <button className="btn-primary" onClick={handleOpenAddUsersModal}>
+                Add Users
+              </button>
+            )}
           </div>
 
           {users.length === 0 ? (
@@ -202,14 +220,18 @@ const GroupDetail = () => {
                           : '-'}
                       </td>
                       <td>
-                        <button
-                          className="btn-danger btn-small"
-                          onClick={() =>
-                            handleRemoveUser(user.id, `${user.firstName} ${user.lastName}`)
-                          }
-                        >
-                          Remove
-                        </button>
+                        {canRemoveUsers ? (
+                          <button
+                            className="btn-danger btn-small"
+                            onClick={() =>
+                              handleRemoveUser(user.id, `${user.firstName} ${user.lastName}`)
+                            }
+                          >
+                            Remove
+                          </button>
+                        ) : (
+                          <span className="text-muted">{canAddUsers ? 'Cannot remove' : 'View only'}</span>
+                        )}
                       </td>
                     </tr>
                   ))}

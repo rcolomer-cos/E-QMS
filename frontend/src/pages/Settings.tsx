@@ -27,7 +27,7 @@ function Settings() {
   const hasRole = (r: string) => roleNames.map(normalizeRole).includes(r.toLowerCase());
   const canProcesses = hasRole('admin') || hasRole('manager') || hasRole('superuser');
   const canUsers = hasRole('admin') || hasRole('superuser');
-  const canGroups = hasRole('admin') || hasRole('superuser');
+  const canGroups = hasRole('admin') || hasRole('manager') || hasRole('superuser');
   const canModules = hasRole('admin') || hasRole('superuser');
 
   // Determine primary permission label per tab
@@ -35,7 +35,7 @@ function Settings() {
   const tabBadges = useMemo(() => ({
     processes: canProcesses ? (bestRole(['superuser', 'admin', 'manager']) || 'allowed') : 'no access',
     users: canUsers ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
-    groups: canGroups ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
+    groups: canGroups ? (bestRole(['superuser', 'admin', 'manager']) || 'allowed') : 'no access',
     modules: canModules ? (bestRole(['superuser', 'admin']) || 'allowed') : 'no access',
   }), [canProcesses, canUsers, canGroups, canModules]);
 
