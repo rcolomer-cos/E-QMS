@@ -21,13 +21,19 @@ export const createEquipment = async (req: AuthRequest, res: Response): Promise<
 
     const equipment: Equipment = req.body;
 
-    // Generate QR code with URL to read-only page
+    // Handle image upload if present
+    if (req.file) {
+      console.log('File uploaded:', req.file.filename);
+      equipment.imagePath = `uploads/equipment/${req.file.filename}`;
+      console.log('Image path set to:', equipment.imagePath);
+    }
+
+    const equipmentId = await EquipmentModel.create(equipment);
+
+    // Generate QR code on-the-fly (not stored in database)
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const qrData = `${frontendUrl}/equipment/view/${equipment.equipmentNumber}`;
     const qrCode = await QRCode.toDataURL(qrData);
-    equipment.qrCode = qrCode;
-
-    const equipmentId = await EquipmentModel.create(equipment);
 
     // Log audit entry
     await logCreate({
@@ -83,23 +89,6 @@ export const getEquipmentById = async (req: AuthRequest, res: Response): Promise
   }
 };
 
-export const getEquipmentByQR = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { qrCode } = req.params;
-
-    const equipment = await EquipmentModel.findByQRCode(qrCode);
-    if (!equipment) {
-      res.status(404).json({ error: 'Equipment not found' });
-      return;
-    }
-
-    res.json(equipment);
-  } catch (error) {
-    console.error('Get equipment by QR error:', error);
-    res.status(500).json({ error: 'Failed to get equipment' });
-  }
-};
-
 export const updateEquipment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Validate input
@@ -111,6 +100,15 @@ export const updateEquipment = async (req: AuthRequest, res: Response): Promise<
 
     const { id } = req.params;
     const updates = req.body;
+
+    // Handle image upload if present
+    if (req.file) {
+      console.log('File uploaded for update:', req.file.filename);
+      updates.imagePath = `uploads/equipment/${req.file.filename}`;
+      console.log('Image path set to:', updates.imagePath);
+    } else {
+      console.log('No file uploaded, updates:', Object.keys(updates));
+    }
 
     // Check if equipment exists
     const equipment = await EquipmentModel.findById(parseInt(id, 10));
@@ -224,21 +222,18 @@ export const regenerateQRCode = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    // Generate new QR code with URL to read-only page
+    // Generate QR code on-the-fly (not stored in database)
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const qrData = `${frontendUrl}/equipment/view/${equipment.equipmentNumber}`;
     const qrCode = await QRCode.toDataURL(qrData);
 
-    // Update equipment with new QR code
-    await EquipmentModel.update(parseInt(id, 10), { qrCode });
-
     res.json({
-      message: 'QR code regenerated successfully',
+      message: 'QR code generated successfully',
       qrCode,
     });
   } catch (error) {
-    console.error('Regenerate QR code error:', error);
-    res.status(500).json({ error: 'Failed to regenerate QR code' });
+    console.error('Generate QR code error:', error);
+    res.status(500).json({ error: 'Failed to generate QR code' });
   }
 };
 

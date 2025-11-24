@@ -19,8 +19,8 @@ export interface Equipment {
   lastMaintenanceDate?: Date;
   nextMaintenanceDate?: Date;
   maintenanceInterval?: number;
-  qrCode?: string;
   responsiblePerson?: number;
+  imagePath?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -28,6 +28,30 @@ export interface Equipment {
 export class EquipmentModel {
   static async create(equipment: Equipment): Promise<number> {
     const pool = await getConnection();
+
+    // Calculate next calibration date if lastCalibrationDate and calibrationInterval > 0
+    let nextCalibrationDate = null;
+    if (equipment.lastCalibrationDate && equipment.calibrationInterval && equipment.calibrationInterval > 0) {
+      // Parse date in UTC to avoid timezone shifts
+      const lastDate = new Date(equipment.lastCalibrationDate);
+      const year = lastDate.getUTCFullYear();
+      const month = lastDate.getUTCMonth();
+      const day = lastDate.getUTCDate();
+      nextCalibrationDate = new Date(Date.UTC(year, month, day));
+      nextCalibrationDate.setUTCDate(nextCalibrationDate.getUTCDate() + equipment.calibrationInterval);
+    }
+
+    // Calculate next maintenance date if lastMaintenanceDate and maintenanceInterval > 0
+    let nextMaintenanceDate = null;
+    if (equipment.lastMaintenanceDate && equipment.maintenanceInterval && equipment.maintenanceInterval > 0) {
+      // Parse date in UTC to avoid timezone shifts
+      const lastDate = new Date(equipment.lastMaintenanceDate);
+      const year = lastDate.getUTCFullYear();
+      const month = lastDate.getUTCMonth();
+      const day = lastDate.getUTCDate();
+      nextMaintenanceDate = new Date(Date.UTC(year, month, day));
+      nextMaintenanceDate.setUTCDate(nextMaintenanceDate.getUTCDate() + equipment.maintenanceInterval);
+    }
 
     const result = await pool
       .request()
@@ -41,14 +65,18 @@ export class EquipmentModel {
       .input('department', sql.NVarChar, equipment.department)
       .input('status', sql.NVarChar, equipment.status)
       .input('purchaseDate', sql.DateTime, equipment.purchaseDate)
+      .input('lastCalibrationDate', sql.DateTime, equipment.lastCalibrationDate)
+      .input('nextCalibrationDate', sql.DateTime, nextCalibrationDate)
       .input('calibrationInterval', sql.Int, equipment.calibrationInterval)
+      .input('lastMaintenanceDate', sql.DateTime, equipment.lastMaintenanceDate)
+      .input('nextMaintenanceDate', sql.DateTime, nextMaintenanceDate)
       .input('maintenanceInterval', sql.Int, equipment.maintenanceInterval)
-      .input('qrCode', sql.NVarChar, equipment.qrCode)
       .input('responsiblePerson', sql.Int, equipment.responsiblePerson)
+      .input('imagePath', sql.NVarChar, equipment.imagePath)
       .query(`
-        INSERT INTO Equipment (equipmentNumber, name, description, manufacturer, model, serialNumber, location, department, status, purchaseDate, calibrationInterval, maintenanceInterval, qrCode, responsiblePerson)
+        INSERT INTO Equipment (equipmentNumber, name, description, manufacturer, model, serialNumber, location, department, status, purchaseDate, lastCalibrationDate, nextCalibrationDate, calibrationInterval, lastMaintenanceDate, nextMaintenanceDate, maintenanceInterval, responsiblePerson, imagePath)
         OUTPUT INSERTED.id
-        VALUES (@equipmentNumber, @name, @description, @manufacturer, @model, @serialNumber, @location, @department, @status, @purchaseDate, @calibrationInterval, @maintenanceInterval, @qrCode, @responsiblePerson)
+        VALUES (@equipmentNumber, @name, @description, @manufacturer, @model, @serialNumber, @location, @department, @status, @purchaseDate, @lastCalibrationDate, @nextCalibrationDate, @calibrationInterval, @lastMaintenanceDate, @nextMaintenanceDate, @maintenanceInterval, @responsiblePerson, @imagePath)
       `);
 
     return result.recordset[0].id;
@@ -60,16 +88,6 @@ export class EquipmentModel {
       .request()
       .input('id', sql.Int, id)
       .query('SELECT * FROM Equipment WHERE id = @id');
-
-    return result.recordset[0] || null;
-  }
-
-  static async findByQRCode(qrCode: string): Promise<Equipment | null> {
-    const pool = await getConnection();
-    const result = await pool
-      .request()
-      .input('qrCode', sql.NVarChar, qrCode)
-      .query('SELECT * FROM Equipment WHERE qrCode = @qrCode');
 
     return result.recordset[0] || null;
   }
@@ -106,7 +124,62 @@ export class EquipmentModel {
 
   static async update(id: number, updates: Partial<Equipment>): Promise<void> {
     const pool = await getConnection();
+    
+    // Get current equipment data to check for changes in dates/intervals
+    const current = await this.findById(id);
+    if (!current) {
+      throw new Error('Equipment not found');
+    }
+
     const request = pool.request().input('id', sql.Int, id);
+
+    // Calculate next calibration date if needed
+    if (updates.lastCalibrationDate !== undefined || updates.calibrationInterval !== undefined) {
+      const lastCalibrationDate = updates.lastCalibrationDate !== undefined 
+        ? updates.lastCalibrationDate 
+        : current.lastCalibrationDate;
+      const calibrationInterval = updates.calibrationInterval !== undefined 
+        ? updates.calibrationInterval 
+        : current.calibrationInterval;
+
+      if (lastCalibrationDate && calibrationInterval && calibrationInterval > 0) {
+        // Parse date in UTC to avoid timezone shifts
+        const lastDate = new Date(lastCalibrationDate);
+        const year = lastDate.getUTCFullYear();
+        const month = lastDate.getUTCMonth();
+        const day = lastDate.getUTCDate();
+        const nextDate = new Date(Date.UTC(year, month, day));
+        nextDate.setUTCDate(nextDate.getUTCDate() + Number(calibrationInterval));
+        updates.nextCalibrationDate = nextDate;
+      } else {
+        // If interval is 0 or no last date, set next date to null
+        updates.nextCalibrationDate = undefined;
+      }
+    }
+
+    // Calculate next maintenance date if needed
+    if (updates.lastMaintenanceDate !== undefined || updates.maintenanceInterval !== undefined) {
+      const lastMaintenanceDate = updates.lastMaintenanceDate !== undefined 
+        ? updates.lastMaintenanceDate 
+        : current.lastMaintenanceDate;
+      const maintenanceInterval = updates.maintenanceInterval !== undefined 
+        ? updates.maintenanceInterval 
+        : current.maintenanceInterval;
+
+      if (lastMaintenanceDate && maintenanceInterval && maintenanceInterval > 0) {
+        // Parse date in UTC to avoid timezone shifts
+        const lastDate = new Date(lastMaintenanceDate);
+        const year = lastDate.getUTCFullYear();
+        const month = lastDate.getUTCMonth();
+        const day = lastDate.getUTCDate();
+        const nextDate = new Date(Date.UTC(year, month, day));
+        nextDate.setUTCDate(nextDate.getUTCDate() + Number(maintenanceInterval));
+        updates.nextMaintenanceDate = nextDate;
+      } else {
+        // If interval is 0 or no last date, set next date to null
+        updates.nextMaintenanceDate = undefined;
+      }
+    }
 
     const fields: string[] = [];
     Object.entries(updates).forEach(([key, value]) => {

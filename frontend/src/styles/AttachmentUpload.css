@@ -20,6 +20,27 @@
   color: #333;
 }
 
+.attachment-upload-section .attachment-upload-header .btn-secondary {
+  padding: 8px 16px !important;
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px !important;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.attachment-upload-section .attachment-upload-header .btn-secondary:hover {
+  background-color: #4b5563;
+}
+
+.attachment-upload-section .attachment-upload-header .btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .attachment-upload-loading {
   text-align: center;
   padding: 20px;

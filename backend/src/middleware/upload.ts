@@ -90,6 +90,37 @@ export const attachmentUpload = multer({
   },
 });
 
+// Configure storage for equipment images
+const equipmentImageDir = path.join(baseUploadDir, 'equipment');
+if (!fs.existsSync(equipmentImageDir)) {
+  fs.mkdirSync(equipmentImageDir, { recursive: true });
+}
+
+const equipmentImageStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, equipmentImageDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+    cb(null, `equipment-${uniqueSuffix}${path.extname(file.originalname)}`);
+  },
+});
+
+export const equipmentImageUpload = multer({
+  storage: equipmentImageStorage,
+  fileFilter: (_req, file, cb) => {
+    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'));
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB max file size
+  },
+});
+
 // Configure multer for legacy document uploads
 export const uploadMiddleware = multer({
   storage,

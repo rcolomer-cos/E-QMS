@@ -18,9 +18,9 @@ export interface Equipment {
   lastMaintenanceDate?: string;
   nextMaintenanceDate?: string;
   maintenanceInterval?: number;
-  qrCode?: string;
   responsiblePerson?: number;
   responsiblePersonName?: string;
+  imagePath?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -46,13 +46,19 @@ export const getEquipmentById = async (id: number): Promise<Equipment> => {
   return response.data;
 };
 
-export const createEquipment = async (equipment: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt' | 'qrCode'>): Promise<{ equipmentId: number; qrCode: string }> => {
-  const response = await api.post('/equipment', equipment);
+export const createEquipment = async (equipment: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt' | 'qrCode'> | FormData): Promise<{ equipmentId: number; qrCode: string }> => {
+  const config = equipment instanceof FormData ? {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  } : {};
+  const response = await api.post('/equipment', equipment, config);
   return response.data;
 };
 
-export const updateEquipment = async (id: number, equipment: Partial<Equipment>): Promise<void> => {
-  await api.put(`/equipment/${id}`, equipment);
+export const updateEquipment = async (id: number, equipment: Partial<Equipment> | FormData): Promise<void> => {
+  const config = equipment instanceof FormData ? {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  } : {};
+  await api.put(`/equipment/${id}`, equipment, config);
 };
 
 export const deleteEquipment = async (id: number): Promise<void> => {

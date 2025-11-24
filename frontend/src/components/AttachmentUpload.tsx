@@ -17,16 +17,16 @@ interface AttachmentUploadProps {
 }
 
 const AttachmentUpload = ({ entityType, entityId, onAttachmentsChange }: AttachmentUploadProps) => {
+  const { t } = useTranslation();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { t } = useTranslation();
   const toast = useToast();
 
   // Load attachments on mount
   useEffect(() => {
     loadAttachments();
-  }, []);
+  }, [entityType, entityId]);
 
   const loadAttachments = async () => {
     try {
@@ -49,12 +49,12 @@ const AttachmentUpload = ({ entityType, entityId, onAttachmentsChange }: Attachm
     setUploadingFile(true);
     try {
       for (const file of Array.from(files)) {
-        await uploadAttachment(file, entityType, entityId, undefined, 'audit-document');
+        await uploadAttachment(file, entityType, entityId, undefined, 'equipment-document');
       }
-      toast.success(t('common.uploadSuccess'));
+      toast.success(t('attachments.uploadSuccess'));
       await loadAttachments();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || t('common.uploadError'));
+      toast.error(err.response?.data?.error || t('attachments.uploadError'));
     } finally {
       setUploadingFile(false);
       // Reset file input
@@ -65,23 +65,23 @@ const AttachmentUpload = ({ entityType, entityId, onAttachmentsChange }: Attachm
   const handleDeleteAttachment = async (attachmentId: number) => {
     try {
       await deleteAttachment(attachmentId);
-      toast.success(t('common.deleteSuccess'));
+      toast.success(t('attachments.deleteSuccess'));
       await loadAttachments();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || t('common.deleteError'));
+      toast.error(err.response?.data?.error || t('attachments.deleteError'));
     }
   };
 
   if (loading) {
-    return <div className="attachment-upload-loading">{t('common.loading')}</div>;
+    return <div className="attachment-upload-loading">{t('attachments.loading')}</div>;
   }
 
   return (
     <div className="attachment-upload-section">
       <div className="attachment-upload-header">
-        <h3>{t('common.attachments')}</h3>
-        <label className="tw-btn tw-btn-secondary" style={{ cursor: 'pointer', fontSize: '14px' }}>
-          {uploadingFile ? t('common.uploading') : t('common.uploadFile')}
+        <h3>{t('attachments.title')}</h3>
+        <label className="btn-secondary" style={{ cursor: 'pointer' }}>
+          {uploadingFile ? t('attachments.uploading') : t('attachments.uploadFiles')}
           <input
             type="file"
             multiple

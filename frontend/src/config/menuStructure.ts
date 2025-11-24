@@ -99,11 +99,6 @@ export const menuStructure: MenuItem[] = [
         path: '/equipment',
       },
       {
-        id: 'calibration-records',
-        label: 'navigation.calibrationRecords',
-        path: '/calibration-records',
-      },
-      {
         id: 'service-records',
         label: 'navigation.serviceRecords',
         path: '/service-records',

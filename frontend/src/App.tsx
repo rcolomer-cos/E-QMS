@@ -23,6 +23,7 @@ import CAPADetail from './pages/CAPADetail';
 import CAPADashboard from './pages/CAPADashboard';
 import Equipment from './pages/Equipment';
 import EquipmentReadOnly from './pages/EquipmentReadOnly';
+import AddEditEquipment from './pages/AddEditEquipment';
 import Training from './pages/Training';
 import TrainingMatrix from './pages/TrainingMatrix';
 import RoleTrainingRequirements from './pages/RoleTrainingRequirements';
@@ -33,8 +34,6 @@ import Processes from './pages/Processes';
 import ProcessOverview from './pages/ProcessOverview';
 import ProcessDetail from './pages/ProcessDetail';
 import Settings from './pages/Settings';
-import CalibrationRecords from './pages/CalibrationRecords';
-import CalibrationRecordDetail from './pages/CalibrationRecordDetail';
 import InspectionRecords from './pages/InspectionRecords';
 import InspectionRecordDetail from './pages/InspectionRecordDetail';
 import ServiceRecords from './pages/ServiceRecords';
@@ -107,6 +106,12 @@ function App() {
         <Route path="capa/dashboard" element={<ProtectedModuleRoute moduleKey="capa"><CAPADashboard /></ProtectedModuleRoute>} />
         <Route path="capa/:id" element={<ProtectedModuleRoute moduleKey="capa"><CAPADetail /></ProtectedModuleRoute>} />
         <Route path="equipment" element={<ProtectedModuleRoute moduleKey="equipment"><Equipment /></ProtectedModuleRoute>} />
+        <Route path="equipment/add" element={<ProtectedModuleRoute moduleKey="equipment"><AddEditEquipment /></ProtectedModuleRoute>} />
+        <Route path="equipment/edit/:id" element={<ProtectedModuleRoute moduleKey="equipment"><AddEditEquipment /></ProtectedModuleRoute>} />
+        {/* Swedish route aliases */}
+        <Route path="utrustning" element={<ProtectedModuleRoute moduleKey="equipment"><Equipment /></ProtectedModuleRoute>} />
+        <Route path="utrustning/lagg-till" element={<ProtectedModuleRoute moduleKey="equipment"><AddEditEquipment /></ProtectedModuleRoute>} />
+        <Route path="utrustning/redigera/:id" element={<ProtectedModuleRoute moduleKey="equipment"><AddEditEquipment /></ProtectedModuleRoute>} />
         <Route path="training" element={<ProtectedModuleRoute moduleKey="training"><Training /></ProtectedModuleRoute>} />
         <Route path="training-matrix" element={<ProtectedModuleRoute moduleKey="training"><TrainingMatrix /></ProtectedModuleRoute>} />
         <Route path="role-training-requirements" element={<ProtectedModuleRoute moduleKey="training"><RoleTrainingRequirements /></ProtectedModuleRoute>} />
@@ -123,8 +128,6 @@ function App() {
         <Route path="processes" element={<ProtectedModuleRoute moduleKey="processes"><Processes /></ProtectedModuleRoute>} />
         <Route path="processes/overview" element={<ProtectedModuleRoute moduleKey="processes"><ProcessOverview /></ProtectedModuleRoute>} />
         <Route path="processes/:id/detail" element={<ProtectedModuleRoute moduleKey="processes"><ProcessDetail /></ProtectedModuleRoute>} />
-        <Route path="calibration-records" element={<ProtectedModuleRoute moduleKey="equipment"><CalibrationRecords /></ProtectedModuleRoute>} />
-        <Route path="calibration-records/:id" element={<ProtectedModuleRoute moduleKey="equipment"><CalibrationRecordDetail /></ProtectedModuleRoute>} />
         <Route path="inspection-records" element={<ProtectedModuleRoute moduleKey="inspection"><InspectionRecords /></ProtectedModuleRoute>} />
         <Route path="inspection-records/:id" element={<ProtectedModuleRoute moduleKey="inspection"><InspectionRecordDetail /></ProtectedModuleRoute>} />
         <Route path="inspection-mobile" element={<ProtectedModuleRoute moduleKey="inspection"><MobileInspectionForm /></ProtectedModuleRoute>} />

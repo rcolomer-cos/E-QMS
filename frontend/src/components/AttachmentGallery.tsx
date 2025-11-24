@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Attachment, getAttachmentDownloadUrl, downloadAttachment, isImageFile, isPdfFile, formatFileSize, getFileTypeIcon } from '../services/attachmentService';
 import '../styles/AttachmentGallery.css';
 
@@ -9,6 +10,7 @@ interface AttachmentGalleryProps {
 }
 
 const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: AttachmentGalleryProps) => {
+  const { t } = useTranslation();
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [downloading, setDownloading] = useState<number | null>(null);
@@ -33,14 +35,14 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
       await downloadAttachment(attachment.id, attachment.fileName);
     } catch (error) {
       console.error('Failed to download attachment:', error);
-      alert('Failed to download attachment. Please try again.');
+      alert(t('attachments.downloadError'));
     } finally {
       setDownloading(null);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!onDelete || !window.confirm('Are you sure you want to delete this attachment?')) {
+    if (!onDelete || !window.confirm(t('attachments.confirmDelete'))) {
       return;
     }
 
@@ -49,7 +51,7 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
       await onDelete(id);
     } catch (error) {
       console.error('Failed to delete attachment:', error);
-      alert('Failed to delete attachment. Please try again.');
+      alert(t('attachments.deleteError'));
     } finally {
       setDeleting(null);
     }
@@ -62,7 +64,7 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
   if (attachments.length === 0) {
     return (
       <div className="attachment-gallery-empty">
-        <p>No attachments found</p>
+        <p>{t('attachments.noAttachments')}</p>
       </div>
     );
   }
@@ -94,7 +96,7 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
                 </div>
               )}
               <div className="attachment-overlay">
-                <span>Click to view</span>
+                <span>{t('attachments.clickToView')}</span>
               </div>
             </div>
             
@@ -109,7 +111,7 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
                 </p>
               )}
               <p className="attachment-date">
-                Uploaded: {formatDate(attachment.createdAt)}
+                {t('attachments.uploaded')}: {formatDate(attachment.createdAt)}
               </p>
             </div>
 
@@ -118,18 +120,18 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
                 className="btn-download"
                 onClick={() => handleDownload(attachment)}
                 disabled={downloading === attachment.id}
-                title="Download"
+                title={t('common.download')}
               >
-                {downloading === attachment.id ? '⏳' : '⬇️'} Download
+                {downloading === attachment.id ? '⏳' : '⬇️'} {t('common.download')}
               </button>
               {canDelete && (
                 <button
                   className="btn-delete"
                   onClick={() => handleDelete(attachment.id)}
                   disabled={deleting === attachment.id}
-                  title="Delete"
+                  title={t('common.delete')}
                 >
-                  {deleting === attachment.id ? '⏳' : '🗑️'} Delete
+                  {deleting === attachment.id ? '⏳' : '🗑️'} {t('common.delete')}
                 </button>
               )}
             </div>
@@ -184,7 +186,7 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
                     onClick={() => handleDownload(selectedAttachment)}
                     disabled={downloading === selectedAttachment.id}
                   >
-                    {downloading === selectedAttachment.id ? '⏳ Downloading...' : 'Download File'}
+                    {downloading === selectedAttachment.id ? `⏳ ${t('attachments.downloading')}` : t('attachments.downloadFile')}
                   </button>
                 </div>
               )}
@@ -193,13 +195,13 @@ const AttachmentGallery = ({ attachments, onDelete, canDelete = false }: Attachm
             <div className="modal-footer">
               {selectedAttachment.description && (
                 <p className="modal-description">
-                  <strong>Description:</strong> {selectedAttachment.description}
+                  <strong>{t('common.description')}:</strong> {selectedAttachment.description}
                 </p>
               )}
               <div className="modal-metadata">
-                <span>Size: {formatFileSize(selectedAttachment.fileSize)}</span>
+                <span>{t('attachments.size')}: {formatFileSize(selectedAttachment.fileSize)}</span>
                 <span>•</span>
-                <span>Uploaded: {formatDate(selectedAttachment.createdAt)}</span>
+                <span>{t('attachments.uploaded')}: {formatDate(selectedAttachment.createdAt)}</span>
               </div>
             </div>
           </div>
