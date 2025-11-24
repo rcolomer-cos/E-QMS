@@ -110,7 +110,7 @@ function Layout() {
     if (item.path) {
       return (
         <li key={item.id}>
-          <Link to={item.path}>{t(item.label)}</Link>
+          <Link to={item.path} onClick={closeMobileMenu}>{t(item.label)}</Link>
         </li>
       );
     }
@@ -118,10 +118,44 @@ function Layout() {
     return null;
   };
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (mobileMenuOpen && !target.closest('.navbar-menu') && !target.closest('.hamburger-btn')) {
+        closeMobileMenu();
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [mobileMenuOpen]);
+
   return (
     <div className="layout">
       <nav className="navbar">
         <div className="navbar-brand">
+          <button 
+            className="hamburger-btn"
+            onClick={toggleMobileMenu}
+            aria-label="Toggle menu"
+          >
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+          </button>
           {branding?.companyLogoUrl || branding?.companyLogoPath ? (
             <>
               <img 
@@ -138,7 +172,7 @@ function Layout() {
             <h1>{branding?.companyName || t('branding.companyName')}</h1>
           )}
         </div>
-        <ul className="navbar-menu">
+        <ul className={`navbar-menu ${mobileMenuOpen ? 'mobile-open' : ''}`}>
           {menuStructure.map(item => renderMenuItem(item))}
         </ul>
         <div className="navbar-user">
