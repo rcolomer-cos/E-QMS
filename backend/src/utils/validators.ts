@@ -2136,3 +2136,27 @@ export const validateSwotEntryUpdate = [
     .withMessage('Status must be one of: active, archived, addressed'),
 ];
 
+
+// ====================================
+// USER-DEPARTMENT ASSIGNMENT VALIDATORS
+// ====================================
+
+export const validateUserDepartment = [
+  body('userId')
+    .isInt({ min: 1 })
+    .withMessage('Valid user ID is required'),
+  body('departmentId')
+    .isInt({ min: 1 })
+    .withMessage('Valid department ID is required'),
+  body('isPrimary')
+    .optional()
+    .isBoolean()
+    .withMessage('isPrimary must be a boolean value'),
+];
+
+export const validateUserDepartmentUpdate = [
+  body('isPrimary')
+    .optional()
+    .isBoolean()
+    .withMessage('isPrimary must be a boolean value'),
+];

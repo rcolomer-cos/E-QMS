@@ -8,12 +8,14 @@ import {
   UpdateDepartmentData,
 } from '../services/departmentService';
 import { getUsers } from '../services/userService';
+import { getCurrentUser } from '../services/authService';
 import { useToast } from '../contexts/ToastContext';
 import { Department, User } from '../types';
 import '../styles/Departments.css';
 
 const Departments = () => {
   const toast = useToast();
+  const user = getCurrentUser();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,18 @@ const Departments = () => {
     description: '',
     managerId: undefined,
   });
+
+  // Check user permissions
+  const roleNames: string[] = ((user?.roles?.map(r => r.name)) || (user?.role ? [user.role as string] : [])) as string[];
+  const normalizeRole = (name: string) => {
+    const n = (name || '').toLowerCase();
+    if (n === 'administrator' || n.startsWith('admin')) return 'admin';
+    if (n === 'super user' || n === 'super-user' || n.startsWith('super')) return 'superuser';
+    if (n.startsWith('manager')) return 'manager';
+    return n;
+  };
+  const hasRole = (r: string) => roleNames.map(normalizeRole).includes(r.toLowerCase());
+  const canManage = hasRole('superuser') || hasRole('admin') || hasRole('manager');
 
   useEffect(() => {
     loadData();
@@ -135,14 +149,26 @@ const Departments = () => {
   return (
     <div className="departments-page">
       <div className="page-header">
-        <h1>Department Management</h1>
-        <p className="subtitle">Manage organizational departments</p>
-        <button className="btn-add" onClick={() => handleOpenModal()}>
-          Add Department
-        </button>
+        <div>
+          <h1>Department Management</h1>
+          <p className="subtitle">Manage organizational departments</p>
+        </div>
+        {canManage && (
+          <button 
+            onClick={() => handleOpenModal()}
+            className="btn-add"
+          >
+            Add Department
+          </button>
+        )}
       </div>
 
       {error && <div className="error-message">{error}</div>}
+      {!canManage && (
+        <div className="info-message" style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#e3f2fd', borderLeft: '4px solid #2196f3' }}>
+          You have view-only access to departments. Manager, Admin, or Superuser role required to make changes.
+        </div>
+      )}
 
       <div className="table-container">
         <table className="data-table">
@@ -167,20 +193,26 @@ const Departments = () => {
                 <td>{dept.managerName || 'N/A'}</td>
                 <td>{formatDate(dept.createdAt)}</td>
                 <td className="actions-cell">
-                  <button
-                    onClick={() => handleOpenModal(dept)}
-                    className="btn-edit"
-                    title="Edit Department"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(dept.id)}
-                    className="btn-delete"
-                    title="Delete Department"
-                  >
-                    Delete
-                  </button>
+                  {canManage ? (
+                    <>
+                      <button
+                        onClick={() => handleOpenModal(dept)}
+                        className="btn-edit"
+                        title="Edit Department"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(dept.id)}
+                        className="btn-delete"
+                        title="Delete Department"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  ) : (
+                    <span style={{ color: '#999', fontSize: '0.9rem' }}>View Only</span>
+                  )}
                 </td>
               </tr>
             ))}

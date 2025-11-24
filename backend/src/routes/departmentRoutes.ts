@@ -30,8 +30,8 @@ router.put('/orgchart/data', authorizeRoles(UserRole.MANAGER, UserRole.ADMIN, Us
 router.get('/', getAllDepartments); // All authenticated users can view departments
 router.get('/:id', validateId, getDepartmentById); // All authenticated users can view departments
 router.get('/code/:code', getDepartmentByCode); // All authenticated users can view departments by code
-router.post('/', authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), validateDepartment, createDepartment); // Admin/superuser only
-router.put('/:id', authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), validateId, validateDepartmentUpdate, updateDepartment); // Admin/superuser only
-router.delete('/:id', authorizeRoles(UserRole.ADMIN, UserRole.SUPERUSER), validateId, deleteDepartment); // Admin/superuser only
+router.post('/', authorizeRoles(UserRole.MANAGER, UserRole.ADMIN, UserRole.SUPERUSER), validateDepartment, createDepartment); // Manager+ only
+router.put('/:id', authorizeRoles(UserRole.MANAGER, UserRole.ADMIN, UserRole.SUPERUSER), validateId, validateDepartmentUpdate, updateDepartment); // Manager+ only
+router.delete('/:id', authorizeRoles(UserRole.MANAGER, UserRole.ADMIN, UserRole.SUPERUSER), validateId, deleteDepartment); // Manager+ only
 
 export default router;

@@ -6,39 +6,52 @@
   margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.page-header div {
+.page-header > div {
   flex: 1;
 }
 
 .page-header h1 {
   color: #2c3e50;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem 0;
 }
 
 .subtitle {
   color: #7f8c8d;
   font-size: 1rem;
+  margin: 0;
 }
 
-.btn-add {
-  background-color: #27ae60;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: background-color 0.2s;
+.departments-page .btn-add {
+  background-color: #27ae60 !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  transition: background-color 0.2s !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  align-self: flex-start !important;
+  line-height: 1.5 !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+  margin: 0 !important;
+  height: auto !important;
+  min-height: auto !important;
+  width: auto !important;
 }
 
-.btn-add:hover {
-  background-color: #229954;
+.departments-page .btn-add:hover {
+  background-color: #229954 !important;
 }
 
 .error-message {
@@ -137,11 +150,12 @@
 
 .btn-delete {
   background-color: #e74c3c;
-  color: white;
+  color: white !important;
 }
 
 .btn-delete:hover {
   background-color: #c0392b;
+  color: white !important;
 }
 
 .modal-overlay {
@@ -256,7 +270,7 @@
     align-items: stretch;
   }
 
-  .btn-add {
+  .departments-page .btn-add {
     width: 100%;
   }
 

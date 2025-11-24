@@ -28,6 +28,7 @@ import TrainingMatrix from './pages/TrainingMatrix';
 import RoleTrainingRequirements from './pages/RoleTrainingRequirements';
 import Users from './pages/Users';
 import Departments from './pages/Departments';
+import UserDepartments from './pages/UserDepartments';
 import Processes from './pages/Processes';
 import ProcessOverview from './pages/ProcessOverview';
 import ProcessDetail from './pages/ProcessDetail';
@@ -111,6 +112,7 @@ function App() {
         <Route path="role-training-requirements" element={<ProtectedModuleRoute moduleKey="training"><RoleTrainingRequirements /></ProtectedModuleRoute>} />
         <Route path="groups/:id" element={<GroupDetail />} />
         <Route path="departments" element={<Departments />} />
+        <Route path="user-departments" element={<UserDepartments />} />
         <Route path="users/create" element={<CreateUserPage />} />
         <Route path="profile" element={<UserProfile />} />
         
