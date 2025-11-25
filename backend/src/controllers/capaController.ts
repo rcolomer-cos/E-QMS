@@ -51,7 +51,7 @@ export const createCAPA = async (req: AuthRequest, res: Response): Promise<void>
 
 export const getCAPAs = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { status, priority, page = '1', limit = '10' } = req.query;
+    const { status, priority, ncrId, page = '1', limit = '10' } = req.query;
 
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
@@ -65,6 +65,7 @@ export const getCAPAs = async (req: AuthRequest, res: Response): Promise<void> =
     const filters = {
       status: status as CAPAStatus | undefined,
       priority: priority as string | undefined,
+      ncrId: ncrId ? parseInt(ncrId as string, 10) : undefined,
     };
 
     const allCAPAs = await CAPAModel.findAll(filters);

@@ -504,7 +504,53 @@
     "openItems": "Öppna artiklar",
     "overdueItems": "Försenade artiklar",
     "completedThisMonth": "Slutförda denna månad",
-    "implementationTasks": "Implementeringsuppgifter"
+    "implementationTasks": "Implementeringsuppgifter",
+    "actionOwner": "Åtgärdsansvarig",
+    "targetDate": "Målsättningsdatum",
+    "completedDate": "Slutförandedatum",
+    "verifiedBy": "Verifierad av",
+    "source": "Källa",
+    "priority": "Prioritet",
+    "description": "Beskrivning",
+    "rootCause": "Grundorsak",
+    "selectActionOwner": "Välj åtgärdsansvarig",
+    "selectType": "Välj typ",
+    "selectSource": "Välj källa",
+    "selectPriority": "Välj prioritet",
+    "selectNCR": "Välj avvikelse (valfritt)",
+    "noNCR": "Ingen avvikelse",
+    "linkedNCR": "Länkad avvikelse",
+    "linkedCAPAs": "Länkade CAPA",
+    "noLinkedCAPAs": "Inga CAPA är länkade till denna avvikelse",
+    "createCAPAFromNCR": "Skapa CAPA från avvikelse",
+    "types": {
+      "corrective": "Korrigerande",
+      "preventive": "Förebyggande"
+    },
+    "statuses": {
+      "open": "Öppen",
+      "in_progress": "Pågående",
+      "completed": "Slutförd",
+      "verified": "Verifierad",
+      "closed": "Stängd"
+    },
+    "priorities": {
+      "low": "Låg",
+      "medium": "Medel",
+      "high": "Hög",
+      "urgent": "Brådskande"
+    },
+    "sources": {
+      "ncr": "Avvikelserapport",
+      "internal_audit": "Intern revision",
+      "external_audit": "Extern revision",
+      "management_review": "Ledningsgranskning",
+      "customer_complaint": "Kundklagomål",
+      "process_analysis": "Processanalys",
+      "risk_assessment": "Riskbedömning",
+      "improvement_opportunity": "Förbättringsmöjlighet",
+      "other": "Övrigt"
+    }
   },
   "equipment": {
     "title": "Utrustning",

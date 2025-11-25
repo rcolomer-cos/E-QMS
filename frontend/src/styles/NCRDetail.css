@@ -462,3 +462,117 @@
     width: 100%;
   }
 }
+
+/* Linked CAPAs Section */
+.linked-capas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.linked-capa-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.linked-capa-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #3498db;
+}
+
+.capa-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.capa-number {
+  font-weight: 600;
+  color: #3498db;
+  font-size: 0.95rem;
+}
+
+.capa-title {
+  font-size: 1rem;
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  line-height: 1.4;
+}
+
+.capa-card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.meta-label {
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.meta-value {
+  color: #2c3e50;
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.priority-badge.priority-low {
+  background: #d4edda;
+  color: #155724;
+}
+
+.priority-badge.priority-medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.priority-badge.priority-high {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.priority-badge.priority-urgent {
+  background: #dc3545;
+  color: white;
+}
+
+.no-capas-message {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+}
+
+.no-capas-message p {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .linked-capas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .capa-card-meta {
+    grid-template-columns: 1fr;
+  }
+}

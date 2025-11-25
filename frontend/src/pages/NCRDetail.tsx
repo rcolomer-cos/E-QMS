@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getNCRById, updateNCRStatus, updateNCR, UpdateNCRData, deleteNCR } from '../services/ncrService';
 import { getUsers } from '../services/userService';
 import { getAttachmentsByEntity, deleteAttachment, uploadAttachment } from '../services/attachmentService';
+import { getCAPAsByNCRId, CAPA } from '../services/capaService';
 import { NCR as NCRType, User } from '../types';
 import { Attachment } from '../services/attachmentService';
 import AttachmentGallery from '../components/AttachmentGallery';
@@ -17,6 +18,7 @@ function NCRDetail() {
   
   const [ncr, setNcr] = useState<NCRType | null>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [capas, setCapas] = useState<CAPA[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -32,13 +34,13 @@ function NCRDetail() {
   }, [id]);
 
   const loadCurrentUser = () => {
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
         setCurrentUser(user);
       } catch (err) {
-        console.error('Failed to parse user from localStorage:', err);
+        console.error('Failed to parse user from storage:', err);
       }
     }
   };
@@ -48,15 +50,18 @@ function NCRDetail() {
 
     try {
       setLoading(true);
-      const [ncrData, attachmentsData, usersData] = await Promise.all([
-        getNCRById(parseInt(id, 10)),
-        getAttachmentsByEntity('ncr', parseInt(id, 10)),
+      const ncrId = parseInt(id, 10);
+      const [ncrData, attachmentsData, usersData, capasData] = await Promise.all([
+        getNCRById(ncrId),
+        getAttachmentsByEntity('ncr', ncrId),
         getUsers(),
+        getCAPAsByNCRId(ncrId),
       ]);
 
       setNcr(ncrData);
       setAttachments(attachmentsData.data);
       setUsers(usersData);
+      setCapas(capasData);
       setError('');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
@@ -155,8 +160,21 @@ function NCRDetail() {
 
   const hasRole = (roleNames: string[]) => {
     if (!currentUser) return false;
+    // Check roleNames array first (preferred)
     const userRoles = currentUser.roleNames || [];
-    return roleNames.some(role => userRoles.includes(role));
+    if (userRoles.length > 0) {
+      return roleNames.some(role => userRoles.includes(role));
+    }
+    // Fallback: check roles array and extract names
+    if (currentUser.roles && currentUser.roles.length > 0) {
+      const roleNamesFromRoles = currentUser.roles.map(r => r.name.toLowerCase());
+      return roleNames.some(role => roleNamesFromRoles.includes(role.toLowerCase()));
+    }
+    // Legacy fallback: check single role property
+    if (currentUser.role) {
+      return roleNames.some(role => role.toLowerCase() === currentUser.role?.toLowerCase());
+    }
+    return false;
   };
 
   const canEdit = hasRole(['superuser', 'admin', 'manager', 'auditor']);
@@ -202,9 +220,14 @@ function NCRDetail() {
         </div>
         <div className="header-actions">
           {canEdit && (
-            <button className="btn-secondary" onClick={() => navigate(`/ncr/${id}/edit`)}>
-              ✏️ {t('ncr.editNCR')}
-            </button>
+            <>
+              <button className="btn-primary" onClick={() => navigate(`/capa/add?ncrId=${id}`)}>
+                + {t('capa.createCAPAFromNCR')}
+              </button>
+              <button className="btn-secondary" onClick={() => navigate(`/ncr/${id}/edit`)}>
+                ✏️ {t('ncr.editNCR')}
+              </button>
+            </>
           )}
           {canDelete && (
             <button className="btn-danger" onClick={handleDelete}>
@@ -395,6 +418,60 @@ function NCRDetail() {
             </div>
           </div>
         )}
+
+        {/* Linked CAPAs Section */}
+        <div className="content-section">
+          <h2>{t('capa.linkedCAPAs')} ({capas.length})</h2>
+          {capas.length > 0 ? (
+            <div className="linked-capas-grid">
+              {capas.map((capa) => (
+                <div
+                  key={capa.id}
+                  className="linked-capa-card"
+                  onClick={() => navigate(`/capa/${capa.id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="capa-card-header">
+                    <span className="capa-number">{capa.capaNumber}</span>
+                    <span className={`status-badge status-${capa.status}`}>
+                      {t(`capa.statuses.${capa.status}`)}
+                    </span>
+                  </div>
+                  <h3 className="capa-title">{capa.title}</h3>
+                  <div className="capa-card-meta">
+                    <div className="meta-item">
+                      <span className="meta-label">{t('capa.capaType')}:</span>
+                      <span className="meta-value">{t(`capa.types.${capa.type}`)}</span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-label">{t('capa.priority')}:</span>
+                      <span className={`priority-badge priority-${capa.priority}`}>
+                        {t(`capa.priorities.${capa.priority}`)}
+                      </span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-label">{t('capa.actionOwner')}:</span>
+                      <span className="meta-value">{capa.actionOwnerName || getUserName(capa.actionOwner)}</span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-label">{t('capa.targetDate')}:</span>
+                      <span className="meta-value">{formatDate(capa.targetDate)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-capas-message">
+              <p>{t('capa.noLinkedCAPAs')}</p>
+              {canEdit && (
+                <button className="btn-primary" onClick={() => navigate(`/capa/add?ncrId=${id}`)}>
+                  + {t('capa.createCAPAFromNCR')}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Linked Inspection Record */}
         {ncr.inspectionRecordId && (

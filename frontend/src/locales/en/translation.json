@@ -504,7 +504,53 @@
     "openItems": "Open Items",
     "overdueItems": "Overdue Items",
     "completedThisMonth": "Completed This Month",
-    "implementationTasks": "Implementation Tasks"
+    "implementationTasks": "Implementation Tasks",
+    "actionOwner": "Action Owner",
+    "targetDate": "Target Date",
+    "completedDate": "Completed Date",
+    "verifiedBy": "Verified By",
+    "source": "Source",
+    "priority": "Priority",
+    "description": "Description",
+    "rootCause": "Root Cause",
+    "selectActionOwner": "Select Action Owner",
+    "selectType": "Select Type",
+    "selectSource": "Select Source",
+    "selectPriority": "Select Priority",
+    "selectNCR": "Select NCR (Optional)",
+    "noNCR": "No NCR",
+    "linkedNCR": "Linked NCR",
+    "linkedCAPAs": "Linked CAPAs",
+    "noLinkedCAPAs": "No CAPAs are linked to this NCR",
+    "createCAPAFromNCR": "Create CAPA from NCR",
+    "types": {
+      "corrective": "Corrective",
+      "preventive": "Preventive"
+    },
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "verified": "Verified",
+      "closed": "Closed"
+    },
+    "priorities": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "sources": {
+      "ncr": "Non-Conformance Report",
+      "internal_audit": "Internal Audit",
+      "external_audit": "External Audit",
+      "management_review": "Management Review",
+      "customer_complaint": "Customer Complaint",
+      "process_analysis": "Process Analysis",
+      "risk_assessment": "Risk Assessment",
+      "improvement_opportunity": "Improvement Opportunity",
+      "other": "Other"
+    }
   },
   "equipment": {
     "title": "Equipment",

@@ -68,8 +68,21 @@ function NCR() {
 
   const hasRole = (roleNames: string[]) => {
     if (!currentUser) return false;
+    // Check roleNames array first (preferred)
     const userRoles = currentUser.roleNames || [];
-    return roleNames.some(role => userRoles.includes(role));
+    if (userRoles.length > 0) {
+      return roleNames.some(role => userRoles.includes(role));
+    }
+    // Fallback: check roles array and extract names
+    if (currentUser.roles && currentUser.roles.length > 0) {
+      const roleNamesFromRoles = currentUser.roles.map(r => r.name.toLowerCase());
+      return roleNames.some(role => roleNamesFromRoles.includes(role.toLowerCase()));
+    }
+    // Legacy fallback: check single role property
+    if (currentUser.role) {
+      return roleNames.some(role => role.toLowerCase() === currentUser.role?.toLowerCase());
+    }
+    return false;
   };
 
   const canEdit = hasRole(['superuser', 'admin', 'manager', 'auditor']);

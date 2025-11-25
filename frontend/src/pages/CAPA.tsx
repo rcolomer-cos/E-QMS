@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { getCurrentUser } from '../services/authService';
 import {
   getCAPAs,
   getCAPAsAssignedToMe,
@@ -16,6 +18,7 @@ import CAPAForm from '../components/CAPAForm';
 type ViewMode = 'all' | 'assigned' | 'overdue';
 
 function CAPA() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
   const [capas, setCapas] = useState<CAPAType[]>([]);
@@ -33,16 +36,32 @@ function CAPA() {
   }, [viewMode]);
 
   const loadCurrentUser = () => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        setCurrentUser(user);
-      } catch (err) {
-        console.error('Failed to parse user from localStorage:', err);
-      }
+    const user = getCurrentUser();
+    if (user) {
+      setCurrentUser(user);
     }
   };
+
+  const hasRole = (roleNames: string[]) => {
+    if (!currentUser) return false;
+    // Check roleNames array first (preferred)
+    const userRoles = currentUser.roleNames || [];
+    if (userRoles.length > 0) {
+      return roleNames.some(role => userRoles.includes(role));
+    }
+    // Fallback: check roles array and extract names
+    if (currentUser.roles && currentUser.roles.length > 0) {
+      const roleNamesFromRoles = currentUser.roles.map(r => r.name.toLowerCase());
+      return roleNames.some(role => roleNamesFromRoles.includes(role.toLowerCase()));
+    }
+    // Legacy fallback: check single role property
+    if (currentUser.role) {
+      return roleNames.some(role => role.toLowerCase() === currentUser.role?.toLowerCase());
+    }
+    return false;
+  };
+
+  const canEdit = hasRole(['superuser', 'admin', 'manager', 'auditor']);
 
   const loadData = async () => {
     try {
@@ -118,10 +137,7 @@ function CAPA() {
     return priorityMap[priority] || 'priority-low';
   };
 
-  const canCreateCAPA = () => {
-    const role = currentUser?.role?.toLowerCase() || '';
-    return ['admin', 'manager', 'auditor'].includes(role);
-  };
+  const canCreateCAPA = hasRole(['superuser', 'admin', 'manager', 'auditor']);
 
   if (showCreateForm) {
     return (
@@ -139,14 +155,14 @@ function CAPA() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Corrective and Preventive Actions (CAPA)</h1>
+        <h1>{t('capa.fullTitle')}</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="tw-btn tw-btn-secondary" onClick={() => navigate('/capa/dashboard')}>
-            Dashboard
+          <button className="btn-secondary" onClick={() => navigate('/capa/dashboard')}>
+            {t('capa.dashboard')}
           </button>
-          {canCreateCAPA() && (
-            <button className="tw-btn tw-btn-primary" onClick={() => setShowCreateForm(true)}>
-              Create CAPA
+          {canCreateCAPA && (
+            <button className="btn-primary" onClick={() => navigate('/capa/add')}>
+              {t('capa.createCAPA')}
             </button>
           )}
         </div>
@@ -154,77 +170,111 @@ function CAPA() {
 
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
         <button
-          className={viewMode === 'all' ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-secondary'}
+          className={viewMode === 'all' ? 'btn-primary' : 'btn-secondary'}
           onClick={() => setViewMode('all')}
         >
-          All CAPAs
+          {t('capa.allCAPAs')}
         </button>
         <button
-          className={viewMode === 'assigned' ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-secondary'}
+          className={viewMode === 'assigned' ? 'btn-primary' : 'btn-secondary'}
           onClick={() => setViewMode('assigned')}
         >
-          Assigned to Me
+          {t('common.assignedToMe')}
         </button>
         <button
-          className={viewMode === 'overdue' ? 'tw-btn tw-btn-primary' : 'tw-btn tw-btn-secondary'}
+          className={viewMode === 'overdue' ? 'btn-primary' : 'btn-secondary'}
           onClick={() => setViewMode('overdue')}
         >
-          Overdue
+          {t('capa.overdueItems')}
         </button>
       </div>
 
-      {loading && <p>Loading CAPAs...</p>}
+      {loading && <p>{t('common.loading')}</p>}
       {error && <p className="error">{error}</p>}
 
       {!loading && !error && (
         <table className="data-table">
           <thead>
             <tr>
-              <th>CAPA Number</th>
-              <th>Title</th>
-              <th>Type</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Action Owner</th>
-              <th>Target Date</th>
-              <th>Actions</th>
+              <th>{t('capa.capaNumber')}</th>
+              <th>{t('capa.capaTitle')}</th>
+              <th>{t('capa.capaType')}</th>
+              <th>{t('capa.linkedNCR')}</th>
+              <th>{t('capa.priority')}</th>
+              <th>{t('capa.capaStatus')}</th>
+              <th>{t('capa.actionOwner')}</th>
+              <th>{t('capa.targetDate')}</th>
+              <th>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {capas.length === 0 ? (
               <tr>
-                <td colSpan={8}>No CAPAs found</td>
+                <td colSpan={9}>{t('messages.noData')}</td>
               </tr>
             ) : (
               capas.map((capa) => (
                 <tr key={capa.id} className={isOverdue(capa.targetDate) && capa.status !== 'closed' ? 'overdue-row' : ''}>
                   <td>{capa.capaNumber}</td>
                   <td>{capa.title}</td>
-                  <td style={{ textTransform: 'capitalize' }}>{capa.type}</td>
+                  <td>{t(`capa.types.${capa.type}`)}</td>
+                  <td>
+                    {capa.ncrId ? (
+                      <button
+                        className="tw-btn-link"
+                        onClick={() => navigate(`/ncr/${capa.ncrId}`)}
+                        style={{
+                          color: '#3498db',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          border: 'none',
+                          background: 'none',
+                          padding: 0,
+                          font: 'inherit'
+                        }}
+                      >
+                        {t('ncr.title')} #{capa.ncrId}
+                      </button>
+                    ) : (
+                      <span style={{ color: '#7f8c8d' }}>—</span>
+                    )}
+                  </td>
                   <td>
                     <span className={`badge ${getPriorityBadgeClass(capa.priority)}`}>
-                      {capa.priority}
+                      {t(`capa.priorities.${capa.priority}`)}
                     </span>
                   </td>
                   <td>
                     <span className={`badge ${getStatusBadgeClass(capa.status)}`}>
-                      {capa.status.replace('_', ' ')}
+                      {t(`capa.statuses.${capa.status}`)}
                     </span>
                   </td>
-                  <td>{capa.actionOwnerName || `User ${capa.actionOwner}`}</td>
+                  <td>{capa.actionOwnerName || `${t('common.user')} ${capa.actionOwner}`}</td>
                   <td>
                     {new Date(capa.targetDate).toLocaleDateString()}
                     {isOverdue(capa.targetDate) && capa.status !== 'closed' && (
-                      <span style={{ color: 'red', marginLeft: '5px', fontWeight: 'bold' }}>⚠ OVERDUE</span>
+                      <span style={{ color: 'red', marginLeft: '5px', fontWeight: 'bold' }}>⚠ {t('capa.overdueItems').toUpperCase()}</span>
                     )}
                   </td>
                   <td>
-                    <button 
-                      className="tw-btn-small"
-                      onClick={() => handleViewCAPA(capa.id)}
-                    >
-                      View Details
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        className="btn-view"
+                        onClick={() => handleViewCAPA(capa.id)}
+                        title={t('common.view')}
+                      >
+                        👁️
+                      </button>
+                      {canEdit && (
+                        <button
+                          className="btn-edit"
+                          onClick={() => navigate(`/capa/${capa.id}/edit`)}
+                          title={t('capa.editCAPA')}
+                        >
+                          ✏️
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

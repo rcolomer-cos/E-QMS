@@ -64,7 +64,7 @@ export class CAPAModel {
     return result.recordset[0] || null;
   }
 
-  static async findAll(filters?: { status?: CAPAStatus; priority?: string }): Promise<CAPA[]> {
+  static async findAll(filters?: { status?: CAPAStatus; priority?: string; ncrId?: number }): Promise<CAPA[]> {
     const pool = await getConnection();
     const request = pool.request();
     let query = 'SELECT * FROM CAPAs WHERE 1=1';
@@ -76,6 +76,10 @@ export class CAPAModel {
     if (filters?.priority) {
       request.input('priority', sql.NVarChar, filters.priority);
       query += ' AND priority = @priority';
+    }
+    if (filters?.ncrId) {
+      request.input('ncrId', sql.Int, filters.ncrId);
+      query += ' AND ncrId = @ncrId';
     }
 
     query += ' ORDER BY targetDate ASC';

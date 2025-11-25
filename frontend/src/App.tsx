@@ -21,6 +21,8 @@ import EditNCR from './pages/EditNCR';
 import NCRDetail from './pages/NCRDetail';
 import NCRDashboard from './pages/NCRDashboard';
 import CAPA from './pages/CAPA';
+import AddCAPA from './pages/AddCAPA';
+import EditCAPA from './pages/EditCAPA';
 import CAPADetail from './pages/CAPADetail';
 import CAPADashboard from './pages/CAPADashboard';
 import Equipment from './pages/Equipment';
@@ -107,7 +109,9 @@ function App() {
         <Route path="ncr/:id/edit" element={<ProtectedModuleRoute moduleKey="ncr"><EditNCR /></ProtectedModuleRoute>} />
         <Route path="ncr/:id" element={<ProtectedModuleRoute moduleKey="ncr"><NCRDetail /></ProtectedModuleRoute>} />
         <Route path="capa" element={<ProtectedModuleRoute moduleKey="capa"><CAPA /></ProtectedModuleRoute>} />
+        <Route path="capa/add" element={<ProtectedModuleRoute moduleKey="capa"><AddCAPA /></ProtectedModuleRoute>} />
         <Route path="capa/dashboard" element={<ProtectedModuleRoute moduleKey="capa"><CAPADashboard /></ProtectedModuleRoute>} />
+        <Route path="capa/:id/edit" element={<ProtectedModuleRoute moduleKey="capa"><EditCAPA /></ProtectedModuleRoute>} />
         <Route path="capa/:id" element={<ProtectedModuleRoute moduleKey="capa"><CAPADetail /></ProtectedModuleRoute>} />
         <Route path="equipment" element={<ProtectedModuleRoute moduleKey="equipment"><Equipment /></ProtectedModuleRoute>} />
         <Route path="equipment/add" element={<ProtectedModuleRoute moduleKey="equipment"><AddEditEquipment /></ProtectedModuleRoute>} />

@@ -137,6 +137,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         lastName: user.lastName,
         department: user.department,
         roles: user.roles,
+        roleNames: user.roleNames,
         mustChangePassword: user.mustChangePassword,
       },
     });

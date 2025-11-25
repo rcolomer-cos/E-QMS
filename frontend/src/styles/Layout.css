@@ -21,6 +21,15 @@
   margin-right: 3rem;
 }
 
+.navbar-brand .app-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+  padding-right: 1rem;
+  border-right: 2px solid rgba(255, 255, 255, 0.3);
+}
+
 .navbar-brand h1 {
   margin: 0;
   font-size: 1.5rem;
@@ -133,16 +142,30 @@
 
 .navbar-menu .has-submenu .submenu {
   display: none;
-  position: static;
+  position: absolute;
+  left: 100%;
+  top: 0;
   background: #34495e;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-  margin-left: 1rem;
+  border-radius: 4px;
+  padding: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  min-width: 200px;
+  margin-left: 0.25rem;
 }
 
-.navbar-menu .has-submenu:hover > .submenu {
+.navbar-menu .has-submenu:hover > .submenu,
+.navbar-menu .has-submenu .submenu:hover {
   display: block;
+}
+
+.navbar-menu .has-submenu::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: 0.5rem;
+  height: 100%;
+  background: transparent;
 }
 
 .navbar-menu .submenu li {

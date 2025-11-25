@@ -298,9 +298,9 @@ function CAPADetail() {
       <div className="page-header">
         <h1>CAPA Details</h1>
         <div className="header-actions">
-          {!isEditing && canEdit() && (
-            <button onClick={handleEdit} className="btn-secondary">
-              Edit
+          {canEdit() && (
+            <button onClick={() => navigate(`/capa/${id}/edit`)} className="btn-primary">
+              ✏️ Edit CAPA
             </button>
           )}
           <button onClick={() => navigate('/capa')} className="btn-secondary">

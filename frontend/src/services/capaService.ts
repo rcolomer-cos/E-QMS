@@ -202,3 +202,11 @@ export const getCAPADashboardStats = async (filters?: {
   const response = await api.get<CAPADashboardStats>(`/capas/dashboard/stats?${params.toString()}`);
   return response.data;
 };
+
+/**
+ * Get CAPAs linked to a specific NCR
+ */
+export const getCAPAsByNCRId = async (ncrId: number): Promise<CAPA[]> => {
+  const response = await api.get<{ data: CAPA[] }>(`/capas?ncrId=${ncrId}`);
+  return response.data.data || response.data;
+};

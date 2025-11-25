@@ -156,6 +156,7 @@ function Layout() {
             <span className="hamburger-line"></span>
             <span className="hamburger-line"></span>
           </button>
+          <span className="app-name">E-QMS</span>
           {branding?.companyLogoUrl || branding?.companyLogoPath ? (
             <>
               <img 
