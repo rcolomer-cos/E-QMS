@@ -58,6 +58,7 @@ import importRoutes from './routes/importRoutes';
 import workRoleRoutes from './routes/workRoleRoutes';
 import skillLevelRoutes from './routes/skillLevelRoutes';
 import userWorkRoleRoutes from './routes/userWorkRoleRoutes';
+import workRoleKpiRoutes from './routes/workRoleKpiRoutes';
 
 // Import scheduler service
 // TEMPORARILY DISABLED FOR DEBUGGING
@@ -152,6 +153,7 @@ app.use('/api/imports', importRoutes);
 app.use('/api/work-roles', workRoleRoutes);
 app.use('/api/skill-levels', skillLevelRoutes);
 app.use('/api/user-work-roles', userWorkRoleRoutes);
+app.use('/api/work-role-kpis', workRoleKpiRoutes);
 
 // 404 handler
 app.use((_req, res) => {

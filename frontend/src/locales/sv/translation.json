@@ -219,6 +219,7 @@
     "trainingMatrix": "Utbildningsmatris",
     "roleRequirements": "Rollkrav",
     "workRoles": "Arbetsroller",
+    "workRoleKPI": "KPI-tavla för Arbetsroller",
     "skillLevels": "Kompetensnivåer",
     "userWorkRoles": "Användararbetsroller",
     "users": "Användare",

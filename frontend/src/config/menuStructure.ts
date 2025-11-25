@@ -146,6 +146,12 @@ export const menuStructure: MenuItem[] = [
         requireAnyRole: ['manager', 'superuser'],
       },
       {
+        id: 'work-role-kpi',
+        label: 'navigation.workRoleKPI',
+        path: '/work-roles/kpi',
+        requireAnyRole: ['manager', 'superuser', 'hr_manager', 'admin', 'quality_manager'],
+      },
+      {
         id: 'skill-levels',
         label: 'navigation.skillLevels',
         path: '/skill-levels',

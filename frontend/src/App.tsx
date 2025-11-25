@@ -67,6 +67,7 @@ import SwotAnalysis from './pages/SwotAnalysis';
 import DataImport from './pages/DataImport';
 import WorkRoles from './pages/WorkRoles';
 import WorkRoleForm from './pages/WorkRoleForm';
+import WorkRoleKPIBoard from './pages/WorkRoleKPIBoard';
 import SkillLevels from './pages/SkillLevels';
 import UserWorkRoleAssignments from './pages/UserWorkRoleAssignments';
 import UserWorkRoleForm from './pages/UserWorkRoleForm';
@@ -133,6 +134,7 @@ function App() {
         <Route path="work-roles" element={<WorkRoles />} />
         <Route path="work-roles/add" element={<WorkRoleForm />} />
         <Route path="work-roles/edit/:id" element={<WorkRoleForm />} />
+        <Route path="work-roles/kpi" element={<WorkRoleKPIBoard />} />
         <Route path="skill-levels" element={<SkillLevels />} />
         <Route path="user-work-roles" element={<UserWorkRoleAssignments />} />
         <Route path="user-work-roles/assign" element={<UserWorkRoleForm />} />
