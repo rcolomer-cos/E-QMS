@@ -49,6 +49,8 @@ import RiskDetail from './pages/RiskDetail';
 import RiskBoard from './pages/RiskBoard';
 import SupplierPerformanceDashboard from './pages/SupplierPerformanceDashboard';
 import ApprovedSupplierList from './pages/ApprovedSupplierList';
+import AddSupplier from './pages/AddSupplier';
+import EditSupplier from './pages/EditSupplier';
 import InspectionSchedule from './pages/InspectionSchedule';
 import InspectionPlanning from './pages/InspectionPlanning';
 import MobileInspectionForm from './pages/MobileInspectionForm';
@@ -152,6 +154,8 @@ function App() {
         <Route path="swot-analysis" element={<ProtectedModuleRoute moduleKey="improvements"><SwotAnalysis /></ProtectedModuleRoute>} />
         <Route path="supplier-performance" element={<SupplierPerformanceDashboard />} />
         <Route path="approved-supplier-list" element={<ApprovedSupplierList />} />
+        <Route path="approved-supplier-list/add" element={<AddSupplier />} />
+        <Route path="approved-supplier-list/edit/:id" element={<EditSupplier />} />
         <Route path="improvement-ideas" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementIdeas /></ProtectedModuleRoute>} />
         <Route path="improvement-ideas/dashboard" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementStatusDashboard /></ProtectedModuleRoute>} />
         <Route path="improvement-ideas/:id" element={<ProtectedModuleRoute moduleKey="improvements"><ImprovementIdeaDetail /></ProtectedModuleRoute>} />

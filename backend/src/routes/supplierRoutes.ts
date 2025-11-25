@@ -31,8 +31,8 @@ router.get('/industries', getIndustries);
 // Export suppliers - Accessible to all authenticated users
 router.get('/export', exportSuppliers);
 
-// Create supplier - Requires ADMIN or MANAGER role
-router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), createSupplier);
+// Create supplier - Requires ADMIN, MANAGER, or SUPERUSER role
+router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), createSupplier);
 
 // Get all suppliers - Accessible to all authenticated users
 router.get('/', getSuppliers);
@@ -43,19 +43,19 @@ router.get('/number/:supplierNumber', getSupplierByNumber);
 // Get supplier by ID - Accessible to all authenticated users
 router.get('/:id', validateId, getSupplierById);
 
-// Update supplier approval status - ADMIN and MANAGER only
+// Update supplier approval status - ADMIN, MANAGER, and SUPERUSER only
 router.put(
   '/:id/approval-status',
   validateId,
-  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER),
+  authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER),
   updateSupplierApprovalStatus
 );
 
 // Reactivate supplier - ADMIN, MANAGER, SUPERUSER
 router.put('/:id/reactivate', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), reactivateSupplier);
 
-// Update supplier - Requires ADMIN or MANAGER role
-router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), updateSupplier);
+// Update supplier - Requires ADMIN, MANAGER, or SUPERUSER role
+router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), updateSupplier);
 
 // Deactivate supplier - Requires ADMIN, MANAGER, or SUPERUSER role
 router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deactivateSupplier);

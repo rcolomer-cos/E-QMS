@@ -1,22 +1,27 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getSupplierPerformanceDashboard,
   Supplier,
   SupplierPerformanceDashboard as DashboardData,
 } from '../services/supplierService';
+import { getCurrentUser } from '../services/authService';
 import '../styles/SupplierPerformanceDashboard.css';
 
 function SupplierPerformanceDashboard() {
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Filter states
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   useEffect(() => {
+    loadCurrentUser();
     loadDashboardData();
   }, []);
 
@@ -26,6 +31,32 @@ function SupplierPerformanceDashboard() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dashboardData, riskFilter, categoryFilter]);
+
+  const loadCurrentUser = () => {
+    const user = getCurrentUser();
+    setCurrentUser(user);
+  };
+
+  const hasRole = (roleNames: string[]) => {
+    if (!currentUser) return false;
+    // Check roleNames array first (preferred)
+    const userRoles = currentUser.roleNames || [];
+    if (userRoles.length > 0) {
+      return roleNames.some(role => userRoles.map((r: string) => r.toLowerCase()).includes(role.toLowerCase()));
+    }
+    // Fallback: check roles array and extract names
+    if (currentUser.roles && currentUser.roles.length > 0) {
+      const roleNamesFromRoles = currentUser.roles.map((r: any) => r.name.toLowerCase());
+      return roleNames.some(role => roleNamesFromRoles.includes(role.toLowerCase()));
+    }
+    // Legacy fallback: check single role property
+    if (currentUser.role) {
+      return roleNames.some(role => role.toLowerCase() === currentUser.role?.toLowerCase());
+    }
+    return false;
+  };
+
+  const canManageSuppliers = hasRole(['superuser', 'admin', 'manager']);
 
   const loadDashboardData = async () => {
     try {
@@ -112,6 +143,16 @@ function SupplierPerformanceDashboard() {
     <div className="supplier-dashboard">
       <div className="page-header">
         <h1>Supplier Performance Dashboard</h1>
+        <div className="header-actions">
+          {canManageSuppliers && (
+            <button 
+              className="btn-primary"
+              onClick={() => navigate('/approved-supplier-list')}
+            >
+              Manage Suppliers
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Summary Statistics */}
@@ -123,12 +164,6 @@ function SupplierPerformanceDashboard() {
         <div className="stat-card stat-evaluations">
           <div className="stat-value">{stats.totalEvaluations || 0}</div>
           <div className="stat-label">Total Evaluations</div>
-        </div>
-        <div className="stat-card stat-score">
-          <div className="stat-value">
-            {stats.avgOverallScore ? stats.avgOverallScore.toFixed(1) : 'N/A'}
-          </div>
-          <div className="stat-label">Avg Overall Score</div>
         </div>
         <div className="stat-card stat-quality">
           <div className="stat-value">
@@ -308,12 +343,13 @@ function SupplierPerformanceDashboard() {
                 <th>Name</th>
                 <th>Category</th>
                 <th>Risk Level</th>
-                <th>Performance Score</th>
+                <th>Rating</th>
                 <th>Grade</th>
                 <th>Latest Score</th>
                 <th>Latest Compliance</th>
                 <th>Evaluations</th>
                 <th>Non-Compliant</th>
+                {canManageSuppliers && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -343,9 +379,14 @@ function SupplierPerformanceDashboard() {
                       </span>
                     </td>
                     <td>
-                      {supplier.performanceScore !== null && supplier.performanceScore !== undefined
-                        ? supplier.performanceScore.toFixed(1)
-                        : 'N/A'}
+                      {supplier.rating !== null && supplier.rating !== undefined ? (
+                        <span className="rating-display">
+                          {'★'.repeat(supplier.rating)}
+                          {'☆'.repeat(5 - supplier.rating)}
+                        </span>
+                      ) : (
+                        'N/A'
+                      )}
                     </td>
                     <td>
                       {supplier.qualityGrade ? (
@@ -378,6 +419,19 @@ function SupplierPerformanceDashboard() {
                         <span className="ok-count">0</span>
                       )}
                     </td>
+                    {canManageSuppliers && (
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            className="btn-view"
+                            onClick={() => navigate(`/approved-supplier-list?supplier=${supplier.id}`)}
+                            title="View Details"
+                          >
+                            👁️
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

@@ -100,42 +100,76 @@ export interface SupplierSortOptions {
 
 export class SupplierModel {
   /**
+   * Generate next supplier number
+   */
+  static async generateSupplierNumber(): Promise<string> {
+    const pool = await getConnection();
+
+    const result = await pool.request().query(`
+      SELECT TOP 1 supplierNumber
+      FROM Suppliers
+      WHERE supplierNumber LIKE 'SUP%'
+      ORDER BY CAST(SUBSTRING(supplierNumber, 4, LEN(supplierNumber)) AS INT) DESC
+    `);
+
+    if (result.recordset.length === 0) {
+      return 'SUP001';
+    }
+
+    const lastNumber = result.recordset[0].supplierNumber;
+    const numberPart = parseInt(lastNumber.substring(3), 10);
+    const nextNumber = numberPart + 1;
+
+    return `SUP${nextNumber.toString().padStart(3, '0')}`;
+  }
+
+  /**
    * Create a new supplier
    */
   static async create(supplier: Supplier): Promise<number> {
     const pool = await getConnection();
 
+    // Generate supplier number if not provided
+    if (!supplier.supplierNumber) {
+      supplier.supplierNumber = await this.generateSupplierNumber();
+    }
+
+    // Helper function to convert empty strings to null
+    const toNullIfEmpty = (value: any) => (value === '' ? null : value);
+
     const result = await pool
       .request()
       .input('supplierNumber', sql.NVarChar, supplier.supplierNumber)
       .input('name', sql.NVarChar, supplier.name)
-      .input('description', sql.NVarChar, supplier.description)
-      .input('contactPerson', sql.NVarChar, supplier.contactPerson)
-      .input('email', sql.NVarChar, supplier.email)
-      .input('phone', sql.NVarChar, supplier.phone)
-      .input('alternatePhone', sql.NVarChar, supplier.alternatePhone)
-      .input('fax', sql.NVarChar, supplier.fax)
-      .input('website', sql.NVarChar, supplier.website)
-      .input('addressLine1', sql.NVarChar, supplier.addressLine1)
-      .input('addressLine2', sql.NVarChar, supplier.addressLine2)
-      .input('city', sql.NVarChar, supplier.city)
-      .input('stateProvince', sql.NVarChar, supplier.stateProvince)
-      .input('postalCode', sql.NVarChar, supplier.postalCode)
-      .input('country', sql.NVarChar, supplier.country)
+      .input('description', sql.NVarChar, toNullIfEmpty(supplier.description))
+      .input('contactPerson', sql.NVarChar, toNullIfEmpty(supplier.contactPerson))
+      .input('email', sql.NVarChar, toNullIfEmpty(supplier.email))
+      .input('phone', sql.NVarChar, toNullIfEmpty(supplier.phone))
+      .input('alternatePhone', sql.NVarChar, toNullIfEmpty(supplier.alternatePhone))
+      .input('fax', sql.NVarChar, toNullIfEmpty(supplier.fax))
+      .input('website', sql.NVarChar, toNullIfEmpty(supplier.website))
+      .input('addressLine1', sql.NVarChar, toNullIfEmpty(supplier.addressLine1))
+      .input('addressLine2', sql.NVarChar, toNullIfEmpty(supplier.addressLine2))
+      .input('city', sql.NVarChar, toNullIfEmpty(supplier.city))
+      .input('stateProvince', sql.NVarChar, toNullIfEmpty(supplier.stateProvince))
+      .input('postalCode', sql.NVarChar, toNullIfEmpty(supplier.postalCode))
+      .input('country', sql.NVarChar, toNullIfEmpty(supplier.country))
       .input('category', sql.NVarChar, supplier.category)
-      .input('supplierType', sql.NVarChar, supplier.supplierType)
-      .input('industry', sql.NVarChar, supplier.industry)
-      .input('productsServices', sql.NVarChar, supplier.productsServices)
+      .input('supplierType', sql.NVarChar, toNullIfEmpty(supplier.supplierType))
+      .input('industry', sql.NVarChar, toNullIfEmpty(supplier.industry))
+      .input('productsServices', sql.NVarChar, toNullIfEmpty(supplier.productsServices))
       .input('approvalStatus', sql.NVarChar, supplier.approvalStatus)
       .input('rating', sql.Int, supplier.rating)
       .input('performanceScore', sql.Decimal(5, 2), supplier.performanceScore)
-      .input('qualityGrade', sql.NVarChar, supplier.qualityGrade)
-      .input('certifications', sql.NVarChar, supplier.certifications)
-      .input('complianceStatus', sql.NVarChar, supplier.complianceStatus)
-      .input('riskLevel', sql.NVarChar, supplier.riskLevel)
+      .input('qualityGrade', sql.NVarChar, toNullIfEmpty(supplier.qualityGrade))
+      .input('certifications', sql.NVarChar, toNullIfEmpty(supplier.certifications))
+      .input('complianceStatus', sql.NVarChar, toNullIfEmpty(supplier.complianceStatus))
+      .input('riskLevel', sql.NVarChar, toNullIfEmpty(supplier.riskLevel))
       .input('criticalSupplier', sql.Bit, supplier.criticalSupplier || false)
       .input('preferredSupplier', sql.Bit, supplier.preferredSupplier || false)
-      .input('notes', sql.NVarChar(sql.MAX), supplier.notes)
+      .input('businessRegistrationNumber', sql.NVarChar, toNullIfEmpty(supplier.businessRegistrationNumber))
+      .input('paymentTerms', sql.NVarChar, toNullIfEmpty(supplier.paymentTerms))
+      .input('notes', sql.NVarChar(sql.MAX), toNullIfEmpty(supplier.notes))
       .input('createdBy', sql.Int, supplier.createdBy)
       .query(`
         INSERT INTO Suppliers (
@@ -143,14 +177,14 @@ export class SupplierModel {
           addressLine1, addressLine2, city, stateProvince, postalCode, country,
           category, supplierType, industry, productsServices, approvalStatus,
           rating, performanceScore, qualityGrade, certifications, complianceStatus,
-          riskLevel, criticalSupplier, preferredSupplier, notes, createdBy
+          riskLevel, criticalSupplier, preferredSupplier, businessRegistrationNumber, paymentTerms, notes, createdBy
         )
         VALUES (
           @supplierNumber, @name, @description, @contactPerson, @email, @phone, @alternatePhone, @fax, @website,
           @addressLine1, @addressLine2, @city, @stateProvince, @postalCode, @country,
           @category, @supplierType, @industry, @productsServices, @approvalStatus,
           @rating, @performanceScore, @qualityGrade, @certifications, @complianceStatus,
-          @riskLevel, @criticalSupplier, @preferredSupplier, @notes, @createdBy
+          @riskLevel, @criticalSupplier, @preferredSupplier, @businessRegistrationNumber, @paymentTerms, @notes, @createdBy
         );
         SELECT SCOPE_IDENTITY() as id;
       `);
@@ -349,18 +383,37 @@ export class SupplierModel {
   static async update(id: number, supplier: Partial<Supplier>): Promise<void> {
     const pool = await getConnection();
 
+    // Helper function to convert empty strings to null
+    const toNullIfEmpty = (value: any) => (value === '' ? null : value);
+
     const setClauses: string[] = [];
     const request = pool.request().input('id', sql.Int, id);
 
     // Build dynamic SET clause
     Object.keys(supplier).forEach((key) => {
       if (key !== 'id' && key !== 'createdBy' && key !== 'createdAt') {
-        const value = (supplier as Record<string, unknown>)[key];
+        let value = (supplier as Record<string, unknown>)[key];
+        
+        // Convert empty strings to null for string fields
+        if (typeof value === 'string' && 
+            !key.includes('Date') && 
+            !key.includes('At') &&
+            key !== 'approvalStatus' &&
+            key !== 'category' &&
+            key !== 'name') {
+          value = toNullIfEmpty(value);
+        }
+        
+        // Convert date strings to Date objects
+        if ((key.includes('Date') || key.includes('At')) && value && typeof value === 'string') {
+          value = new Date(value);
+        }
+        
         setClauses.push(`${key} = @${key}`);
 
         // Determine SQL type based on key
         if (key.includes('Date') || key.includes('At')) {
-          request.input(key, sql.DateTime2, value);
+          request.input(key, sql.DateTime2, value || null);
         } else if (
           key.includes('Score') ||
           key.includes('Rate') ||
@@ -372,6 +425,7 @@ export class SupplierModel {
         } else if (
           key === 'rating' ||
           key.endsWith('By') ||
+          key === 'supplierManager' ||
           key === 'evaluationFrequency' ||
           key === 'auditFrequency' ||
           key === 'establishedYear' ||
@@ -470,13 +524,13 @@ export class SupplierModel {
     const pool = await getConnection();
 
     const result = await pool.request().query(`
-      SELECT DISTINCT category
-      FROM Suppliers
-      WHERE category IS NOT NULL AND active = 1
-      ORDER BY category
+      SELECT name
+      FROM SupplierCategories
+      WHERE isActive = 1
+      ORDER BY displayOrder, name
     `);
 
-    return result.recordset.map((row: { category: string }) => row.category);
+    return result.recordset.map((row: { name: string }) => row.name);
   }
 
   /**
@@ -486,13 +540,13 @@ export class SupplierModel {
     const pool = await getConnection();
 
     const result = await pool.request().query(`
-      SELECT DISTINCT supplierType
-      FROM Suppliers
-      WHERE supplierType IS NOT NULL AND active = 1
-      ORDER BY supplierType
+      SELECT name
+      FROM SupplierTypes
+      WHERE isActive = 1
+      ORDER BY displayOrder, name
     `);
 
-    return result.recordset.map((row: { supplierType: string }) => row.supplierType);
+    return result.recordset.map((row: { name: string }) => row.name);
   }
 
   /**
@@ -502,12 +556,12 @@ export class SupplierModel {
     const pool = await getConnection();
 
     const result = await pool.request().query(`
-      SELECT DISTINCT industry
-      FROM Suppliers
-      WHERE industry IS NOT NULL AND active = 1
-      ORDER BY industry
+      SELECT name
+      FROM SupplierIndustries
+      WHERE isActive = 1
+      ORDER BY displayOrder, name
     `);
 
-    return result.recordset.map((row: { industry: string }) => row.industry);
+    return result.recordset.map((row: { name: string }) => row.name);
   }
 }

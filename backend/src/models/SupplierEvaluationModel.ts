@@ -650,9 +650,8 @@ export class SupplierEvaluationModel {
       SELECT 
         COUNT(DISTINCT s.id) as totalSuppliers,
         COUNT(se.id) as totalEvaluations,
-        AVG(CAST(se.qualityRating as FLOAT)) as avgQualityRating,
-        AVG(se.onTimeDeliveryRate) as avgOnTimeDeliveryRate,
-        AVG(se.overallScore) as avgOverallScore,
+        AVG(CAST(s.rating as FLOAT)) as avgQualityRating,
+        AVG(s.onTimeDeliveryRate) as avgOnTimeDeliveryRate,
         SUM(CASE WHEN se.complianceStatus = 'Compliant' THEN 1 ELSE 0 END) as compliantCount,
         SUM(CASE WHEN se.complianceStatus = 'Non-Compliant' THEN 1 ELSE 0 END) as nonCompliantCount,
         SUM(CASE WHEN s.riskLevel = 'Critical' THEN 1 ELSE 0 END) as criticalRiskCount,
