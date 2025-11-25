@@ -140,6 +140,23 @@ export const menuStructure: MenuItem[] = [
         requireAnyRole: ['admin', 'manager', 'superuser'],
       },
       {
+        id: 'work-roles',
+        label: 'navigation.workRoles',
+        path: '/work-roles',
+        requireAnyRole: ['manager', 'superuser'],
+      },
+      {
+        id: 'skill-levels',
+        label: 'navigation.skillLevels',
+        path: '/skill-levels',
+      },
+      {
+        id: 'user-work-roles',
+        label: 'navigation.userWorkRoles',
+        path: '/user-work-roles',
+        requireAnyRole: ['manager', 'superuser'],
+      },
+      {
         id: 'users',
         label: 'navigation.users',
         path: '/settings?tab=users',

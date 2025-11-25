@@ -7890,3 +7890,654 @@ PRINT '- SupplierTypes: 10 default types';
 PRINT '- SupplierIndustries: 20 default industries';
 PRINT '- All tables indexed for performance';
 PRINT '======================================';
+
+-- =============================================
+-- Patch 72: Create WorkRoles Table
+-- =============================================
+-- Description: Creates WorkRoles table for managing job/work roles within the organization.
+-- WorkRoles are connected to the competence matrix and define what competencies 
+-- are required for specific positions/roles in the organization.
+-- Version: 1.0.72
+-- Author: E-QMS System
+-- Date: 2025-11-25
+-- =============================================
+
+USE EQMS;
+GO
+
+PRINT 'Starting Patch 72: Create WorkRoles Table';
+PRINT '==========================================';
+GO
+
+-- =============================================
+-- Create WorkRoles Table
+-- =============================================
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WorkRoles')
+BEGIN
+    CREATE TABLE WorkRoles (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- Core Information
+        name NVARCHAR(200) NOT NULL, -- Role name (e.g., "Quality Manager", "Production Operator")
+        code NVARCHAR(50), -- Optional short code for the role (e.g., "QM", "PO")
+        description NVARCHAR(2000), -- Detailed description of the role
+        
+        -- Organizational Structure
+        departmentId INT, -- Foreign key to Departments table
+        category NVARCHAR(100), -- Category/classification (e.g., "Management", "Technical", "Administrative")
+        level NVARCHAR(50), -- Job level (e.g., "Entry", "Mid", "Senior", "Executive")
+        
+        -- Status and Display
+        status NVARCHAR(50) NOT NULL DEFAULT 'active', -- 'active', 'inactive', 'archived'
+        displayOrder INT DEFAULT 0, -- For custom sorting in UI
+        active BIT DEFAULT 1, -- Quick active/inactive flag
+        
+        -- ISO 9001 Compliance Fields
+        responsibilitiesAndAuthorities NVARCHAR(MAX), -- Key responsibilities and authorities per ISO 9001:2015 clause 5.3
+        requiredQualifications NVARCHAR(2000), -- Minimum qualifications needed
+        experienceYears INT, -- Minimum years of experience
+        
+        -- Documentation and Notes
+        notes NVARCHAR(2000), -- Additional notes or comments
+        attachmentPath NVARCHAR(500), -- Optional path to role description document
+        
+        -- Audit Trail
+        createdAt DATETIME2 DEFAULT GETDATE(),
+        updatedAt DATETIME2 DEFAULT GETDATE(),
+        createdBy INT NOT NULL, -- User who created this work role
+        updatedBy INT, -- User who last updated this work role
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_WorkRoles_CreatedBy FOREIGN KEY (createdBy) REFERENCES Users(id),
+        CONSTRAINT FK_WorkRoles_UpdatedBy FOREIGN KEY (updatedBy) REFERENCES Users(id),
+        CONSTRAINT FK_WorkRoles_Department FOREIGN KEY (departmentId) REFERENCES Departments(id),
+        
+        -- Constraints
+        CONSTRAINT CK_WorkRoles_Status CHECK (status IN ('active', 'inactive', 'archived')),
+        CONSTRAINT CK_WorkRoles_Level CHECK (level IS NULL OR level IN ('Entry', 'Junior', 'Mid', 'Senior', 'Lead', 'Manager', 'Director', 'Executive')),
+        CONSTRAINT CK_WorkRoles_ExperienceYears CHECK (experienceYears IS NULL OR experienceYears >= 0),
+        
+        -- Unique constraint: Role names should be unique within active records
+        CONSTRAINT UQ_WorkRoles_Name UNIQUE (name)
+    );
+
+    -- Indexes for Performance
+    
+    -- Primary lookups
+    CREATE INDEX IX_WorkRoles_Name ON WorkRoles(name);
+    CREATE INDEX IX_WorkRoles_Code ON WorkRoles(code);
+    CREATE INDEX IX_WorkRoles_Status ON WorkRoles(status);
+    CREATE INDEX IX_WorkRoles_Active ON WorkRoles(active);
+    
+    -- Organizational filters
+    CREATE INDEX IX_WorkRoles_DepartmentId ON WorkRoles(departmentId);
+    CREATE INDEX IX_WorkRoles_Category ON WorkRoles(category);
+    CREATE INDEX IX_WorkRoles_Level ON WorkRoles(level);
+    
+    -- Display and sorting
+    CREATE INDEX IX_WorkRoles_DisplayOrder ON WorkRoles(displayOrder);
+    
+    -- Audit trail
+    CREATE INDEX IX_WorkRoles_CreatedBy ON WorkRoles(createdBy);
+    CREATE INDEX IX_WorkRoles_UpdatedBy ON WorkRoles(updatedBy);
+    CREATE INDEX IX_WorkRoles_CreatedAt ON WorkRoles(createdAt);
+    CREATE INDEX IX_WorkRoles_UpdatedAt ON WorkRoles(updatedAt);
+    
+    -- Composite indexes for common queries
+    CREATE INDEX IX_WorkRoles_Status_DisplayOrder ON WorkRoles(status, displayOrder);
+    CREATE INDEX IX_WorkRoles_Department_Status ON WorkRoles(departmentId, status);
+    CREATE INDEX IX_WorkRoles_Active_DisplayOrder ON WorkRoles(active, displayOrder) WHERE active = 1;
+    CREATE INDEX IX_WorkRoles_Category_Status ON WorkRoles(category, status);
+
+    PRINT '✓ WorkRoles table created successfully';
+END
+ELSE
+BEGIN
+    PRINT '○ WorkRoles table already exists';
+END
+GO
+
+-- =============================================
+-- Insert Sample WorkRoles
+-- =============================================
+
+-- Get a valid user ID for createdBy (use first superuser or admin)
+DECLARE @createdByUserId INT;
+SELECT TOP 1 @createdByUserId = u.id 
+FROM Users u
+INNER JOIN UserRoles ur ON u.id = ur.userId
+INNER JOIN Roles r ON ur.roleId = r.id
+WHERE r.name IN ('superuser', 'admin') AND u.active = 1
+ORDER BY r.level DESC;
+
+-- If no admin/superuser found, use the first active user
+IF @createdByUserId IS NULL
+BEGIN
+    SELECT TOP 1 @createdByUserId = id FROM Users WHERE active = 1;
+END
+
+-- Insert sample work roles if the table is empty
+IF NOT EXISTS (SELECT * FROM WorkRoles)
+BEGIN
+    -- Management Roles
+    INSERT INTO WorkRoles (name, code, description, category, level, status, displayOrder, createdBy, responsibilitiesAndAuthorities)
+    VALUES 
+    ('Quality Manager', 'QM', 'Oversees quality management system, ensures ISO 9001 compliance, and leads continuous improvement initiatives.', 'Management', 'Manager', 'active', 10, @createdByUserId, 
+     'Overall responsibility for QMS effectiveness, authority to approve quality procedures, manage quality audits, and implement corrective actions.'),
+    
+    ('Operations Manager', 'OM', 'Manages day-to-day operations, production planning, and resource allocation.', 'Management', 'Manager', 'active', 20, @createdByUserId,
+     'Authority to plan and direct operations, allocate resources, ensure compliance with operational procedures.'),
+    
+    ('Department Manager', 'DM', 'Leads and manages department activities, personnel, and objectives.', 'Management', 'Manager', 'active', 30, @createdByUserId,
+     'Manage department staff, approve departmental procedures, ensure team competency and performance.');
+
+    -- Technical Roles
+    INSERT INTO WorkRoles (name, code, description, category, level, status, displayOrder, createdBy, requiredQualifications, experienceYears)
+    VALUES 
+    ('Quality Engineer', 'QE', 'Develops quality control processes, conducts inspections, and analyzes quality data.', 'Technical', 'Senior', 'active', 40, @createdByUserId,
+     'Engineering degree or equivalent, knowledge of quality management systems and statistical process control.', 3),
+    
+    ('Quality Technician', 'QT', 'Performs quality inspections, testing, and documentation according to established procedures.', 'Technical', 'Mid', 'active', 50, @createdByUserId,
+     'Technical diploma or equivalent, basic understanding of quality control methods.', 1),
+    
+    ('Process Engineer', 'PE', 'Designs and optimizes manufacturing processes, develops work instructions, and implements process improvements.', 'Technical', 'Senior', 'active', 60, @createdByUserId,
+     'Engineering degree, process improvement methodologies (Lean, Six Sigma).', 3);
+
+    -- Auditor Roles
+    INSERT INTO WorkRoles (name, code, description, category, level, status, displayOrder, createdBy, requiredQualifications, experienceYears)
+    VALUES 
+    ('Lead Auditor', 'LA', 'Plans and conducts internal audits, leads audit teams, and reports findings to management.', 'Quality Assurance', 'Lead', 'active', 70, @createdByUserId,
+     'ISO 9001 Lead Auditor certification, in-depth knowledge of audit principles and techniques.', 5),
+    
+    ('Internal Auditor', 'IA', 'Conducts internal audits, identifies non-conformances, and verifies corrective actions.', 'Quality Assurance', 'Mid', 'active', 80, @createdByUserId,
+     'ISO 9001 Internal Auditor training, understanding of audit procedures.', 2);
+
+    -- Production Roles
+    INSERT INTO WorkRoles (name, code, description, category, level, status, displayOrder, createdBy, requiredQualifications)
+    VALUES 
+    ('Production Supervisor', 'PS', 'Supervises production operations, ensures quality standards, and manages production team.', 'Production', 'Lead', 'active', 90, @createdByUserId,
+     'Production management experience, knowledge of manufacturing processes.'),
+    
+    ('Production Operator', 'PO', 'Operates production equipment, follows work instructions, and maintains quality standards.', 'Production', 'Entry', 'active', 100, @createdByUserId,
+     'Basic technical skills, ability to follow written procedures.'),
+    
+    ('Machine Operator', 'MO', 'Operates specific machinery, performs routine maintenance, and ensures production quality.', 'Production', 'Junior', 'active', 110, @createdByUserId,
+     'Machine operation training, basic maintenance skills.');
+
+    -- Administrative Roles
+    INSERT INTO WorkRoles (name, code, description, category, level, status, displayOrder, createdBy)
+    VALUES 
+    ('Document Controller', 'DC', 'Manages document control system, ensures document accuracy and version control.', 'Administrative', 'Mid', 'active', 120, @createdByUserId),
+    
+    ('Quality Coordinator', 'QC', 'Coordinates quality activities, maintains quality records, and supports audit processes.', 'Administrative', 'Mid', 'active', 130, @createdByUserId),
+    
+    ('Training Coordinator', 'TC', 'Manages training programs, maintains training records, and tracks competency requirements.', 'Administrative', 'Mid', 'active', 140, @createdByUserId);
+
+    PRINT '✓ Sample work roles inserted successfully';
+END
+ELSE
+BEGIN
+    PRINT '○ WorkRoles table already contains data';
+END
+GO
+
+-- =============================================
+-- Record Schema Version
+-- =============================================
+
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.72' AND scriptName = '72_create_work_roles_table.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.72',
+        'Create WorkRoles table for managing job/work roles',
+        '72_create_work_roles_table.sql',
+        'SUCCESS',
+        'WorkRoles table supports organizational role definitions connected to competence matrix. Includes role hierarchy, qualifications, responsibilities per ISO 9001:2015, and relationship to departments.'
+    );
+    
+    PRINT '✓ Database version recorded';
+END
+ELSE
+BEGIN
+    PRINT '○ Database version already recorded';
+END
+GO
+
+PRINT '';
+PRINT 'Patch 72 completed successfully';
+PRINT '==========================================';
+GO
+
+-- =============================================
+-- Patch 73: Create SkillLevels Table for Competency Scoring
+-- =============================================
+-- Description: Creates SkillLevels table to define skill criteria for each level (1-5).
+-- This supports employee competency assessment and skill matrix evaluation.
+-- Version: 1.0.73
+-- Author: E-QMS System
+-- Date: 2025-11-25
+-- =============================================
+
+USE EQMS;
+GO
+
+PRINT 'Starting Patch 73: Create SkillLevels Table';
+PRINT '==========================================';
+GO
+
+-- =============================================
+-- Create SkillLevels Table
+-- =============================================
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'SkillLevels')
+BEGIN
+    CREATE TABLE SkillLevels (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- Core Information
+        level INT NOT NULL, -- Skill level: 1 (Beginner) to 5 (Expert)
+        name NVARCHAR(100) NOT NULL, -- Level name (e.g., "Beginner", "Advanced", "Expert")
+        shortName NVARCHAR(50), -- Short name (e.g., "L1", "L2", etc.)
+        
+        -- Skill Criteria
+        description NVARCHAR(2000) NOT NULL, -- Detailed description of competency at this level
+        knowledgeCriteria NVARCHAR(2000), -- Knowledge requirements for this level
+        skillsCriteria NVARCHAR(2000), -- Skills/abilities required
+        experienceCriteria NVARCHAR(2000), -- Experience expectations
+        autonomyCriteria NVARCHAR(2000), -- Level of independence/supervision needed
+        complexityCriteria NVARCHAR(2000), -- Complexity of tasks handled
+        
+        -- Visual and Display
+        color NVARCHAR(50), -- Color code for UI display (e.g., "#FF5733")
+        icon NVARCHAR(100), -- Icon identifier for display
+        displayOrder INT DEFAULT 0, -- For custom sorting
+        
+        -- Examples and Guidance
+        exampleBehaviors NVARCHAR(MAX), -- Example behaviors/competencies at this level
+        assessmentGuidance NVARCHAR(2000), -- Guidance for assessors on how to evaluate
+        
+        -- Status
+        active BIT DEFAULT 1,
+        
+        -- Audit Trail
+        createdAt DATETIME2 DEFAULT GETDATE(),
+        updatedAt DATETIME2 DEFAULT GETDATE(),
+        createdBy INT NOT NULL,
+        updatedBy INT,
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_SkillLevels_CreatedBy FOREIGN KEY (createdBy) REFERENCES Users(id),
+        CONSTRAINT FK_SkillLevels_UpdatedBy FOREIGN KEY (updatedBy) REFERENCES Users(id),
+        
+        -- Constraints
+        CONSTRAINT CK_SkillLevels_Level CHECK (level >= 1 AND level <= 5),
+        CONSTRAINT UQ_SkillLevels_Level UNIQUE (level)
+    );
+
+    -- Indexes for Performance
+    CREATE INDEX IX_SkillLevels_Level ON SkillLevels(level);
+    CREATE INDEX IX_SkillLevels_Active ON SkillLevels(active);
+    CREATE INDEX IX_SkillLevels_DisplayOrder ON SkillLevels(displayOrder);
+    CREATE INDEX IX_SkillLevels_CreatedBy ON SkillLevels(createdBy);
+    CREATE INDEX IX_SkillLevels_UpdatedBy ON SkillLevels(updatedBy);
+
+    PRINT '✓ SkillLevels table created successfully';
+END
+ELSE
+BEGIN
+    PRINT '○ SkillLevels table already exists';
+END
+GO
+
+-- =============================================
+-- Insert Default Skill Levels (1-5)
+-- =============================================
+
+-- Get a valid user ID for createdBy
+DECLARE @createdByUserId INT;
+SELECT TOP 1 @createdByUserId = u.id 
+FROM Users u
+INNER JOIN UserRoles ur ON u.id = ur.userId
+INNER JOIN Roles r ON ur.roleId = r.id
+WHERE r.name IN ('superuser', 'admin') AND u.active = 1
+ORDER BY r.level DESC;
+
+IF @createdByUserId IS NULL
+BEGIN
+    SELECT TOP 1 @createdByUserId = id FROM Users WHERE active = 1;
+END
+
+-- Insert default skill levels if table is empty
+IF NOT EXISTS (SELECT * FROM SkillLevels)
+BEGIN
+    -- Level 1: Beginner / Novice
+    INSERT INTO SkillLevels (
+        level, name, shortName, description, 
+        knowledgeCriteria, skillsCriteria, experienceCriteria, 
+        autonomyCriteria, complexityCriteria,
+        color, icon, displayOrder, 
+        exampleBehaviors, assessmentGuidance,
+        createdBy
+    )
+    VALUES (
+        1, 
+        'Beginner', 
+        'L1',
+        'Entry-level competency with basic understanding. Requires close supervision and guidance to perform tasks.',
+        'Has basic theoretical knowledge. Understands fundamental concepts and terminology. May have completed initial training or orientation.',
+        'Can perform simple, routine tasks under direct supervision. Follows standard procedures and checklists. Limited problem-solving ability.',
+        'Little to no practical experience (0-6 months). May be new to the role or industry.',
+        'Requires constant supervision and detailed instructions. Needs guidance for most decisions. Works under close mentorship.',
+        'Handles simple, well-defined tasks with clear procedures. Cannot handle exceptions or complex situations independently.',
+        '#EF4444',
+        '⭐',
+        10,
+        'Follows step-by-step instructions; Asks frequent questions; Shadows experienced colleagues; Completes basic tasks with supervision; Learns standard operating procedures',
+        'Look for basic understanding of concepts, ability to follow procedures, willingness to learn, and appropriate recognition of own limitations.',
+        @createdByUserId
+    );
+
+    -- Level 2: Advanced Beginner / Developing
+    INSERT INTO SkillLevels (
+        level, name, shortName, description, 
+        knowledgeCriteria, skillsCriteria, experienceCriteria, 
+        autonomyCriteria, complexityCriteria,
+        color, icon, displayOrder, 
+        exampleBehaviors, assessmentGuidance,
+        createdBy
+    )
+    VALUES (
+        2, 
+        'Advanced Beginner', 
+        'L2',
+        'Developing competency with growing practical experience. Can perform routine tasks with minimal supervision.',
+        'Has working knowledge of key concepts and procedures. Understanding extends beyond basics. Can explain standard processes.',
+        'Performs routine tasks independently. Can identify common problems and knows when to seek help. Begins to recognize patterns.',
+        'Some practical experience (6 months - 2 years). Has encountered various common situations and learned from them.',
+        'Requires occasional supervision and periodic checking. Can work independently on routine tasks. Seeks guidance for non-routine situations.',
+        'Handles standard tasks and common variations. Can manage routine problems but needs support for complex issues.',
+        '#F97316',
+        '⭐⭐',
+        20,
+        'Works independently on routine tasks; Recognizes common issues; Applies learned procedures; Begins to anticipate problems; Requires less frequent guidance',
+        'Assess ability to work independently on routine tasks, recognize when help is needed, and apply learned knowledge to similar situations.',
+        @createdByUserId
+    );
+
+    -- Level 3: Competent / Proficient
+    INSERT INTO SkillLevels (
+        level, name, shortName, description, 
+        knowledgeCriteria, skillsCriteria, experienceCriteria, 
+        autonomyCriteria, complexityCriteria,
+        color, icon, displayOrder, 
+        exampleBehaviors, assessmentGuidance,
+        createdBy
+    )
+    VALUES (
+        3, 
+        'Competent', 
+        'L3',
+        'Fully competent with solid practical experience. Works independently and can handle most situations effectively.',
+        'Has comprehensive knowledge of area. Understands underlying principles and can apply them. Can explain complex concepts to others.',
+        'Performs all standard tasks proficiently. Can troubleshoot problems effectively. Adapts procedures to different contexts. Makes sound decisions.',
+        'Significant practical experience (2-5 years). Has handled diverse situations including challenging scenarios. Builds expertise through practice.',
+        'Works independently with minimal supervision. Self-directed in daily work. Seeks input only for unusual or high-impact situations.',
+        'Handles complex tasks and non-routine problems. Can prioritize and plan work effectively. Manages multiple responsibilities simultaneously.',
+        '#EAB308',
+        '⭐⭐⭐',
+        30,
+        'Completes work independently; Solves most problems without assistance; Trains beginners; Suggests process improvements; Handles multiple priorities effectively',
+        'Look for consistent quality of work, effective problem-solving, ability to work without supervision, and capacity to guide others.',
+        @createdByUserId
+    );
+
+    -- Level 4: Advanced / Highly Proficient
+    INSERT INTO SkillLevels (
+        level, name, shortName, description, 
+        knowledgeCriteria, skillsCriteria, experienceCriteria, 
+        autonomyCriteria, complexityCriteria,
+        color, icon, displayOrder, 
+        exampleBehaviors, assessmentGuidance,
+        createdBy
+    )
+    VALUES (
+        4, 
+        'Advanced', 
+        'L4',
+        'Advanced competency with extensive experience. Recognized as skilled practitioner who can handle complex challenges.',
+        'Deep, specialized knowledge. Understands nuances and exceptions. Can analyze complex issues and identify root causes. Keeps current with developments.',
+        'Masters complex techniques and approaches. Innovates and improves methods. Handles critical situations with confidence. Strong analytical and judgment skills.',
+        'Extensive experience (5-10 years). Has successfully managed diverse, complex situations. Recognized as experienced practitioner.',
+        'Fully autonomous. Self-managing with strong judgment. Provides guidance and direction to others. Trusted with significant responsibilities.',
+        'Excels at complex, ambiguous situations. Handles critical problems and emergencies. Can work across different contexts and adapt approaches.',
+        '#22C55E',
+        '⭐⭐⭐⭐',
+        40,
+        'Leads complex projects; Mentors and coaches others; Develops new procedures; Handles critical situations independently; Recognized as subject matter resource',
+        'Evaluate depth of expertise, ability to handle complex situations, mentoring capability, innovation, and recognition as go-to person.',
+        @createdByUserId
+    );
+
+    -- Level 5: Expert / Master
+    INSERT INTO SkillLevels (
+        level, name, shortName, description, 
+        knowledgeCriteria, skillsCriteria, experienceCriteria, 
+        autonomyCriteria, complexityCriteria,
+        color, icon, displayOrder, 
+        exampleBehaviors, assessmentGuidance,
+        createdBy
+    )
+    VALUES (
+        5, 
+        'Expert', 
+        'L5',
+        'Expert-level mastery with exceptional depth and breadth. Recognized authority who shapes practices and develops others.',
+        'Authoritative, comprehensive knowledge. Deep understanding across breadth and depth. Contributes to field knowledge. Anticipates future trends and needs.',
+        'Demonstrates mastery and innovation. Creates new approaches and solutions. Handles unprecedented situations intuitively. Influences standards and practices.',
+        'Extensive, diverse experience (10+ years). Has handled full range of situations including rare and critical cases. Proven track record of excellence.',
+        'Completely autonomous. Strategic thinker who influences policy and direction. Sets standards for others. Develops organizational capability.',
+        'Masters the most complex, ambiguous, and critical situations. Handles organization-wide impacts. Creates frameworks others use.',
+        '#3B82F6',
+        '⭐⭐⭐⭐⭐',
+        50,
+        'Recognized as organizational authority; Shapes policies and standards; Develops training programs; Solves unprecedented problems; Influences strategic direction; External expert reputation',
+        'Look for exceptional expertise, innovation and thought leadership, strategic impact, development of others and organizational capability, and external recognition.',
+        @createdByUserId
+    );
+
+    PRINT '✓ Default skill levels (1-5) inserted successfully';
+END
+ELSE
+BEGIN
+    PRINT '○ SkillLevels table already contains data';
+END
+GO
+
+-- =============================================
+-- Record Schema Version
+-- =============================================
+
+IF NOT EXISTS (SELECT * FROM DatabaseVersion WHERE version = '1.0.73' AND scriptName = '73_create_skill_levels_table.sql')
+BEGIN
+    INSERT INTO DatabaseVersion (version, description, scriptName, status, notes)
+    VALUES (
+        '1.0.73',
+        'Create SkillLevels table for competency scoring system',
+        '73_create_skill_levels_table.sql',
+        'SUCCESS',
+        'SkillLevels table defines skill criteria for 5 competency levels (Beginner to Expert) to support employee skill assessment and competence matrix evaluation.'
+    );
+    
+    PRINT '✓ Database version recorded';
+END
+ELSE
+BEGIN
+    PRINT '○ Database version already recorded';
+END
+GO
+
+PRINT '';
+PRINT 'Patch 73 completed successfully';
+PRINT '==========================================';
+GO
+
+-- =============================================
+-- Patch 74: Create UserWorkRoles Table
+-- Description: Table for assigning work roles to users with skill level tracking
+-- Author: System
+-- Date: 2025-11-25
+-- =============================================
+
+USE [eqms];
+GO
+
+-- Create UserWorkRoles table
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UserWorkRoles]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[UserWorkRoles] (
+        [id] INT IDENTITY(1,1) PRIMARY KEY,
+        [userId] INT NOT NULL,
+        [workRoleId] INT NOT NULL,
+        [skillLevelId] INT NULL,
+        
+        -- Assignment Details
+        [assignedDate] DATETIME2 NOT NULL DEFAULT GETDATE(),
+        [effectiveDate] DATETIME2 NOT NULL DEFAULT GETDATE(),
+        [expiryDate] DATETIME2 NULL,
+        [status] NVARCHAR(50) NOT NULL DEFAULT 'active', -- active, inactive, expired, pending, suspended
+        
+        -- Verification
+        [verified] BIT NOT NULL DEFAULT 0,
+        [verifiedBy] INT NULL,
+        [verifiedAt] DATETIME2 NULL,
+        [verificationNotes] NVARCHAR(MAX) NULL,
+        
+        -- Additional Information
+        [notes] NVARCHAR(MAX) NULL,
+        [trainingRequired] BIT NOT NULL DEFAULT 0,
+        [trainingCompleted] BIT NOT NULL DEFAULT 0,
+        [trainingCompletedDate] DATETIME2 NULL,
+        [certificationRequired] BIT NOT NULL DEFAULT 0,
+        [certificationId] INT NULL,
+        
+        -- Assessment
+        [lastAssessmentDate] DATETIME2 NULL,
+        [lastAssessmentScore] DECIMAL(5,2) NULL,
+        [lastAssessedBy] INT NULL,
+        [nextAssessmentDate] DATETIME2 NULL,
+        
+        -- Audit Fields
+        [assignedBy] INT NOT NULL,
+        [createdAt] DATETIME2 NOT NULL DEFAULT GETDATE(),
+        [updatedAt] DATETIME2 NOT NULL DEFAULT GETDATE(),
+        [updatedBy] INT NULL,
+        [active] BIT NOT NULL DEFAULT 1,
+        
+        -- Foreign Keys
+        CONSTRAINT [FK_UserWorkRoles_Users] FOREIGN KEY ([userId]) 
+            REFERENCES [dbo].[Users]([id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_UserWorkRoles_WorkRoles] FOREIGN KEY ([workRoleId]) 
+            REFERENCES [dbo].[WorkRoles]([id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_UserWorkRoles_SkillLevels] FOREIGN KEY ([skillLevelId]) 
+            REFERENCES [dbo].[SkillLevels]([id]) ON DELETE SET NULL,
+        CONSTRAINT [FK_UserWorkRoles_AssignedBy] FOREIGN KEY ([assignedBy]) 
+            REFERENCES [dbo].[Users]([id]),
+        CONSTRAINT [FK_UserWorkRoles_VerifiedBy] FOREIGN KEY ([verifiedBy]) 
+            REFERENCES [dbo].[Users]([id]),
+        CONSTRAINT [FK_UserWorkRoles_UpdatedBy] FOREIGN KEY ([updatedBy]) 
+            REFERENCES [dbo].[Users]([id]),
+        CONSTRAINT [FK_UserWorkRoles_LastAssessedBy] FOREIGN KEY ([lastAssessedBy]) 
+            REFERENCES [dbo].[Users]([id]),
+        
+        -- Unique constraint: One user can only have one active assignment per work role
+        CONSTRAINT [UQ_UserWorkRoles_User_WorkRole] UNIQUE ([userId], [workRoleId])
+    );
+
+    -- Create indexes for performance
+    CREATE NONCLUSTERED INDEX [IX_UserWorkRoles_UserId] ON [dbo].[UserWorkRoles]([userId]) INCLUDE ([workRoleId], [skillLevelId], [status]);
+    CREATE NONCLUSTERED INDEX [IX_UserWorkRoles_WorkRoleId] ON [dbo].[UserWorkRoles]([workRoleId]) INCLUDE ([userId], [skillLevelId], [status]);
+    CREATE NONCLUSTERED INDEX [IX_UserWorkRoles_SkillLevelId] ON [dbo].[UserWorkRoles]([skillLevelId]) INCLUDE ([userId], [workRoleId]);
+    CREATE NONCLUSTERED INDEX [IX_UserWorkRoles_Status] ON [dbo].[UserWorkRoles]([status]) INCLUDE ([userId], [workRoleId]);
+    CREATE NONCLUSTERED INDEX [IX_UserWorkRoles_ExpiryDate] ON [dbo].[UserWorkRoles]([expiryDate]) WHERE [expiryDate] IS NOT NULL;
+    CREATE NONCLUSTERED INDEX [IX_UserWorkRoles_AssessmentDate] ON [dbo].[UserWorkRoles]([nextAssessmentDate]) WHERE [nextAssessmentDate] IS NOT NULL;
+
+    PRINT 'Table UserWorkRoles created successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'Table UserWorkRoles already exists.';
+END
+GO
+
+-- Create trigger to update updatedAt timestamp
+IF NOT EXISTS (SELECT * FROM sys.triggers WHERE name = 'TR_UserWorkRoles_UpdateTimestamp')
+BEGIN
+    EXEC('
+    CREATE TRIGGER TR_UserWorkRoles_UpdateTimestamp
+    ON [dbo].[UserWorkRoles]
+    AFTER UPDATE
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        
+        UPDATE [dbo].[UserWorkRoles]
+        SET [updatedAt] = GETDATE()
+        WHERE [id] IN (SELECT DISTINCT [id] FROM INSERTED);
+    END
+    ');
+    
+    PRINT 'Trigger TR_UserWorkRoles_UpdateTimestamp created successfully.';
+END
+GO
+
+-- Insert sample data for demonstration (Optional - remove if not needed)
+IF NOT EXISTS (SELECT 1 FROM [dbo].[UserWorkRoles] WHERE [id] = 1)
+BEGIN
+    -- Sample: Assign Quality Manager role to user 1 with Expert skill level (5)
+    DECLARE @SampleUserId INT = 1;
+    DECLARE @QualityManagerRoleId INT;
+    DECLARE @ExpertSkillLevelId INT;
+    
+    SELECT @QualityManagerRoleId = id FROM [dbo].[WorkRoles] WHERE [code] = 'QM-001';
+    SELECT @ExpertSkillLevelId = id FROM [dbo].[SkillLevels] WHERE [level] = 5;
+    
+    IF @QualityManagerRoleId IS NOT NULL AND @ExpertSkillLevelId IS NOT NULL
+    BEGIN
+        INSERT INTO [dbo].[UserWorkRoles] 
+        (
+            [userId], 
+            [workRoleId], 
+            [skillLevelId], 
+            [assignedDate], 
+            [effectiveDate], 
+            [status], 
+            [verified], 
+            [notes], 
+            [assignedBy]
+        )
+        VALUES 
+        (
+            @SampleUserId, 
+            @QualityManagerRoleId, 
+            @ExpertSkillLevelId, 
+            GETDATE(), 
+            GETDATE(), 
+            'active', 
+            1, 
+            'Initial assignment - Demonstrated extensive experience in quality management', 
+            @SampleUserId
+        );
+        
+        PRINT 'Sample user work role assignment created.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Sample data not inserted - Required WorkRole or SkillLevel not found.';
+    END
+END
+GO
+
+PRINT 'Patch 74 completed successfully.';
+GO

@@ -55,6 +55,9 @@ import swotRoutes from './routes/swotRoutes';
 import documentComplianceRoutes from './routes/documentComplianceRoutes';
 import moduleVisibilityRoutes from './routes/moduleVisibilityRoutes';
 import importRoutes from './routes/importRoutes';
+import workRoleRoutes from './routes/workRoleRoutes';
+import skillLevelRoutes from './routes/skillLevelRoutes';
+import userWorkRoleRoutes from './routes/userWorkRoleRoutes';
 
 // Import scheduler service
 // TEMPORARILY DISABLED FOR DEBUGGING
@@ -146,6 +149,9 @@ app.use('/api/swot', swotRoutes);
 app.use('/api/documents/compliance', documentComplianceRoutes);
 app.use('/api/modules', moduleVisibilityRoutes);
 app.use('/api/imports', importRoutes);
+app.use('/api/work-roles', workRoleRoutes);
+app.use('/api/skill-levels', skillLevelRoutes);
+app.use('/api/user-work-roles', userWorkRoleRoutes);
 
 // 404 handler
 app.use((_req, res) => {

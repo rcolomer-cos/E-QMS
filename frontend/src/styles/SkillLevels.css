@@ -1,0 +1,412 @@
+/* Skill Levels Page - Reference guide for competency assessment */
+
+.skill-levels-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.page-description {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+  max-width: 700px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 4rem;
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+
+/* Skill Level Cards Grid */
+.skill-levels-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.skill-level-card {
+  background: white;
+  border-radius: 12px;
+  border-left: 6px solid #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.skill-level-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.skill-level-card.expanded {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Card Header */
+.skill-level-header {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  cursor: pointer;
+  gap: 1.5rem;
+  user-select: none;
+  background: linear-gradient(to right, #f9fafb, white);
+}
+
+.skill-level-header:hover {
+  background: linear-gradient(to right, #f3f4f6, white);
+}
+
+.level-icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 80px;
+}
+
+.level-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.level-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.level-title {
+  flex: 1;
+}
+
+.level-title h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+}
+
+.level-short-name {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.expand-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  background: white;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.expand-button:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+/* Card Body */
+.skill-level-body {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.level-description {
+  margin-bottom: 1rem;
+}
+
+.level-description p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0;
+}
+
+/* Criteria Details (Expanded State) */
+.criteria-details {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.criteria-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 3px solid #e5e7eb;
+}
+
+.criteria-section:last-child {
+  margin-bottom: 0;
+}
+
+.criteria-section h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.75rem 0;
+}
+
+.criteria-section p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 0;
+}
+
+/* Example Behaviors */
+.criteria-section.behaviors {
+  background: #fef3c7;
+  border-left-color: #f59e0b;
+}
+
+.behaviors-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.behaviors-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #78350f;
+}
+
+.behaviors-list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+.behaviors-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Assessment Guidance */
+.criteria-section.guidance {
+  background: #dbeafe;
+  border-left-color: #3b82f6;
+}
+
+.guidance-text {
+  font-style: italic;
+  color: #1e40af;
+}
+
+/* Usage Guide Section */
+.usage-guide {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.usage-guide h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+}
+
+.usage-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.usage-step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+.step-content h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.step-content p {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .skill-levels-page {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .page-description {
+    font-size: 0.875rem;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions .btn {
+    flex: 1;
+  }
+
+  .skill-level-header {
+    flex-wrap: wrap;
+    padding: 1rem;
+  }
+
+  .level-icon-wrapper {
+    min-width: 60px;
+  }
+
+  .level-icon {
+    font-size: 2rem;
+  }
+
+  .level-title h2 {
+    font-size: 1.25rem;
+  }
+
+  .skill-level-body {
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  .usage-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-guide {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .skill-level-header {
+    gap: 1rem;
+  }
+
+  .level-icon-wrapper {
+    min-width: 50px;
+  }
+
+  .level-icon {
+    font-size: 1.75rem;
+  }
+
+  .level-title h2 {
+    font-size: 1.125rem;
+  }
+
+  .expand-button {
+    width: 36px;
+    height: 36px;
+  }
+}

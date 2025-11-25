@@ -65,6 +65,11 @@ import OrganizationalChart from './pages/OrganizationalChart';
 import Tags from './pages/Tags';
 import SwotAnalysis from './pages/SwotAnalysis';
 import DataImport from './pages/DataImport';
+import WorkRoles from './pages/WorkRoles';
+import WorkRoleForm from './pages/WorkRoleForm';
+import SkillLevels from './pages/SkillLevels';
+import UserWorkRoleAssignments from './pages/UserWorkRoleAssignments';
+import UserWorkRoleForm from './pages/UserWorkRoleForm';
 import { useAuth } from './services/authService';
 import CreateUserPage from './pages/CreateUserPage';
 import UserProfile from './pages/UserProfile';
@@ -125,6 +130,13 @@ function App() {
         <Route path="training" element={<ProtectedModuleRoute moduleKey="training"><Training /></ProtectedModuleRoute>} />
         <Route path="training-matrix" element={<ProtectedModuleRoute moduleKey="training"><TrainingMatrix /></ProtectedModuleRoute>} />
         <Route path="role-training-requirements" element={<ProtectedModuleRoute moduleKey="training"><RoleTrainingRequirements /></ProtectedModuleRoute>} />
+        <Route path="work-roles" element={<WorkRoles />} />
+        <Route path="work-roles/add" element={<WorkRoleForm />} />
+        <Route path="work-roles/edit/:id" element={<WorkRoleForm />} />
+        <Route path="skill-levels" element={<SkillLevels />} />
+        <Route path="user-work-roles" element={<UserWorkRoleAssignments />} />
+        <Route path="user-work-roles/assign" element={<UserWorkRoleForm />} />
+        <Route path="user-work-roles/edit/:id" element={<UserWorkRoleForm />} />
         <Route path="groups/:id" element={<GroupDetail />} />
         <Route path="departments" element={<Departments />} />
         <Route path="user-departments" element={<UserDepartments />} />
