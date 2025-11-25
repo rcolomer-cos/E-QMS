@@ -1,7 +1,7 @@
 /* NCR Detail Page Styles */
 
 .ncr-detail-page {
-  padding: 20px;
+  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -10,40 +10,82 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid #dee2e6;
 }
 
 .page-header h1 {
-  margin: 10px 0 5px 0;
-  font-size: 28px;
-  color: #333;
+  margin: 0.625rem 0 0.3125rem 0;
+  font-size: 2rem;
+  color: #2c3e50;
 }
 
 .page-header .subtitle {
   margin: 0;
-  font-size: 16px;
-  color: #666;
+  font-size: 1rem;
+  color: #7f8c8d;
 }
 
-.btn-back {
-  background: none;
+/* Consistent Button Styles */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-link {
+  padding: 0.625rem 1.25rem;
   border: none;
-  color: #0066cc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 14px;
-  padding: 0;
-  margin-bottom: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: color 0.2s ease;
+  transition: all 0.2s;
 }
 
-.btn-back:hover {
-  color: #0052a3;
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #7f8c8d;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c0392b;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-link {
+  background: none;
+  padding: 0;
+  color: #3498db;
   text-decoration: underline;
+}
+
+.btn-link:hover {
+  color: #2980b9;
 }
 
 .header-actions {
@@ -174,6 +216,22 @@
   color: #333;
   border-bottom: 2px solid #f0f0f0;
   padding-bottom: 10px;
+}
+
+.text-content {
+  background: #f8f9fa;
+  border-left: 4px solid #3498db;
+  padding: 16px 20px;
+  border-radius: 4px;
+  line-height: 1.6;
+}
+
+.text-content p {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 15px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .section-header {

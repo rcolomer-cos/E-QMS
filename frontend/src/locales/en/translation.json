@@ -168,7 +168,15 @@
     "backToList": "Back to List",
     "auditTrail": "Audit Trail",
     "createdAt": "Created At",
-    "updatedAt": "Last Updated"
+    "updatedAt": "Last Updated",
+    "info": "Information",
+    "management": "Management",
+    "resolved": "Resolved",
+    "linkedRecord": "Linked Record",
+    "inspectionRecord": "Inspection Record",
+    "add": "Add",
+    "confirmDelete": "Confirm deletion of",
+    "unknown": "Unknown"
   },
   "auth": {
     "login": "Login",
@@ -415,7 +423,55 @@
     "byStatus": "By Status",
     "trendAnalysis": "Trend Analysis",
     "responseTime": "Response Time",
-    "closureRate": "Closure Rate"
+    "closureRate": "Closure Rate",
+    "subtitle": "Manage and track non-conformances",
+    "noNCRsFound": "No NCRs found",
+    "reportedBy": "Reported By",
+    "assignedTo": "Assigned To",
+    "unassigned": "Unassigned",
+    "basicInformation": "Basic Information",
+    "detailsAndActions": "Details and Actions",
+    "containmentAction": "Containment Action",
+    "verifiedBy": "Verified By",
+    "verifiedDate": "Verified Date",
+    "closedDate": "Closed Date",
+    "category": "Category",
+    "sources": {
+      "Internal Audit": "Internal Audit",
+      "External Audit": "External Audit",
+      "Customer Complaint": "Customer Complaint",
+      "Supplier Issue": "Supplier Issue",
+      "Process Monitoring": "Process Monitoring",
+      "Inspection": "Inspection",
+      "Management Review": "Management Review",
+      "Employee Report": "Employee Report",
+      "Other": "Other"
+    },
+    "categories": {
+      "Product Quality": "Product Quality",
+      "Process Deviation": "Process Deviation",
+      "Documentation": "Documentation",
+      "Equipment/Facility": "Equipment/Facility",
+      "Personnel/Training": "Personnel/Training",
+      "Safety": "Safety",
+      "Environmental": "Environmental",
+      "Regulatory Compliance": "Regulatory Compliance",
+      "Supplier Quality": "Supplier Quality",
+      "Other": "Other"
+    },
+    "severities": {
+      "minor": "Minor",
+      "major": "Major",
+      "critical": "Critical"
+    },
+    "statusOpen": "Open",
+    "statusInProgress": "In Progress",
+    "statusResolved": "Resolved",
+    "statusClosed": "Closed",
+    "statusRejected": "Rejected",
+    "rootCausePlaceholder": "Describe the root cause of the non-conformance...",
+    "containmentActionPlaceholder": "Describe immediate containment action...",
+    "correctiveActionPlaceholder": "Describe corrective action..."
   },
   "capa": {
     "title": "CAPA",

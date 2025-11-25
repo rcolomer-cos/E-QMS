@@ -17,6 +17,10 @@ export interface CreateNCRData {
 export interface UpdateNCRData {
   title?: string;
   description?: string;
+  source?: string;
+  category?: string;
+  severity?: 'minor' | 'major' | 'critical';
+  detectedDate?: string;
   status?: 'open' | 'in_progress' | 'resolved' | 'closed' | 'rejected';
   assignedTo?: number;
   rootCause?: string;

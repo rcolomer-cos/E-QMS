@@ -168,7 +168,15 @@
     "backToList": "Tillbaka till lista",
     "auditTrail": "Revisionsspår",
     "createdAt": "Skapad",
-    "updatedAt": "Uppdaterad"
+    "updatedAt": "Uppdaterad",
+    "info": "Information",
+    "management": "Hantering",
+    "resolved": "Löst",
+    "linkedRecord": "Länkad post",
+    "inspectionRecord": "Inspektionsregister",
+    "add": "Lägg till",
+    "confirmDelete": "Bekräfta borttagning av",
+    "unknown": "Okänd"
   },
   "auth": {
     "login": "Logga in",
@@ -415,7 +423,55 @@
     "byStatus": "Efter status",
     "trendAnalysis": "Trendanalys",
     "responseTime": "Svarstid",
-    "closureRate": "Stängningsfrekvens"
+    "closureRate": "Stängningsfrekvens",
+    "subtitle": "Hantera och spåra avvikelser",
+    "noNCRsFound": "Inga avvikelser hittades",
+    "reportedBy": "Rapporterad av",
+    "assignedTo": "Tilldelad till",
+    "unassigned": "Ej tilldelad",
+    "basicInformation": "Grundläggande information",
+    "detailsAndActions": "Detaljer och åtgärder",
+    "containmentAction": "Inneslutningsåtgärd",
+    "verifiedBy": "Verifierad av",
+    "verifiedDate": "Verifieringsdatum",
+    "closedDate": "Stängningsdatum",
+    "category": "Kategori",
+    "sources": {
+      "Internal Audit": "Intern revision",
+      "External Audit": "Extern revision",
+      "Customer Complaint": "Kundklagomål",
+      "Supplier Issue": "Leverantörsproblem",
+      "Process Monitoring": "Processövervakning",
+      "Inspection": "Inspektion",
+      "Management Review": "Ledningsgranskning",
+      "Employee Report": "Medarbetarrapport",
+      "Other": "Annat"
+    },
+    "categories": {
+      "Product Quality": "Produktkvalitet",
+      "Process Deviation": "Processavvikelse",
+      "Documentation": "Dokumentation",
+      "Equipment/Facility": "Utrustning/Anläggning",
+      "Personnel/Training": "Personal/Utbildning",
+      "Safety": "Säkerhet",
+      "Environmental": "Miljö",
+      "Regulatory Compliance": "Regelefterlevnad",
+      "Supplier Quality": "Leverantörskvalitet",
+      "Other": "Annat"
+    },
+    "severities": {
+      "minor": "Mindre",
+      "major": "Större",
+      "critical": "Kritisk"
+    },
+    "statusOpen": "Öppen",
+    "statusInProgress": "Pågående",
+    "statusResolved": "Löst",
+    "statusClosed": "Stängd",
+    "statusRejected": "Avvisad",
+    "rootCausePlaceholder": "Beskriv grundorsaken till avvikelsen...",
+    "containmentActionPlaceholder": "Beskriv omedelbar inneslutningsåtgärd...",
+    "correctiveActionPlaceholder": "Beskriv korrigerande åtgärd..."
   },
   "capa": {
     "title": "CAPA",

@@ -16,6 +16,8 @@ import AuditDetail from './pages/AuditDetail';
 import AuditExecution from './pages/AuditExecution';
 import AuditFindings from './pages/AuditFindings';
 import NCR from './pages/NCR';
+import AddNCR from './pages/AddNCR';
+import EditNCR from './pages/EditNCR';
 import NCRDetail from './pages/NCRDetail';
 import NCRDashboard from './pages/NCRDashboard';
 import CAPA from './pages/CAPA';
@@ -100,7 +102,9 @@ function App() {
         <Route path="revisioner/:id/utfor" element={<ProtectedModuleRoute moduleKey="audits"><AuditExecution /></ProtectedModuleRoute>} />
         <Route path="revisioner/:auditId/observationer" element={<ProtectedModuleRoute moduleKey="audits"><AuditFindings /></ProtectedModuleRoute>} />
         <Route path="ncr" element={<ProtectedModuleRoute moduleKey="ncr"><NCR /></ProtectedModuleRoute>} />
+        <Route path="ncr/add" element={<ProtectedModuleRoute moduleKey="ncr"><AddNCR /></ProtectedModuleRoute>} />
         <Route path="ncr/dashboard" element={<ProtectedModuleRoute moduleKey="ncr"><NCRDashboard /></ProtectedModuleRoute>} />
+        <Route path="ncr/:id/edit" element={<ProtectedModuleRoute moduleKey="ncr"><EditNCR /></ProtectedModuleRoute>} />
         <Route path="ncr/:id" element={<ProtectedModuleRoute moduleKey="ncr"><NCRDetail /></ProtectedModuleRoute>} />
         <Route path="capa" element={<ProtectedModuleRoute moduleKey="capa"><CAPA /></ProtectedModuleRoute>} />
         <Route path="capa/dashboard" element={<ProtectedModuleRoute moduleKey="capa"><CAPADashboard /></ProtectedModuleRoute>} />

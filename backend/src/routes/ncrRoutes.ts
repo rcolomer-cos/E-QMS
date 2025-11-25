@@ -36,8 +36,8 @@ router.get('/metrics', getNCRMetrics);
 // Get NCRs by Inspection Record - Accessible to all authenticated users
 router.get('/by-inspection/:inspectionRecordId', validateId, getNCRsByInspectionRecord);
 
-// Create NCR - Requires ADMIN, MANAGER, or AUDITOR role
-router.post('/', createLimiter, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCR, createNCR);
+// Create NCR - All authenticated users can report non-conformances
+router.post('/', createLimiter, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR, UserRole.USER), validateNCR, createNCR);
 
 // Get all NCRs - Accessible to all authenticated users
 router.get('/', getNCRs);
@@ -45,14 +45,14 @@ router.get('/', getNCRs);
 // Get NCR by ID - Accessible to all authenticated users
 router.get('/:id', validateId, getNCRById);
 
-// Update NCR status - ADMIN and MANAGER can close NCRs; ADMIN, MANAGER, and AUDITOR can change to other statuses
-router.put('/:id/status', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCRStatus, updateNCRStatus);
+// Update NCR status - SUPERUSER, ADMIN, MANAGER, and AUDITOR can manage status
+router.put('/:id/status', validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCRStatus, updateNCRStatus);
 
-// Assign NCR - Requires ADMIN, MANAGER, or AUDITOR role
-router.put('/:id/assign', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCRAssignment, assignNCR);
+// Assign NCR - Requires SUPERUSER, ADMIN, MANAGER, or AUDITOR role
+router.put('/:id/assign', validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCRAssignment, assignNCR);
 
-// Update NCR - Requires ADMIN, MANAGER, or AUDITOR role
-router.put('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCRUpdate, updateNCR);
+// Update NCR - Requires SUPERUSER, ADMIN, MANAGER, or AUDITOR role
+router.put('/:id', validateId, authorizeRoles(UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MANAGER, UserRole.AUDITOR), validateNCRUpdate, updateNCR);
 
 // Delete NCR - Requires ADMIN, MANAGER, or SUPERUSER role
 router.delete('/:id', validateId, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERUSER), deleteNCR);

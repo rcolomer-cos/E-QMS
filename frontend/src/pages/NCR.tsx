@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getNCRs, createNCR, CreateNCRData } from '../services/ncrService';
+import { useTranslation } from 'react-i18next';
+import { getNCRs, createNCR, CreateNCRData, deleteNCR } from '../services/ncrService';
 import { getUsers } from '../services/userService';
+import { getCurrentUser } from '../services/authService';
 import { useToast } from '../contexts/ToastContext';
 import { NCR as NCRType, User } from '../types';
 import NCRForm from '../components/NCRForm';
@@ -9,6 +11,7 @@ import api from '../services/api';
 import '../styles/NCR.css';
 
 function NCR() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
   const [ncrs, setNcrs] = useState<NCRType[]>([]);
@@ -43,16 +46,34 @@ function NCR() {
   };
 
   const loadCurrentUser = () => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        setCurrentUser(user);
-      } catch (err) {
-        console.error('Failed to parse user from localStorage:', err);
-      }
+    const user = getCurrentUser();
+    if (user) {
+      setCurrentUser(user);
     }
   };
+
+  const handleDeleteNCR = async (ncrId: number, ncrNumber: string) => {
+    if (!window.confirm(`${t('common.confirmDelete')} ${ncrNumber}?`)) {
+      return;
+    }
+
+    try {
+      await deleteNCR(ncrId);
+      toast.success(t('messages.deleteSuccess'));
+      await loadData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || t('messages.deleteError'));
+    }
+  };
+
+  const hasRole = (roleNames: string[]) => {
+    if (!currentUser) return false;
+    const userRoles = currentUser.roleNames || [];
+    return roleNames.some(role => userRoles.includes(role));
+  };
+
+  const canEdit = hasRole(['superuser', 'admin', 'manager', 'auditor']);
+  const canDelete = hasRole(['superuser', 'admin', 'manager']);
 
   const handleCreateNCR = async (data: CreateNCRData, files: File[]) => {
     try {
@@ -103,22 +124,22 @@ function NCR() {
   };
 
   if (loading) {
-    return <div className="loading">Loading NCRs...</div>;
+    return <div className="loading">{t('common.loading')}</div>;
   }
 
   return (
     <div className="ncr-page">
       <div className="page-header">
         <div>
-          <h1>Non-Conformance Reports (NCR)</h1>
-          <p className="subtitle">Manage and track non-conformances</p>
+          <h1>{t('ncr.title')}</h1>
+          <p className="subtitle">{t('ncr.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="tw-btn tw-btn-secondary" onClick={() => navigate('/ncr/dashboard')}>
-            Dashboard
+          <button className="btn-secondary" onClick={() => navigate('/ncr/dashboard')}>
+            {t('ncr.dashboard')}
           </button>
-          <button className="tw-btn tw-btn-primary" onClick={handleOpenModal}>
-            Create NCR
+          <button className="btn-primary" onClick={() => navigate('/ncr/add')}>
+            {t('ncr.createNCR')}
           </button>
         </div>
       </div>
@@ -129,19 +150,19 @@ function NCR() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>NCR Number</th>
-              <th>Title</th>
-              <th>Severity</th>
-              <th>Status</th>
-              <th>Detected Date</th>
-              <th>Actions</th>
+              <th>{t('ncr.ncrNumber')}</th>
+              <th>{t('ncr.ncrTitle')}</th>
+              <th>{t('ncr.severity')}</th>
+              <th>{t('common.status')}</th>
+              <th>{t('ncr.detectedDate')}</th>
+              <th style={{ width: '200px' }}>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {ncrs.length === 0 ? (
               <tr>
                 <td colSpan={6} className="no-data">
-                  No NCRs found
+                  {t('ncr.noNCRsFound')}
                 </td>
               </tr>
             ) : (
@@ -151,7 +172,7 @@ function NCR() {
                   <td>{ncr.title}</td>
                   <td>
                     <span className={`severity-badge severity-${ncr.severity}`}>
-                      {ncr.severity}
+                      {t(`ncr.severities.${ncr.severity}`)}
                     </span>
                   </td>
                   <td>
@@ -162,11 +183,30 @@ function NCR() {
                   <td>{formatDate(ncr.detectedDate)}</td>
                   <td className="actions-cell">
                     <button 
-                      className="tw-btn tw-btn-small tw-btn-primary" 
+                      className="btn-view" 
                       onClick={() => navigate(`/ncr/${ncr.id}`)}
+                      title={t('common.view')}
                     >
-                      View
+                      👁️
                     </button>
+                    {canEdit && (
+                      <button 
+                        className="btn-edit" 
+                        onClick={() => navigate(`/ncr/${ncr.id}/edit`)}
+                        title={t('common.edit')}
+                      >
+                        ✏️
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button 
+                        className="btn-delete" 
+                        onClick={() => handleDeleteNCR(ncr.id!, ncr.ncrNumber)}
+                        title={t('common.delete')}
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
